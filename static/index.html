@@ -24,9 +24,22 @@
         <!-- Add your site or application content here -->
         <p>Hello world! This is HTML5 Boilerplate.</p>
 
+        <table>
+            <thead><tr>
+                <th>Passenger name</th><th>Meal</th><th>Surcharge</th><th></th>
+            </tr></thead>
+            <!-- Todo: Generate table body -->
+            <tbody data-bind="foreach: seats">
+                <td data-bind="text: name"></td>
+                <td data-bind="text: meal().mealName"></td>
+                <td data-bind="text: meal().price"></td>
+            </tbody>
+        </table>
+
         <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.0/jquery.min.js"></script>
         <script>window.jQuery || document.write('<script src="js/vendor/jquery-1.9.0.min.js"><\/script>')</script>
         <script src="js/plugins.js"></script>
+        <script src="js/vendor/knockout-2.2.1.js"></script>
         <script src="js/main.js"></script>
 
         <!-- Google Analytics: change UA-XXXXX-X to be your site's ID. -->
