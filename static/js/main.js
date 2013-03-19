@@ -1,4 +1,6 @@
 
+var infonom_loc = "infonom.iriscouch.com";
+
 // Class to represent a row in the seat reservations grid
 function SeatReservation(name, initialMeal) {
     var self = this;
