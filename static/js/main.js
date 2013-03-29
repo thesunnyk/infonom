@@ -1,29 +1,15 @@
 
 var infonom_loc = "infonom.iriscouch.com";
 
-// Class to represent a row in the seat reservations grid
-function SeatReservation(name, initialMeal) {
-    var self = this;
-    self.name = name;
-    self.meal = ko.observable(initialMeal);
-}
-
 // Overall viewmodel for this screen, along with initial state
-function ReservationsViewModel() {
+function ArticlesViewModel() {
     var self = this;
+    self.articles = ko.observable();
 
-    // Non-editable catalog data - would come from the server
-    self.availableMeals = [
-        { mealName: "Standard (sandwich)", price: 0 },
-        { mealName: "Premium (lobster)", price: 34.95 },
-        { mealName: "Ultimate (whole zebra)", price: 290 }
-    ];    
+    $.get("/articles", function(data) {
+        console.log("Got Data: " + data)
+        self.articles(data);
+    });
+};
 
-    // Editable data
-    self.seats = ko.observableArray([
-        new SeatReservation("Steve", self.availableMeals[0]),
-        new SeatReservation("Bert", self.availableMeals[1])
-    ]);
-}
-
-ko.applyBindings(new ReservationsViewModel());
+ko.applyBindings(new ArticlesViewModel());

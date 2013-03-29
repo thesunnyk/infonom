@@ -26,20 +26,19 @@
         <header>
             <h1>Title</h1>
         </header>
-        <body>
-            <table>
-                <thead><tr>
-                    <th>Passenger name</th><th>Meal</th><th>Surcharge</th><th></th>
-                </tr></thead>
-                <!-- Todo: Generate table body -->
-                <tbody data-bind="foreach: seats">
-                    <td data-bind="text: name"></td>
-                    <td data-bind="text: meal().mealName"></td>
-                    <td data-bind="text: meal().price"></td>
-                </tbody>
-            </table>
+        <main>
+            <div id="login">
+                <a onclick="function() {navigator.id.request();};">Login</a>
+                <a onclick="function() {navigator.id.logout();};">Logout</a>
+            </div>
+            <div id="main-content">
+                <div class="post" data-bind="foreach: articles">
+                    <span data-bind="text: _id">ID</span>
+                    <span data-bind="text: title">Title</span>
+                </div>
+            <div>
             
-        </body>
+        </main>
         
         <footer>
             
@@ -55,6 +54,7 @@
         <script src="js/plugins.js"></script>
         <script src="js/vendor/knockout-2.2.1.js"></script>
         <script src="js/main.js"></script>
+        <script src="https://login.persona.org/include.js"></script>
 
         <!-- Google Analytics: change UA-XXXXX-X to be your site's ID. -->
         <script>
