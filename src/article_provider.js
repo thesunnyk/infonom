@@ -1,13 +1,18 @@
 var dbMan = require('cradle');
 
-exports.ArticleProvider = function(host, port) {
+ArticleProvider.prototype.installDb = installDb;
+ArticleProvider.prototype.save = save;
+ArticleProvider.prototype.findAll = findAll;
+
+exports.ArticleProvider = ArticleProvider;
+
+function ArticleProvider(host, port) {
     var self = this;
     this.connection= new (dbMan.Connection)(host, port, {
         cache: true,
         raw: false
     });
     this.db = this.connection.database('test');
-    var db = this.db;
     this.db.exists(function(err, exists) {
         if (err) {
             console.log('error', err);
@@ -15,7 +20,7 @@ exports.ArticleProvider = function(host, port) {
             console.log("connect successful.");
         } else {
             console.log("creating DB.");
-            db.create();
+            self.db.create();
             self.installDb();
         }
     });
@@ -29,7 +34,7 @@ function printResult(err, res) {
         }
 }
 
-exports.ArticleProvider.prototype.installDb = function() {
+function installDb() {
     console.log("installing database");
     this.db.save("_design/articles", {
         language: "javascript",
@@ -42,7 +47,7 @@ exports.ArticleProvider.prototype.installDb = function() {
     
 };
 
-exports.ArticleProvider.prototype.save = function(articles, callback) {
+function save(articles, callback) {
     if (typeof(articles.length) == "undefined") {
         articles = [articles];
     }
@@ -53,7 +58,7 @@ exports.ArticleProvider.prototype.save = function(articles, callback) {
     });
 };
 
-exports.ArticleProvider.prototype.findAll = function(callback) {
+function findAll(callback) {
     this.db.view('articles/all', function(error, result) {
         if (error) {
             callback(error);

@@ -18,7 +18,10 @@
     </head>
     <body>
         <!--[if lt IE 7]>
-            <p class="chromeframe">You are using an <strong>outdated</strong> browser. Please <a href="http://browsehappy.com/">upgrade your browser</a> or <a href="http://www.google.com/chromeframe/?redirect=true">activate Google Chrome Frame</a> to improve your experience.</p>
+            <p class="chromeframe">You are using an <strong>outdated</strong> browser. Please
+            <a href="http://browsehappy.com/">upgrade your browser</a> or
+            <a href="http://www.google.com/chromeframe/?redirect=true">activate Google Chrome Frame</a> to improve your
+            experience.</p>
         <![endif]-->
 
         <!-- Add your site or application content here -->
@@ -28,15 +31,15 @@
         </header>
         <main>
             <div id="login">
-                <a onclick="function() {navigator.id.request();};">Login</a>
-                <a onclick="function() {navigator.id.logout();};">Logout</a>
+                <a onclick="navigator.id.request();">Login</a>
+                <a onclick="navigator.id.logout();">Logout</a>
             </div>
             <div id="main-content">
                 <div class="post" data-bind="foreach: articles">
                     <span data-bind="text: _id">ID</span>
                     <span data-bind="text: title">Title</span>
                 </div>
-            <div>
+            </div>
             
         </main>
         

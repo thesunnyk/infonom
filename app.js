@@ -2,7 +2,7 @@ var express = require('express');
 var apFactory = require("./src/article_provider");
 var app = express();
 
-var home = function(req, res) {
+function home(req, res) {
     res.redirect("/static/index.html");
 };
 
