@@ -1,5 +1,6 @@
 var express = require('express');
-var apFactory = require("./src/article_provider");
+var browserid = require('express-browserid');
+var apFactory = require('./src/article_provider');
 var app = express();
 
 function home(req, res) {
@@ -21,7 +22,7 @@ var articles = function(req, res) {
 
 app.use(express.bodyParser());
 
-require("./src/express-browserid").plugAll(app);
+browserid.plugAll(app, {audience: 'http://localhost:3000'});
 
 app.get('/', home);
 

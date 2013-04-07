@@ -1,9 +1,5 @@
 var dbMan = require('cradle');
 
-ArticleProvider.prototype.installDb = installDb;
-ArticleProvider.prototype.save = save;
-ArticleProvider.prototype.findAll = findAll;
-
 exports.ArticleProvider = ArticleProvider;
 
 function ArticleProvider(host, port) {
@@ -24,6 +20,11 @@ function ArticleProvider(host, port) {
             self.installDb();
         }
     });
+    
+    this.installDb = installDb;
+    this.save = save;
+    this.findAll = findAll;
+
 };
 
 function printResult(err, res) {

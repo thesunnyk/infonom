@@ -1,47 +1,53 @@
 
 var infonom_loc = "infonom.iriscouch.com";
 
-function watch() {
-    navigator.id.watch({
-        loggedInUser: currentUser,
-        onlogin: function(assertion) {
-            $.ajax({
-                type: 'POST',
-                url: '/auth/login',
-                data: {assertion: assertion},
-                success: function(res, status, xhr) {
-                    window.location.reload();
-                },
-                error: function(xhr, status, err) {
-                    navigator.id.logout();
-                    alert("login failure: " + err);
-                }
-            });
-        },
-        onlogout: function() {
-            $.ajax({
-                type: 'POST',
-                url: '/auth/logout',
-                success: function(res, status, xhr) {
-                    window.location.reload();
-                },
-                error: function(xhr, status, err) {
-                    alert("logout failure: " + err)
-                }
-            });
-        }
-    });
-}
+var currentUser = null;
 
 // Overall viewmodel for this screen, along with initial state
 function ArticlesViewModel() {
     var self = this;
     self.articles = ko.observable();
+    self.email = ko.observable();
 
+    self.email(currentUser);
     $.get("/articles", function(data) {
-        console.log("Got Data: " + data)
         self.articles(data);
     });
 };
 
-ko.applyBindings(new ArticlesViewModel());
+articlesModel = new ArticlesViewModel();
+
+articlesModel.email("Not Logged In");
+
+navigator.id.watch({
+    loggedInUser: currentUser,
+    onlogin: function(assertion) {
+        $.ajax({
+            type: 'POST',
+            url: '/browserid/verify',
+            data: { assertion: assertion },
+            success: function(res, status, xhr) {
+                currentUser = res.email;
+                articlesModel.email(currentUser);
+            },
+            error: function(xhr, status, err) {
+                navigator.id.logout();
+                currentUser = null;
+                articlesModel.email(currentUser);
+                alert('Login Failure: ' + err);
+            }
+        });
+    },
+    onlogout: function() {
+        $.ajax({
+            type: 'POST',
+            url: '/browserid/logout',
+            success: function(res, status, xhr) { window.location.reload(); },
+            error: function(xhr, status, err) {
+                alert('Logout Failure: ' + err);
+            }
+        });
+    }
+});
+
+ko.applyBindings(articlesModel);
