@@ -1,0 +1,82 @@
+
+@import "main_pre.less";
+
+@import "site-variables.less"; // Modify this for custom colors, font-sizes, etc
+
+@font-face {
+  font-family: 'FontAwesome';
+  src: url('../font/fontawesome-webfont.eot?v=3.0.1');
+  src: url('../font/fontawesome-webfont.eot?#iefix&v=3.0.1') format('embedded-opentype'),
+    url('../font/fontawesome-webfont.woff?v=3.0.1') format('woff'),
+    url('../font/fontawesome-webfont.ttf?v=3.0.1') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
+
+.icon {
+    font-family: 'FontAwesome';
+}
+
+h1, h2, h3 {
+  color: @headingColor;
+}
+
+body {
+	font-family: 'Source Sans Pro', sans-serif;
+	font-size: 11pt;
+	color: @textColor;
+  background: @background;
+   > header {
+    padding-left: 10pt;
+   }
+   > main {
+    padding-left: 10pt;
+    ul {
+        .article {
+            padding-left: 10pt;
+        }
+    }
+   }
+	> footer {
+		order: 2;
+		font-size: smaller;
+		background: @footerBackground;
+		border-top: solid 1pt @border;
+		padding: 5pt;
+		ul {
+			text-align: center;
+			border-bottom: 1pt solid @border;
+			border-top: 1pt solid @border;
+			padding: 5pt;
+			li {
+				display: inline;
+				margin-left: 10pt;
+				margin-left: 10pt;
+			}
+		}
+		.authorised {
+			float: right;
+			margin-left: 30pt;
+		}
+		
+		.attribution {
+			max-width: 200pt; 
+		}
+		
+        #email {
+            color: @highlight;
+        }
+
+	}
+}
+
+a {
+	color: @linkColor;
+}
+
+a:hover {
+	color: @linkHover;
+}
+
+@import "main_post.less";
+

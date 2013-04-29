@@ -3,10 +3,6 @@ var browserid = require('express-browserid');
 var apFactory = require('./src/article_provider');
 var app = express();
 
-function home(req, res) {
-    res.redirect("/static/index.html");
-};
-
 var articleProvider = new apFactory.ArticleProvider("infonom.iriscouch.com", 80);
 
 var articles = function(req, res) {
@@ -24,11 +20,9 @@ app.use(express.bodyParser());
 
 browserid.plugAll(app, {audience: 'http://localhost:3000'});
 
-app.get('/', home);
+app.get('/node/articles', articles);
 
-app.get('/articles', articles);
-
-app.use("/static", express.static(__dirname + "/static"));
+app.use("/", express.static(__dirname + "/static"));
 
 app.listen(process.env.PORT);
 console.log('Listening on port ' + process.env.PORT);
