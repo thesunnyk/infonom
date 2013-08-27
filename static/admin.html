@@ -33,43 +33,57 @@
         <main>
             <section class="write">
                 <label>Write Something</label><input type="text"/>
-                <input type="checkbox">Add Body</input>
+                <input type="checkbox" data-bind="checked: showBody">Add Body</input>
+                <div class="showBody" data-bind="visible: showBody">
                 <textarea></textarea>
+                </div>
+            </section>
+            
+            <section class="menu">
+                <ul>
+                    <li><a href="#" id="interesting" data-bind="click: selectInteresting">Interesting</a></li>
+                    <li><a href="#" id="popular" data-bind="click: selectPopular">Popular</a></li>
+                    <li><a href="#" id="latest" data-bind="click: selectLatest">Latest</a></li>
+                    <li><a href="#" id="settings" data-bind="click: selectSettings">Settings</a></li>
+                </ul>
             </section>
 
             <section class="read">
-                <div class="interesting">
-                    <h2>Interesting</h2>
-                    <ul>
-                        <li><a href="#">Cells divide the conservative party</a></li>
-                        <li><a href="#">Man eats Shark</a>
-                            <div class="article">
-                                <p>
+                <div class="interesting" data-bind="with: readList">
+                    <h2 data-bind="text: readHeader">Interesting</h2>
+                    <ul data-bind="foreach: items">
+                        <li><a href="#" data-bind="text: title, click: $parent.expand">
+                                Man eats Shark
+                            </a>
+                            (like) (share)
+                            <div class="article" data-bind="visible: showItem">
+                                <div class="content" data-bind="if: extended">
+                                <p data-bind="html: extended">
                                 A man ate a shark the other day in a shark fin soup.
                                 </p>
-                                <a href="#">Respond</a><br/>
+                                </div>
+                                <div class="responses" data-bind="if: responses">
+                                <h3>Responses</h3>
+                                <ul data-bind="foreach: responses">
+                                    <li><a href="#" data-bind="text: title">Sharks are killers</a></li>
+                                </ul>
+                                </div>
+                                <a href="#" data-bind="click: $parent.respond">Respond</a><br/>
+                                <div class="respondarea" data-bind="visible: showRespond">
                                 <textarea></textarea>
+                                </div>
                             </div>
                         </li>
-                        <li><a href="#">Parties generally considered entertaining.</a></li>
                     </ul>
-                    <a href="#"><span class="icon">&#xf104;</span> older</a>
-                    <a href="#">newer <span class="icon">&#xf105;</span></a>
-                </div>
-                <div class="popular">
-                    <h2>Popular</h2>
-                    <ul>
-                        <li><a href="#">Shark eats lentil soup</a></li>
-                    </ul>
-                    <a href="#"><span class="icon">&#xf104;</span> older</a>
-                    <a href="#">newer <span class="icon">&#xf105;</span></a>
+                    <a href="#">more...</a>
                 </div>
             </section>
             <section class="settings">
                 <h2>Manage</h2>
                 <ul>
-                <li>Add Site</li>
-                <li>Remove Site
+                    <li><a href="/upload.html">Upload OPML</a></li>
+                <li>Add Source</li>
+                <li>Remove Source
                     <ul>
                         <li>Quaddmg</li>
                         <li>Quaddmg</li>

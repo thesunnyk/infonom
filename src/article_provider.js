@@ -1,66 +1,26 @@
-var dbMan = require('cradle');
 
 exports.ArticleProvider = ArticleProvider;
 
-function ArticleProvider(host, port) {
-    var self = this;
-    this.connection= new (dbMan.Connection)(host, port, {
-        cache: true,
-        raw: false
-    });
-    this.db = this.connection.database('test');
-    this.db.exists(function(err, exists) {
-        if (err) {
-            console.log('error', err);
-        } else if(exists) {
-            console.log("connect successful.");
-        } else {
-            console.log("creating DB.");
-            self.db.create();
-            self.installDb();
-        }
-    });
-    
-    this.installDb = installDb;
-    this.save = save;
+function ArticleProvider(dbConn) {
+    this.dbConn = dbConn;
     this.findAll = findAll;
-
-};
-
-function printResult(err, res) {
-        if (err) {
-            console.log("Error: " + err);
-        } else {
-            console.log("Success!");
-        }
+    this.byDate = byDate;
+    this.save = save;
 }
-
-function installDb() {
-    console.log("installing database");
-    this.db.save("_design/articles", {
-        language: "javascript",
-        views: {
-            "all": {
-                "map": "function(doc) { emit(doc._id, doc) }",
-            }
-        },
-    }, printResult);
-    
-};
 
 function save(articles, callback) {
     if (typeof(articles.length) == "undefined") {
         articles = [articles];
     }
     
-    this.db.save(articles, function(error, result) {
+    this.dbConn.db.save(articles, function(error, result) {
         if (error) callback(error);
         else callback(null, articles);
     });
-};
+}
 
 function findAll(callback) {
-    this.db.view('articles/all', function(error, result) {
+    this.dbConn.db.view('articles/all', function(error, result) {
         if (error) {
             callback(error);
         } else {
@@ -71,4 +31,19 @@ function findAll(callback) {
             callback(null, docs);
         }
     });
-};
+}
+
+function byDate(offset, count, callback) {
+    this.dbConn.db.view('articles/by_date', {skip: offset, limit: count},
+        function(error, result) {
+        if (error) {
+            callback(error);
+        } else {
+            var docs = [];
+            result.forEach(function (row) {
+                docs.push(row);
+            });
+            callback(null, docs);
+        }
+    });
+}

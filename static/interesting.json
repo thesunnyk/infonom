@@ -1,0 +1,25 @@
+[
+    {
+        "title": "Cells divide the conservative party",
+        "extended": null,
+        "responses": null
+    },
+    {
+        "title": "Man eats Shark",
+        "extended": "A man ate a shark the other day in a shark fin soup.",
+        "url": "/man-bites-shark.html",
+        "responses": [
+            {
+                "title": "Sharks are killers"
+            },
+            {
+                "title": "Man bites Shark"
+            }
+        ]
+    },
+    {
+        "title": "Parties generally considered entertaining",
+        "extended": null,
+        "responses": null
+    }
+]

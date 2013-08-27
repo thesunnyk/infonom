@@ -4,8 +4,10 @@
   "version": "0.0.1",
   "private": true,
   "dependencies": {
-    "express": "3.1.0"
-    "cradle": "0.6.4"
-    "express-browserid": "0.0.2"
+    "express": "3.1.0",
+    "cradle": "0.6.4",
+    "express-browserid": "0.0.2",
+    "feedparser": "0.16.1",
+    "opmlparser": "0.5.0",
   }
 }
