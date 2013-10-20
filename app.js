@@ -4,6 +4,7 @@ var apFactory = require('./src/article_provider');
 var dbConnFactory = require('./src/db_conn');
 var opmlFactory = require('./src/opml_reader');
 var fs = require('fs');
+var url = require('url');
 
 var app = express();
 
@@ -25,6 +26,17 @@ function articles(req, res) {
 function upload(req, res) {
     var stream = fs.createReadStream(req.files.file.path);
     opmlReader.addOPML(stream);
+    res.write("OK");
+    res.end();
+}
+
+function addFeed(req, res) {
+    var params = url.parse(req.url, true).query;
+    if (params.feed && params.folder) {
+        opmlReader.addFeed(params.feed, params.folder);
+    }
+    res.write("OK");
+    res.end();
 }
 
 dbConn.installDb();
@@ -38,6 +50,8 @@ browserid.plugAll(app, {audience: 'http://localhost:3000'});
 app.get('/node/articles', articles);
 
 app.post('/node/upload', upload);
+
+app.get('/node/addfeed', addFeed);
 
 app.use("/", express.static(__dirname + "/static"));
 

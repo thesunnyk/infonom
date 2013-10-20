@@ -10,39 +10,64 @@ function OPMLReader(conn) {
     this.addOPML = addOPML;
     this.updateAll = updateAll;
     this.updateFeed = updateFeed;
+    this.addFeed = addFeed;
 }
 
 function addOPML(stream) {
     stream.pipe(new OpmlParser())
         .on('feed', function feed(item) {
-            var toSave = {};
-            toSave.type = "feed_data";
-            toSave.folder = item.folder;
-            toSave.htmlurl = item.htmlurl;
-            toSave.xmlurl = item.xmlurl;
-            toSave.title = item.title;
-            toSave.text = item.text;
-            toSave.lastupdate = 0;
+            var toSave = {
+                type: "feed_data",
+                folder: item.folder,
+                htmlurl: item.htmlurl,
+                xmlurl: item.xmlurl,
+                title: item.title,
+                text: item.text,
+                lastupdate: 0
+            };
+
             this.conn.db.save(toSave);
          }.bind(this));
+}
 
+function getArticle(item) {
+    var article = {
+        type: 'article',
+        title: item.title,
+        description: item.description,
+        author: item.author,
+        summary: item.summary,
+        link: item.link,
+        date: item.date,
+        image: item.image,
+        fromfeedurl: item.xmlurl
+    };
+    this.conn.db.save(item.guid, article);
+}
+
+function addFeed(xmlurl, folder) {
+    console.log("adding feed: " + xmlurl);
+    var feedstream = request(xmlurl)
+    feedstream.pipe(new FeedParser())
+        .on('meta', function saveData(item) {
+            var now = new Date();
+            var toSave = {
+                type: "feed_data",
+                folder: folder,
+                htmlurl: item.htmlurl,
+                xmlurl: xmlurl,
+                title: item.title,
+                text: item.description,
+                lastupdate: now.getTime()
+            }
+            this.conn.db.save(toSave);
+        }.bind(this))
+        .on('data', getArticle.bind(this));
 }
 
 function updateFeed(feedstream) {
     feedstream.pipe(new FeedParser())
-        .on('data', function article(item) {
-            var article = {};
-            article.type = 'article';
-            article.title = item.title;
-            article.description = item.description;
-            article.author = item.author;
-            article.summary = item.summary;
-            article.link = item.link;
-            article.date = item.date;
-            article.image = item.image;
-            article.fromfeedurl = item.xmlurl;
-            this.conn.db.save(item.guid, article);
-        }.bind(this));
+        .on('data', getArticle.bind(this));
 }
 
 function updateAll() {

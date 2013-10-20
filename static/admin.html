@@ -31,7 +31,7 @@
             <h1>Infonom</h1>
         </header>
         <main>
-            <section class="write">
+            <section class="write" id="writeSection">
                 <label>Write Something</label><input type="text"/>
                 <input type="checkbox" data-bind="checked: showBody">Add Body</input>
                 <div class="showBody" data-bind="visible: showBody">
@@ -39,17 +39,18 @@
                 </div>
             </section>
             
-            <section class="menu">
+            <section class="menu" id="menuSection">
                 <ul>
                     <li><a href="#" id="interesting" data-bind="click: selectInteresting">Interesting</a></li>
                     <li><a href="#" id="popular" data-bind="click: selectPopular">Popular</a></li>
                     <li><a href="#" id="latest" data-bind="click: selectLatest">Latest</a></li>
                     <li><a href="#" id="settings" data-bind="click: selectSettings">Settings</a></li>
                 </ul>
+                <span data-bind="text: selected">Interesting</span>
             </section>
 
-            <section class="read">
-                <div class="interesting" data-bind="with: readList">
+            <section class="read" id="readSection">
+                <div class="interesting">
                     <h2 data-bind="text: readHeader">Interesting</h2>
                     <ul data-bind="foreach: items">
                         <li><a href="#" data-bind="text: title, click: $parent.expand">
@@ -78,11 +79,14 @@
                     <a href="#">more...</a>
                 </div>
             </section>
-            <section class="settings">
+            <section class="settings" id="settingsSection">
                 <h2>Manage</h2>
                 <ul>
                     <li><a href="/upload.html">Upload OPML</a></li>
-                <li>Add Source</li>
+                    <li id="uploadSection">Add Source:
+                        <input type="text" data-bind="value: xmlurl" />
+                        <a href="#" data-bind="click: upload">Go!</a>
+                    </li>
                 <li>Remove Source
                     <ul>
                         <li>Quaddmg</li>
