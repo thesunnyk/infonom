@@ -1,29 +1,35 @@
-html,button,input,select,textarea{color:#222;}
-body{font-size:1em;line-height:1.4;}
-::-moz-selection{background:#b3d4fc;text-shadow:none;}
-::selection{background:#b3d4fc;text-shadow:none;}
-hr{display:block;height:1px;border:0;border-top:1px solid #ccc;margin:1em 0;padding:0;}
-img{vertical-align:middle;}
-fieldset{border:0;margin:0;padding:0;}
-textarea{resize:vertical;}
-.chromeframe{margin:0.2em 0;background:#ccc;color:#000;padding:0.2em 0;}
-@font-face{font-family:'FontAwesome';src:url('../font/fontawesome-webfont.eot?v=3.0.1');src:url('../font/fontawesome-webfont.eot?#iefix&v=3.0.1') format('embedded-opentype'),url('../font/fontawesome-webfont.woff?v=3.0.1') format('woff'),url('../font/fontawesome-webfont.ttf?v=3.0.1') format('truetype');font-weight:normal;font-style:normal;}.icon{font-family:'FontAwesome';}
-h1,h2,h3{color:#304c7a;}
-body{font-family:'Source Sans Pro',sans-serif;font-size:11pt;color:#757575;background:#f6f6f6;}body>header{padding-left:10pt;}
-body>main{padding-left:10pt;}body>main ul .article{padding-left:10pt;}
-body>footer{order:2;font-size:smaller;background:#e9e9e9;border-top:solid 1pt #304c7a;padding:5pt;}body>footer ul{text-align:center;border-bottom:1pt solid #304c7a;border-top:1pt solid #304c7a;padding:5pt;}body>footer ul li{display:inline;margin-left:10pt;}
-body>footer .authorised{float:right;margin-left:30pt;}
-body>footer .attribution{max-width:200pt;}
-body>footer #email{color:#cc4756;}
-a{color:#174aa0;}
-a:hover{color:#7c8dc4;}
-.ir{background-color:transparent;border:0;overflow:hidden;*text-indent:-9999px;}
-.ir:before{content:"";display:block;width:0;height:150%;}
-.hidden{display:none !important;visibility:hidden;}
-.visuallyhidden{border:0;clip:rect(0 0 0 0);height:1px;margin:-1px;overflow:hidden;padding:0;position:absolute;width:1px;}
-.visuallyhidden.focusable:active,.visuallyhidden.focusable:focus{clip:auto;height:auto;margin:0;overflow:visible;position:static;width:auto;}
-.invisible{visibility:hidden;}
+html,button,input,select,textarea{color:#222}
+body{font-size:1em;line-height:1.4}
+::-moz-selection{background:#b3d4fc;text-shadow:none}
+::selection{background:#b3d4fc;text-shadow:none}
+hr{display:block;height:1px;border:0;border-top:1px solid #ccc;margin:1em 0;padding:0}
+img{vertical-align:middle}
+fieldset{border:0;margin:0;padding:0}
+textarea{resize:vertical}
+.chromeframe{margin:.2em 0;background:#ccc;color:#000;padding:.2em 0}
+@font-face{font-family:'FontAwesome';src:url('../font/fontawesome-webfont.eot?v=3.2.1');src:url('../font/fontawesome-webfont.eot?#iefix&v=3.2.1') format('embedded-opentype'),url('../font/fontawesome-webfont.woff?v=3.2.1') format('woff'),url('../font/fontawesome-webfont.ttf?v=3.2.1') format('truetype');font-weight:normal;font-style:normal}.icon{font-family:'FontAwesome'}
+h1,h2,h3{color:#304c7a}
+body{font-family:'Source Sans Pro',sans-serif;font-size:11pt;color:#757575;background:#f6f6f6}body>header{padding-left:10pt}
+body>main{padding-left:10pt}body>main ul .article{padding-left:10pt}
+body>footer{order:2;font-size:smaller;background:#e9e9e9;border-top:solid 1pt #304c7a;padding:5pt}body>footer ul{text-align:center;border-bottom:1pt solid #304c7a;border-top:1pt solid #304c7a;padding:5pt}body>footer ul li{display:inline;margin-left:10pt;margin-left:10pt}
+body>footer .authorised{float:right;margin-left:30pt}
+body>footer .attribution{max-width:200pt}
+body>footer #email{color:#cc4756}
+section{clear:both}
+a{color:#174aa0}
+a:hover{color:#7c8dc4}
+#menuSection>ul{float:left;border-radius:.8em;background-color:#ddd;padding:.5em;list-style-type:none}#menuSection>ul :first-child{border-left:none}
+#menuSection li{display:inline;padding-left:1em;padding-right:1em;border-left:1pt solid #d0d0d0}#menuSection li a{text-decoration:none}
+#menuSection li .selected{color:#cc4756}
+#readSection ul{list-style-type:none}#readSection ul li{padding:.5em;border-bottom:1pt solid #d0d0d0}
+#readSection div.article{background-color:#e9e9e9;padding:2em;padding-top:0;margin:2em;border:solid #d0d0d0;border-width:1pt 1em 1em 1pt;width:36em}
+.ir{background-color:transparent;border:0;overflow:hidden;*text-indent:-9999px}
+.ir:before{content:"";display:block;width:0;height:150%}
+.hidden{display:none !important;visibility:hidden}
+.visuallyhidden{border:0;clip:rect(0 0 0 0);height:1px;margin:-1px;overflow:hidden;padding:0;position:absolute;width:1px}
+.visuallyhidden.focusable:active,.visuallyhidden.focusable:focus{clip:auto;height:auto;margin:0;overflow:visible;position:static;width:auto}
+.invisible{visibility:hidden}
 .clearfix:before,.clearfix:after{content:" ";display:table;}
-.clearfix:after{clear:both;}
-.clearfix{*zoom:1;}
-@media only screen and (min-width:35em){}@media print,(-o-min-device-pixel-ratio:5/4),(-webkit-min-device-pixel-ratio:1.25),(min-resolution:120dpi){}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important;} a,a:visited{text-decoration:underline;} a[href]:after{content:" (" attr(href) ")";} abbr[title]:after{content:" (" attr(title) ")";} .ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:"";} pre,blockquote{border:1px solid #999;page-break-inside:avoid;} thead{display:table-header-group;} tr,img{page-break-inside:avoid;} img{max-width:100% !important;} @page {margin:0.5cm;}p,h2,h3{orphans:3;widows:3;} h2,h3{page-break-after:avoid;}}
+.clearfix:after{clear:both}
+.clearfix{*zoom:1}
+@media only screen and (min-width:35em){}@media print,(-o-min-device-pixel-ratio:5/4),(-webkit-min-device-pixel-ratio:1.25),(min-resolution:120dpi){}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important} a,a:visited{text-decoration:underline} a[href]:after{content:" (" attr(href) ")"} abbr[title]:after{content:" (" attr(title) ")"} .ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""} pre,blockquote{border:1px solid #999;page-break-inside:avoid} thead{display:table-header-group;} tr,img{page-break-inside:avoid} img{max-width:100% !important} @page {margin:.5cm}p,h2,h3{orphans:3;widows:3} h2,h3{page-break-after:avoid}}

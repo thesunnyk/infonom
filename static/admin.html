@@ -41,22 +41,27 @@
             
             <section class="menu" id="menuSection">
                 <ul>
-                    <li><a href="#" id="interesting" data-bind="click: selectInteresting">Interesting</a></li>
-                    <li><a href="#" id="popular" data-bind="click: selectPopular">Popular</a></li>
-                    <li><a href="#" id="latest" data-bind="click: selectLatest">Latest</a></li>
-                    <li><a href="#" id="settings" data-bind="click: selectSettings">Settings</a></li>
+                    <li><a href="#" id="interesting" data-bind="click: selectInteresting, css: {selected: selected() === 'interesting'}">
+                        <span class="icon">&#xf12a;</span> Interesting</a></li>
+                    <li><a href="#" id="popular" data-bind="click: selectPopular, css: {selected: selected() === 'popular'}">
+                        <span class="icon">&#xf164;</span> Popular</a></li>
+                    <li><a href="#" id="latest" data-bind="click: selectLatest, css: {selected: selected() === 'latest'}">
+                        <span class="icon">&#xf0c9;</span> Latest</a></li>
+                    <li><a href="#" id="settings" data-bind="click: selectSettings, css: {selected: selected() === 'settings'}">
+                        <span class="icon">&#xf013;</span> Settings</a></li>
                 </ul>
-                <span data-bind="text: selected">Interesting</span>
             </section>
 
             <section class="read" id="readSection">
                 <div class="interesting">
                     <h2 data-bind="text: readHeader">Interesting</h2>
                     <ul data-bind="foreach: items">
-                        <li><a href="#" data-bind="text: title, click: $parent.expand">
+                        <li><span class="icon" data-bind="visible: !showItem()">&#xf138;</span>
+                            <span class="icon" data-bind="visible: showItem">&#xf13a;</span>
+                            <a href="#" data-bind="text: title, click: $parent.expand">
                                 Man eats Shark
                             </a>
-                            (like) (share)
+                            <span class="icon">&#xf005;</span> <span class="icon">&#xf064;</span>
                             <div class="article" data-bind="visible: showItem">
                                 <div class="content" data-bind="if: extended">
                                 <p data-bind="html: extended">

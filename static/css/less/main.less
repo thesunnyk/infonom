@@ -5,10 +5,10 @@
 
 @font-face {
   font-family: 'FontAwesome';
-  src: url('../font/fontawesome-webfont.eot?v=3.0.1');
-  src: url('../font/fontawesome-webfont.eot?#iefix&v=3.0.1') format('embedded-opentype'),
-    url('../font/fontawesome-webfont.woff?v=3.0.1') format('woff'),
-    url('../font/fontawesome-webfont.ttf?v=3.0.1') format('truetype');
+  src: url('../font/fontawesome-webfont.eot?v=3.2.1');
+  src: url('../font/fontawesome-webfont.eot?#iefix&v=3.2.1') format('embedded-opentype'),
+    url('../font/fontawesome-webfont.woff?v=3.2.1') format('woff'),
+    url('../font/fontawesome-webfont.ttf?v=3.2.1') format('truetype');
   font-weight: normal;
   font-style: normal;
 }
@@ -18,25 +18,25 @@
 }
 
 h1, h2, h3 {
-  color: @headingColor;
+    color: @headingColor;
 }
 
 body {
 	font-family: 'Source Sans Pro', sans-serif;
 	font-size: 11pt;
 	color: @textColor;
-  background: @background;
-   > header {
-    padding-left: 10pt;
-   }
-   > main {
-    padding-left: 10pt;
-    ul {
-        .article {
-            padding-left: 10pt;
+    background: @background;
+    > header {
+        padding-left: 10pt;
+    }
+    > main {
+        padding-left: 10pt;
+        ul {
+            .article {
+                padding-left: 10pt;
+            }
         }
     }
-   }
 	> footer {
 		order: 2;
 		font-size: smaller;
@@ -70,12 +70,61 @@ body {
 	}
 }
 
+section {
+    clear: both;
+}
+
 a {
 	color: @linkColor;
 }
 
 a:hover {
 	color: @linkHover;
+}
+
+#menuSection {
+    > ul {
+        float: left;
+        border-radius: 0.8em;
+        background-color: @menuBackground;
+        padding: 0.5em;
+        list-style-type: none;
+        :first-child {
+            border-left: none;
+        }
+    }
+    li {
+        display: inline;
+        padding-left: 1em;
+        padding-right: 1em;
+        border-left: 1pt solid @menuSplit;
+        a {
+            text-decoration: none;
+        }
+
+        .selected {
+            color: @highlight;
+        }
+    }
+}
+
+#readSection {
+    ul {
+        list-style-type: none;
+        li {
+            padding: 0.5em;
+            border-bottom: 1pt solid @menuSplit;
+        }
+    }
+    div.article {
+        background-color: @articleBackground;
+        padding: 2em;
+        padding-top: 0;
+        margin: 2em;
+        border: solid @menuSplit;
+        border-width: 1pt 1em 1em 1pt;
+        width: 36em;
+    }
 }
 
 @import "main_post.less";
