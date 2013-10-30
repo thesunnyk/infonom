@@ -11,6 +11,7 @@ function OPMLReader(conn) {
     this.updateAll = updateAll;
     this.updateFeed = updateFeed;
     this.addFeed = addFeed;
+    this.findAll = findAll;
 }
 
 function addOPML(stream) {
@@ -30,31 +31,34 @@ function addOPML(stream) {
          }.bind(this));
 }
 
-function getArticle(item) {
-    var article = {
-        type: 'article',
-        title: item.title,
-        description: item.description,
-        author: item.author,
-        summary: item.summary,
-        link: item.link,
-        date: item.date,
-        image: item.image,
-        fromfeedurl: item.xmlurl
-    };
-    this.conn.db.save(item.guid, article);
+function getArticle(feedxmlurl) {
+    return function(item) {
+        var article = {
+            type: 'article',
+            title: item.title,
+            description: item.description,
+            author: item.author,
+            summary: item.summary,
+            link: item.link,
+            date: item.date,
+            image: item.image,
+            fromfeedurl: feedxmlurl,
+        };
+        this.conn.db.save(item.guid, article);
+    }
 }
 
 function addFeed(xmlurl, folder) {
     console.log("adding feed: " + xmlurl);
-    var feedstream = request(xmlurl)
+    var feedstream = request(xmlurl);
+    this.feedtitle = "Unknown";
     feedstream.pipe(new FeedParser())
         .on('meta', function saveData(item) {
             var now = new Date();
             var toSave = {
                 type: "feed_data",
                 folder: folder,
-                htmlurl: item.htmlurl,
+                htmlurl: item.link,
                 xmlurl: xmlurl,
                 title: item.title,
                 text: item.description,
@@ -62,12 +66,26 @@ function addFeed(xmlurl, folder) {
             }
             this.conn.db.save(toSave);
         }.bind(this))
-        .on('data', getArticle.bind(this));
+        .on('data', getArticle(xmlurl).bind(this));
 }
 
-function updateFeed(feedstream) {
+function updateFeed(feedtitle, feedxmlurl, feedstream) {
     feedstream.pipe(new FeedParser())
-        .on('data', getArticle.bind(this));
+        .on('data', getArticle(feedxmlurl).bind(this));
+}
+
+function findAll(callback) {
+    this.conn.db.view('feeds/all', function(error, result) {
+        if (error) {
+            callback(error);
+        } else {
+            var docs = [];
+            result.forEach(function (row) {
+                docs.push(row);
+            });
+            callback(null, docs);
+        }
+    });
 }
 
 function updateAll() {
@@ -79,7 +97,7 @@ function updateAll() {
                 var now = new Date();
                 if (((now.getTime() - row.lastupdate)  / 1000) > (3600 * 24)) {
                     var stream = request(row.xmlurl);
-                    this.updateFeed(stream);
+                    this.updateFeed(row.title, row.xmlurl, stream);
                     row.lastupdate = now.getTime();
                     this.conn.db.save(row);
                 }

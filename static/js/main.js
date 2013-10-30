@@ -26,14 +26,9 @@ function MenuViewModel(articles) {
 }
 
 function ArticlesViewModel() {
-    this.items = ko.observable();
+    this.feeds = ko.observable();
+    this.items = ko.observableArray();
  
-    this.articles = ko.observable();
-    this.updateArticles = function updateArticles() {
-        $.get("/node/articles", function(data) {
-            this.articles(data);
-        }.bind(this));
-    }
     this.readHeader = ko.observable();
     this.expand = function expand(item) {
         item.showItem(!item.showItem());
@@ -43,21 +38,57 @@ function ArticlesViewModel() {
         item.showRespond(!item.showRespond());
     }
 
+    this.getFeeds = function getFeeds() {
+        $.get("/node/feeds", function(data) {
+            var items = [];
+            for (index in data) {
+                var item = data[index];
+                var d = {
+                    title: item.title,
+                    link: item.htmlurl
+                };
+                items[item.xmlurl] = d;
+            }
+            this.feeds(items);
+        }.bind(this));
+    }
+
     this.getItem = function getItem(header, url) {
         this.readHeader(header);
         $.get(url, function(data) {
-            toSet = [];
+            this.items.removeAll();
             for (item in data) {
                 var v = data[item];
-                d = {};
-                d.showItem = ko.observable(false);
-                d.showRespond = ko.observable(false);
-                d.title = v.title;
-                d.extended = v.description;
-                d.responses = [];
-                toSet[item] = d;
+                d = {
+                    showItem: ko.observable(false),
+                    showRespond: ko.observable(false),
+                    title: v.title,
+                    extended: v.description,
+                    link: v.link,
+                    date: v.date,
+                    author: v.author,
+                    fromfeedurl: v.fromfeedurl,
+                    articles: this,
+                    responses: []
+                };
+                d.publication = ko.computed(function() {
+                    var feeds = this.articles.feeds();
+                    if (feeds !== undefined && feeds[this.fromfeedurl] !== undefined) {
+                        return feeds[this.fromfeedurl].title;
+                    } else {
+                        return "Unknown";
+                    }
+                }, d);
+                d.publink = ko.computed(function() {
+                    var feeds = this.articles.feeds();
+                    if (feeds !== undefined && feeds[this.fromfeedurl] !== undefined) {
+                        return feeds[this.fromfeedurl].link;
+                    } else {
+                        return "#";
+                    }
+                }, d);
+                this.items.push(d);
             }
-            this.items(toSet);
         }.bind(this));
     }
  
@@ -80,7 +111,7 @@ function UploadFeedModel(articles) {
             folder: "uncategorised",
             feed: this.xmlurl()
         }, function updateArticles() {
-            articles.updateArticles();
+            articles.getLatest();
         });
     };
 };
@@ -92,7 +123,8 @@ function UserViewModel() {
 };
 
 articlesModel = new ArticlesViewModel();
-articlesModel.updateArticles();
+
+articlesModel.getFeeds();
 
 userModel = new UserViewModel();
 writeModel = new WriteViewModel();

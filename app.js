@@ -23,6 +23,17 @@ function articles(req, res) {
     });
 }
 
+function feeds(req, res) {
+    opmlReader.findAll(function(err, docs) {
+        if (err) {
+            console.log('error', err);
+            res.json({error: 'error'});
+        } else {
+            res.json(docs)
+        }
+    });
+}
+
 function upload(req, res) {
     var stream = fs.createReadStream(req.files.file.path);
     opmlReader.addOPML(stream);
@@ -48,6 +59,7 @@ app.use(express.bodyParser());
 browserid.plugAll(app, {audience: 'http://localhost:3000'});
 
 app.get('/node/articles', articles);
+app.get('/node/feeds', feeds);
 
 app.post('/node/upload', upload);
 

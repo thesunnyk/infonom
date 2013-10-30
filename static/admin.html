@@ -55,13 +55,30 @@
             <section class="read" id="readSection">
                 <div class="interesting">
                     <h2 data-bind="text: readHeader">Interesting</h2>
-                    <ul data-bind="foreach: items">
-                        <li><span class="icon" data-bind="visible: !showItem()">&#xf138;</span>
-                            <span class="icon" data-bind="visible: showItem">&#xf13a;</span>
-                            <a href="#" data-bind="text: title, click: $parent.expand">
-                                Man eats Shark
+                    <div class="items" data-bind="foreach: items">
+                        <div class="item">
+                        <div class="title">
+                            <h3 class="title">
+                            <a href="#" data-bind="click: $parent.expand">
+                                <span class="icon" data-bind="visible: !showItem()">&#xf138;</span>
+                                <span class="icon" data-bind="visible: showItem">&#xf13a;</span>
+                                <span data-bind="text: title">Man eats Shark</span>
                             </a>
+                            <a href="#" target="_blank" data-bind="attr: {href: link}"><span class="icon">&#xf14c;</span></a>
+
+                            <span class="actions">
+                                <span class="icon">&#xf0c8;</span>
                             <span class="icon">&#xf005;</span> <span class="icon">&#xf064;</span>
+                            </span>
+                        </h3>
+                        <div class="byline">
+                            At <span class="date" data-bind="text: date">3/3/12</span> by
+                            <span class="author" data-bind="text: author">John</span> for
+                            <a href="#" data-bind="attr: {href: publink}">
+                            <span class="pub" data-bind="text: publication">>Engadget</span>
+                            </a>
+                        </div>
+                    </div>
                             <div class="article" data-bind="visible: showItem">
                                 <div class="content" data-bind="if: extended">
                                 <p data-bind="html: extended">
@@ -79,8 +96,8 @@
                                 <textarea></textarea>
                                 </div>
                             </div>
-                        </li>
-                    </ul>
+                        </div>
+                    </div>
                     <a href="#">more...</a>
                 </div>
             </section>

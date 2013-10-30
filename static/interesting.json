@@ -1,13 +1,22 @@
 [
     {
         "title": "Cells divide the conservative party",
+        "link": "http://example.com/test",
+        "date": "2010-01-01",
+        "author": "Apple Inc",
+        "publication": "McDonald",
+        "fromfeedurl": "http://www.example.com/rss.xml",
         "extended": null,
         "responses": null
     },
     {
         "title": "Man eats Shark",
         "extended": "A man ate a shark the other day in a shark fin soup.",
-        "url": "/man-bites-shark.html",
+        "date": "2010-01-01",
+        "author": "Apple Inc",
+        "publication": "McDonald",
+        "fromfeedurl": "http://www.example.com/rss.xml",
+        "link": "http://example.com/test",
         "responses": [
             {
                 "title": "Sharks are killers"
@@ -19,6 +28,11 @@
     },
     {
         "title": "Parties generally considered entertaining",
+        "fromfeedurl": "http://www.example.com/rss.xml",
+        "link": "http://example.com/test",
+        "date": "2010-01-01",
+        "author": "Apple Inc",
+        "publication": "McDonald",
         "extended": null,
         "responses": null
     }

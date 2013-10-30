@@ -1,6 +1,11 @@
 [
     {
         "title": "Shark eats lentil soup",
+        "link": "http://example.com/test",
+        "date": "2010-01-01",
+        "publication": "McDonald",
+        "fromfeedurl": "http://www.example.com/rss.xml",
+        "author": "Apple Inc",
         "extended": null,
         "responses": null
     }
