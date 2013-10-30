@@ -40,7 +40,7 @@ function getArticle(feedxmlurl) {
             author: item.author,
             summary: item.summary,
             link: item.link,
-            date: item.date,
+            date: new Date(item.date),
             image: item.image,
             fromfeedurl: feedxmlurl,
         };
@@ -51,7 +51,6 @@ function getArticle(feedxmlurl) {
 function addFeed(xmlurl, folder) {
     console.log("adding feed: " + xmlurl);
     var feedstream = request(xmlurl);
-    this.feedtitle = "Unknown";
     feedstream.pipe(new FeedParser())
         .on('meta', function saveData(item) {
             var now = new Date();
@@ -69,7 +68,7 @@ function addFeed(xmlurl, folder) {
         .on('data', getArticle(xmlurl).bind(this));
 }
 
-function updateFeed(feedtitle, feedxmlurl, feedstream) {
+function updateFeed(feedxmlurl, feedstream) {
     feedstream.pipe(new FeedParser())
         .on('data', getArticle(feedxmlurl).bind(this));
 }
@@ -97,7 +96,7 @@ function updateAll() {
                 var now = new Date();
                 if (((now.getTime() - row.lastupdate)  / 1000) > (3600 * 24)) {
                     var stream = request(row.xmlurl);
-                    this.updateFeed(row.title, row.xmlurl, stream);
+                    this.updateFeed(row.xmlurl, stream);
                     row.lastupdate = now.getTime();
                     this.conn.db.save(row);
                 }

@@ -34,7 +34,7 @@ function findAll(callback) {
 }
 
 function byDate(offset, count, callback) {
-    this.dbConn.db.view('articles/by_date', {skip: offset, limit: count},
+    this.dbConn.db.view('articles/by_date', {skip: offset, limit: count, descending: true},
         function(error, result) {
         if (error) {
             callback(error);
