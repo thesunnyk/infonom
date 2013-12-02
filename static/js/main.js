@@ -4,22 +4,27 @@ function WriteViewModel() {
     this.showBody(false);
 }
 
-function MenuViewModel(articles) {
+function MenuViewModel(articles, settings) {
     this.selected = ko.observable();
     this.selectInteresting = function selectInteresting(data, event) {
         articles.getInteresting();
         this.selected("interesting");
+        settings.hide();
     };
     this.selectPopular = function selectPopular(data, event) {
         articles.getPopular();
         this.selected("popular");
+        settings.hide();
     };
     this.selectLatest = function selectLatest(data, event) {
         articles.getLatest();
         this.selected("latest");
+        settings.hide();
     };
     this.selectSettings = function selectSettings() {
         this.selected("settings");
+        articles.hide();
+        settings.show();
     };
 
     this.selectInteresting();
@@ -28,6 +33,7 @@ function MenuViewModel(articles) {
 function ArticlesViewModel() {
     this.feeds = ko.observable();
     this.items = ko.observableArray();
+    this.visible = ko.observable();
  
     this.readHeader = ko.observable();
     this.expand = function expand(item) {
@@ -54,6 +60,7 @@ function ArticlesViewModel() {
     }
 
     this.getItem = function getItem(header, url) {
+        this.visible(true);
         this.readHeader(header);
         $.get(url, function(data) {
             this.items.removeAll();
@@ -102,9 +109,14 @@ function ArticlesViewModel() {
         this.getItem("Latest", "/node/articles");
     }
 
+    this.hide = function hide() {
+        this.visible(false);
+    }
+
 }
 
-function UploadFeedModel(articles) {
+function SettingsModel(articles) {
+    this.visible = ko.observable();
     this.xmlurl = ko.observable();
     this.upload = function upload() {
         $.get("/node/addfeed", {
@@ -114,6 +126,13 @@ function UploadFeedModel(articles) {
             articles.getLatest();
         });
     };
+
+    this.hide = function hide() {
+        this.visible(false);
+    }
+    this.show = function show() {
+        this.visible(true);
+    }
 };
 
 function UserViewModel() {
@@ -128,12 +147,20 @@ articlesModel.getFeeds();
 
 userModel = new UserViewModel();
 writeModel = new WriteViewModel();
-menuModel = new MenuViewModel(articlesModel);
+settingsModel = new SettingsModel(articlesModel);
+menuModel = new MenuViewModel(articlesModel, settingsModel);
 
-uploadFeedModel = new UploadFeedModel(articlesModel);
+
+ko.bindingHandlers.hyphenate = {
+    init: function(element, valueAccessor, allBindings, viewModel, bindingContext) {},
+    update: function(element, valueAccessor, allBindings, viewModel, bindingContext) {
+        Hyphenator.hyphenate(element, 'en-gb');
+    }
+}
 
 ko.applyBindings(menuModel, document.getElementById("menuSection"));
 ko.applyBindings(writeModel, document.getElementById("writeSection"));
 ko.applyBindings(articlesModel, document.getElementById("readSection"));
-ko.applyBindings(uploadFeedModel, document.getElementById("uploadSection"));
+ko.applyBindings(settingsModel, document.getElementById("settingsSection"));
 ko.applyBindings(userModel, document.getElementById("login"));
+
