@@ -31,24 +31,18 @@
             <h1>Infonom</h1>
         </header>
         <main>
-            <section class="write" id="writeSection">
-                <label>Write Something</label><input type="text"/>
-                <input type="checkbox" data-bind="checked: showBody">Add Body</input>
-                <div class="showBody" data-bind="visible: showBody">
-                <textarea></textarea>
-                </div>
-            </section>
-            
             <section class="menu" id="menuSection">
                 <ul>
                     <li><a href="#" id="interesting" data-bind="click: selectInteresting, css: {selected: selected() === 'interesting'}">
-                        <span class="icon">&#xf12a;</span> Interesting</a></li>
+                        <span class="icon">&#xf12a;</span>&nbsp;Interesting</a></li>
                     <li><a href="#" id="popular" data-bind="click: selectPopular, css: {selected: selected() === 'popular'}">
-                        <span class="icon">&#xf164;</span> Popular</a></li>
+                        <span class="icon">&#xf164;</span>&nbsp;Popular</a></li>
                     <li><a href="#" id="latest" data-bind="click: selectLatest, css: {selected: selected() === 'latest'}">
-                        <span class="icon">&#xf0c9;</span> Latest</a></li>
+                        <span class="icon">&#xf0c9;</span>&nbsp;Latest</a></li>
+                    <li><a href="#" id="write" data-bind="click: selectWrite, css: {selected: selected() === 'write'}">
+                        <span class="icon">&#xf040;</span>&nbsp;Write</a></li>
                     <li><a href="#" id="settings" data-bind="click: selectSettings, css: {selected: selected() === 'settings'}">
-                        <span class="icon">&#xf013;</span> Settings</a></li>
+                        <span class="icon">&#xf013;</span>&nbsp;Settings</a></li>
                 </ul>
             </section>
 
@@ -58,6 +52,14 @@
                     <div class="items" data-bind="foreach: items">
                         <div class="item">
                         <div class="title">
+                            <span class="actions">
+                                <span class="icon">&#xf0c8;</span>
+                                <a href="#" data-bind="click: star">
+                                    <span class="icon" data-bind="css: {starred: starred}">&#xf005;</span>
+                                </a>
+                                <span class="icon">&#xf064;</span>
+                            </span>
+
                             <h3 class="title">
                             <a href="#" data-bind="click: $parent.expand">
                                 <span class="icon" data-bind="visible: !showItem()">&#xf138;</span>
@@ -65,14 +67,9 @@
                                 <span data-bind="text: title">Man eats Shark</span>
                             </a>
                             <a href="#" target="_blank" data-bind="attr: {href: link}"><span class="icon">&#xf14c;</span></a>
-
-                            <span class="actions">
-                                <span class="icon">&#xf0c8;</span>
-                            <span class="icon">&#xf005;</span> <span class="icon">&#xf064;</span>
-                            </span>
                         </h3>
                         <div class="byline">
-                            At <span class="date" data-bind="text: date">3/3/12</span> by
+                            at <span class="date" data-bind="text: date">3/3/12</span> by
                             <span class="author" data-bind="text: author">John</span> for
                             <a href="#" data-bind="attr: {href: publink}">
                             <span class="pub" data-bind="text: publication">>Engadget</span>
@@ -118,6 +115,15 @@
                     </ul>
                 </li>
                 </ul>
+                </div>
+            </section>
+             <section class="write" id="writeSection">
+                <div data-bind="visible: visible">
+                    <label>Write Something</label><input type="text"/>
+                    <input type="checkbox" data-bind="checked: showBody">Add Body</input>
+                    <div class="showBody" data-bind="visible: showBody">
+                    <textarea></textarea>
+                    </div>
                 </div>
             </section>
         </main>

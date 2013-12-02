@@ -1,33 +1,36 @@
 
-function WriteViewModel() {
-    this.showBody = ko.observable();
-    this.showBody(false);
-}
-
-function MenuViewModel(articles, settings) {
+function MenuViewModel(articles, settings, write) {
     this.selected = ko.observable();
     this.selectInteresting = function selectInteresting(data, event) {
         articles.getInteresting();
         this.selected("interesting");
         settings.hide();
+        write.hide();
     };
     this.selectPopular = function selectPopular(data, event) {
         articles.getPopular();
         this.selected("popular");
         settings.hide();
+        write.hide();
     };
     this.selectLatest = function selectLatest(data, event) {
         articles.getLatest();
         this.selected("latest");
         settings.hide();
+        write.hide();
     };
     this.selectSettings = function selectSettings() {
         this.selected("settings");
         articles.hide();
+        write.hide();
         settings.show();
     };
-
-    this.selectInteresting();
+    this.selectWrite = function selectWrite() {
+        this.selected("write");
+        articles.hide();
+        settings.hide();
+        write.show();
+    };
 }
 
 function ArticlesViewModel() {
@@ -69,6 +72,7 @@ function ArticlesViewModel() {
                 d = {
                     showItem: ko.observable(false),
                     showRespond: ko.observable(false),
+                    starred: ko.observable(false),
                     title: v.title,
                     extended: v.description,
                     link: v.link,
@@ -94,6 +98,10 @@ function ArticlesViewModel() {
                         return "#";
                     }
                 }, d);
+                d.star = function star() {
+                    this.starred(!this.starred());
+                    // TODO Upload result.
+                }.bind(d);
                 this.items.push(d);
             }
         }.bind(this));
@@ -135,6 +143,18 @@ function SettingsModel(articles) {
     }
 };
 
+function WriteViewModel() {
+    this.visible = ko.observable();
+    this.showBody = ko.observable();
+    this.hide = function hide() {
+        this.visible(false);
+    }
+    this.show = function show() {
+        this.visible(true);
+    }
+    this.showBody(false);
+};
+
 function UserViewModel() {
     this.email = ko.observable();
 
@@ -148,7 +168,7 @@ articlesModel.getFeeds();
 userModel = new UserViewModel();
 writeModel = new WriteViewModel();
 settingsModel = new SettingsModel(articlesModel);
-menuModel = new MenuViewModel(articlesModel, settingsModel);
+menuModel = new MenuViewModel(articlesModel, settingsModel, writeModel);
 
 
 ko.bindingHandlers.hyphenate = {
@@ -164,3 +184,4 @@ ko.applyBindings(articlesModel, document.getElementById("readSection"));
 ko.applyBindings(settingsModel, document.getElementById("settingsSection"));
 ko.applyBindings(userModel, document.getElementById("login"));
 
+menuModel.selectLatest();
