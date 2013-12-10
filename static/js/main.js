@@ -7,6 +7,12 @@ function MenuViewModel(articles, settings, write) {
         settings.hide();
         write.hide();
     };
+    this.selectToRead = function selectToRead(data, event) {
+        articles.getToRead();
+        this.selected("toread");
+        settings.hide();
+        write.hide();
+    };
     this.selectPopular = function selectPopular(data, event) {
         articles.getPopular();
         this.selected("popular");
@@ -73,6 +79,7 @@ function ArticlesViewModel() {
                     showItem: ko.observable(false),
                     showRespond: ko.observable(false),
                     starred: ko.observable(false),
+                    toread: ko.observable(false),
                     title: v.title,
                     extended: v.description,
                     link: v.link,
@@ -102,6 +109,9 @@ function ArticlesViewModel() {
                     this.starred(!this.starred());
                     // TODO Upload result.
                 }.bind(d);
+                d.marktoread = function marktoread() {
+                    this.toread(!this.toread());
+                }.bind(d);
                 this.items.push(d);
             }
         }.bind(this));
@@ -115,6 +125,9 @@ function ArticlesViewModel() {
     }
     this.getLatest = function getLatest() {
         this.getItem("Latest", "/node/articles");
+    }
+    this.getToRead = function getToRead() {
+        this.getItem("To Read", "/popular.json");
     }
 
     this.hide = function hide() {

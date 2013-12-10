@@ -33,16 +33,18 @@
         <main>
             <section class="menu" id="menuSection">
                 <ul>
-                    <li><a href="#" id="interesting" data-bind="click: selectInteresting, css: {selected: selected() === 'interesting'}">
-                        <span class="icon">&#xf12a;</span>&nbsp;Interesting</a></li>
-                    <li><a href="#" id="popular" data-bind="click: selectPopular, css: {selected: selected() === 'popular'}">
-                        <span class="icon">&#xf164;</span>&nbsp;Popular</a></li>
-                    <li><a href="#" id="latest" data-bind="click: selectLatest, css: {selected: selected() === 'latest'}">
-                        <span class="icon">&#xf0c9;</span>&nbsp;Latest</a></li>
-                    <li><a href="#" id="write" data-bind="click: selectWrite, css: {selected: selected() === 'write'}">
-                        <span class="icon">&#xf040;</span>&nbsp;Write</a></li>
-                    <li><a href="#" id="settings" data-bind="click: selectSettings, css: {selected: selected() === 'settings'}">
-                        <span class="icon">&#xf013;</span>&nbsp;Settings</a></li>
+                    <a href="#" id="interesting" data-bind="click: selectInteresting, css: {selected: selected() === 'interesting'}">
+                        <li><span class="icon">&#xf12a;</span>&nbsp;Interesting</li></a>
+                    <a href="#" id="popular" data-bind="click: selectPopular, css: {selected: selected() === 'popular'}">
+                        <li><span class="icon">&#xf164;</span>&nbsp;Popular</li></a>
+                    <a href="#" id="latest" data-bind="click: selectLatest, css: {selected: selected() === 'latest'}">
+                        <li><span class="icon">&#xf0c9;</span>&nbsp;Latest</li></a>
+                    <a href="#" id="toread" data-bind="click: selectToRead, css: {selected: selected() === 'toread'}">
+                        <li><span class="icon">&#xf06e;</span>&nbsp;To Read</li></a>
+                    <a href="#" id="write" data-bind="click: selectWrite, css: {selected: selected() === 'write'}">
+                        <li><span class="icon">&#xf040;</span>&nbsp;Write</li></a>
+                    <a href="#" id="settings" data-bind="click: selectSettings, css: {selected: selected() === 'settings'}">
+                        <li><span class="icon">&#xf013;</span>&nbsp;Settings</li></a>
                 </ul>
             </section>
 
@@ -53,7 +55,9 @@
                         <div class="item">
                         <div class="title">
                             <span class="actions">
-                                <span class="icon">&#xf0c8;</span>
+                                <a href="#" data-bind="click: marktoread">
+                                    <span class="icon" data-bind="css: {toread: toread}">&#xf06e;</span>
+                                </a>
                                 <a href="#" data-bind="click: star">
                                     <span class="icon" data-bind="css: {starred: starred}">&#xf005;</span>
                                 </a>
