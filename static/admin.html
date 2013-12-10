@@ -39,8 +39,8 @@
                         <li><span class="icon">&#xf164;</span>&nbsp;Popular</li></a>
                     <a href="#" id="latest" data-bind="click: selectLatest, css: {selected: selected() === 'latest'}">
                         <li><span class="icon">&#xf0c9;</span>&nbsp;Latest</li></a>
-                    <a href="#" id="toread" data-bind="click: selectToRead, css: {selected: selected() === 'toread'}">
-                        <li><span class="icon">&#xf06e;</span>&nbsp;To Read</li></a>
+                    <a href="#" id="bookmarks" data-bind="click: selectBookmarks, css: {selected: selected() === 'bookmarks'}">
+                        <li><span class="icon">&#xf02e;</span>&nbsp;Bookmarks</li></a>
                     <a href="#" id="write" data-bind="click: selectWrite, css: {selected: selected() === 'write'}">
                         <li><span class="icon">&#xf040;</span>&nbsp;Write</li></a>
                     <a href="#" id="settings" data-bind="click: selectSettings, css: {selected: selected() === 'settings'}">
@@ -55,8 +55,8 @@
                         <div class="item">
                         <div class="title">
                             <span class="actions">
-                                <a href="#" data-bind="click: marktoread">
-                                    <span class="icon" data-bind="css: {toread: toread}">&#xf06e;</span>
+                                <a href="#" data-bind="click: bookmark">
+                                    <span class="icon" data-bind="css: {bookmarked: bookmarked}">&#xf02e;</span>
                                 </a>
                                 <a href="#" data-bind="click: star">
                                     <span class="icon" data-bind="css: {starred: starred}">&#xf005;</span>
@@ -99,7 +99,9 @@
                             </div>
                         </div>
                     </div>
-                    <a href="#">more...</a>
+                    <div id="replace">
+                        <a href="#"><span class="icon">&#xf0e7;</span> Replace</a>
+                    </div>
                 </div>
             </section>
             <section class="settings" id="settingsSection">

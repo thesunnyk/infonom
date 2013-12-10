@@ -22,11 +22,12 @@ a:hover{color:#aeccab}
 #menuSection a{text-decoration:none;border-right:1pt solid #ddcf9a}
 #menuSection a.selected{color:#de564b}
 #menuSection li{display:inline-block;padding:.5em;padding-left:1em;padding-right:1em}
+#readSection div#replace{max-width:40em;text-align:right}#readSection div#replace a{text-decoration:none;font-size:2em}
 #readSection div.items{list-style-type:none}#readSection div.items div.item{margin-bottom:1em;max-width:40em}#readSection div.items div.item div.article{background-color:#fff;padding:1em}
 #readSection div.items div.item a{text-decoration:none}
 #readSection div.items div.item div.title{background-color:#eae1c0;border-radius:.5em .5em 0 0;padding-left:.6em;padding-right:1em}#readSection div.items div.item div.title h3{text-indent:-1.2em;margin:0;padding-left:1.2em}
 #readSection div.items div.item div.title .actions{text-align:right;float:right;padding-left:1em}#readSection div.items div.item div.title .actions .starred{color:#de564b}
-#readSection div.items div.item div.title .actions .toread{color:#de564b}
+#readSection div.items div.item div.title .actions .bookmarked{color:#de564b}
 #readSection div.items div.item div.title .byline{font-size:.8em;font-style:italic;padding-left:2em}
 #readSection div.article{padding-left:1.2em;padding-right:1.5em}#readSection div.article p{max-width:36em;text-align:justify}
 #readSection div.article img{max-width:100%}
