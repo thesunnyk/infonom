@@ -5,6 +5,7 @@ function ArticleProvider(dbConn) {
     this.dbConn = dbConn;
     this.findAll = findAll;
     this.byDate = byDate;
+    this.bookmarked = bookmarked;
     this.save = save;
 }
 
@@ -42,6 +43,21 @@ function findAll(callback) {
 
 function byDate(offset, count, callback) {
     this.dbConn.db.view('articles/by_date', {skip: offset, limit: count, descending: true},
+        function(error, result) {
+        if (error) {
+            callback(error);
+        } else {
+            var docs = [];
+            result.forEach(function (row) {
+                docs.push(row);
+            });
+            callback(null, docs);
+        }
+    });
+}
+
+function bookmarked(offset, count, callback) {
+    this.dbConn.db.view('articles/bookmarked', {skip: offset, limit: count, descending: true},
         function(error, result) {
         if (error) {
             callback(error);

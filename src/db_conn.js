@@ -51,6 +51,14 @@ function installDb() {
                         emit(doc.date, doc);
                     }
                 },
+            },
+            bookmarked: {
+                map: function(doc) {
+                    if (doc.type === "article"
+                        && doc.bookmarked) {
+                        emit(doc.date, doc);
+                    }
+                }
             }
         },
     }, printResult);

@@ -139,7 +139,7 @@ function ArticlesViewModel() {
         this.getItem("Latest", "/node/articles");
     }
     this.getBookmarks = function getBookmarks() {
-        this.getItem("Bookmarks", "/popular.json");
+        this.getItem("Bookmarks", "/node/bookmarked");
     }
 
     this.hide = function hide() {

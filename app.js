@@ -23,6 +23,17 @@ function articles(req, res) {
     });
 }
 
+function bookmarked(req, res) {
+    articleProvider.bookmarked(0, 20, function(err, docs) {
+        if (err) {
+            console.log('error', err);
+            res.json('error', err);
+        } else {
+            res.json(docs);
+        }
+    });
+}
+
 function updateArticle(req, res) {
     var article = req.body
     articleProvider.save(article._id, article);
@@ -64,6 +75,7 @@ app.use(express.bodyParser());
 browserid.plugAll(app, {audience: 'http://localhost:3000'});
 
 app.get('/node/articles', articles);
+app.get('/node/bookmarked', bookmarked);
 app.get('/node/feeds', feeds);
 
 app.post('/node/upload', upload);
