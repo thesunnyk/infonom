@@ -26,11 +26,11 @@ function DBConn(host, port) {
 }
 
 function printResult(err, res) {
-        if (err) {
-            console.log("Error: " + err);
-        } else {
-            console.log("Success!");
-        }
+    if (err) {
+        console.log("Error: " + err);
+    } else {
+        console.log("Success!");
+    }
 }
 
 function installDb() {

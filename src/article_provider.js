@@ -8,15 +8,22 @@ function ArticleProvider(dbConn) {
     this.save = save;
 }
 
-function save(articles, callback) {
-    if (typeof(articles.length) == "undefined") {
-        articles = [articles];
-    }
-    
-    this.dbConn.db.save(articles, function(error, result) {
-        if (error) callback(error);
-        else callback(null, articles);
-    });
+function save(id, item) {
+    var article = {
+        type: 'article',
+        title: item.title,
+        description: item.description,
+        bookmarked: item.bookmarked,
+        starred: item.starred,
+        author: item.author,
+        summary: item.summary,
+        link: item.link,
+        date: item.date,
+        image: item.image,
+        fromfeedurl: item.fromfeedurl
+    };
+
+    this.dbConn.db.save(id, article);
 }
 
 function findAll(callback) {

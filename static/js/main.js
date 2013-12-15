@@ -73,24 +73,25 @@ function ArticlesViewModel() {
         this.readHeader(header);
         $.get(url, function(data) {
             this.items.removeAll();
+            var articles = this;
             for (item in data) {
                 var v = data[item];
                 d = {
                     showItem: ko.observable(false),
                     showRespond: ko.observable(false),
-                    starred: ko.observable(false),
-                    bookmarked: ko.observable(false),
+                    starred: ko.observable(v.starred),
+                    bookmarked: ko.observable(v.bookmarked),
+                    _id: v._id,
                     title: v.title,
-                    extended: v.description,
+                    description: v.description,
                     link: v.link,
                     date: v.date,
                     author: v.author,
                     fromfeedurl: v.fromfeedurl,
-                    articles: this,
                     responses: []
                 };
                 d.publication = ko.computed(function() {
-                    var feeds = this.articles.feeds();
+                    var feeds = articles.feeds();
                     if (feeds !== undefined && feeds[this.fromfeedurl] !== undefined) {
                         return feeds[this.fromfeedurl].title;
                     } else {
@@ -98,7 +99,7 @@ function ArticlesViewModel() {
                     }
                 }, d);
                 d.publink = ko.computed(function() {
-                    var feeds = this.articles.feeds();
+                    var feeds = articles.feeds();
                     if (feeds !== undefined && feeds[this.fromfeedurl] !== undefined) {
                         return feeds[this.fromfeedurl].link;
                     } else {
@@ -107,10 +108,21 @@ function ArticlesViewModel() {
                 }, d);
                 d.star = function star() {
                     this.starred(!this.starred());
-                    // TODO Upload result.
+                    var toUpload = ko.toJSON(this);
+                    $.ajax('/node/updatearticle', {
+                        type: 'PUT',
+                        contentType: 'application/json',
+                        data: toUpload
+                    });
                 }.bind(d);
                 d.bookmark = function bookmark() {
                     this.bookmarked(!this.bookmarked());
+                    var toUpload = ko.toJSON(this);
+                    $.ajax('/node/updatearticle', {
+                        type: 'PUT',
+                        contentType: 'application/json',
+                        data: toUpload
+                    });
                 }.bind(d);
                 this.items.push(d);
             }

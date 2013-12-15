@@ -1,12 +1,15 @@
 
 var OpmlParser = require('opmlparser');
 var FeedParser = require('feedparser');
+var ArticleProvider = require('./article_provider');
 var request = require('request');
 
 exports.OPMLReader = OPMLReader;
 
-function OPMLReader(conn) {
+
+function OPMLReader(conn, articleProvider) {
     this.conn = conn;
+    this.articleProvider = articleProvider;
     this.addOPML = addOPML;
     this.updateAll = updateAll;
     this.updateFeed = updateFeed;
@@ -44,7 +47,7 @@ function getArticle(feedxmlurl) {
             image: item.image,
             fromfeedurl: feedxmlurl,
         };
-        this.conn.db.save(item.guid, article);
+        this.articleProvider.save(item.guid, article);
     }
 }
 

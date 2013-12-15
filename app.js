@@ -10,7 +10,7 @@ var app = express();
 
 var dbConn = new dbConnFactory.DBConn("127.0.0.1", 5984);
 var articleProvider = new apFactory.ArticleProvider(dbConn);
-var opmlReader = new opmlFactory.OPMLReader(dbConn);
+var opmlReader = new opmlFactory.OPMLReader(dbConn, articleProvider);
 
 function articles(req, res) {
     articleProvider.byDate(0, 20, function(err, docs) {
@@ -21,6 +21,11 @@ function articles(req, res) {
             res.json(docs);
         }
     });
+}
+
+function updateArticle(req, res) {
+    var article = req.body
+    articleProvider.save(article._id, article);
 }
 
 function feeds(req, res) {
@@ -62,6 +67,7 @@ app.get('/node/articles', articles);
 app.get('/node/feeds', feeds);
 
 app.post('/node/upload', upload);
+app.put('/node/updatearticle', updateArticle);
 
 app.get('/node/addfeed', addFeed);
 
