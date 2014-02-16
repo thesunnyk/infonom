@@ -52,3 +52,46 @@ Others' Reading
  * What did I write recently
  * How to respond to it?
  * What was I referring to?
+
+
+Design
+------
+
+Don't store any GUIDs. 
+
+Articles can be searched by their GUID, as can article data and other pieces of
+metadata. We want this to be repeatable for each article, so we can check it.
+The metadata is the authoritative way to search for the article's contents. The
+article doesn't change, the various soups don't change. The metadata doesn't
+change. There's a tags data structure, which changes.
+
+Tags stores things like whether something is bookmarked, starred, or any future
+tagging (like commenting).
+
+There's two related structures: The word-soup and the link-soup. The link-soup
+is a collection of "substantial" links in the data structure. This means links
+that are not "top-level" (i.e. contain things like /something/something.html).
+Also, any links from the same domain as yours are also removed. This stops the
+kind of spamming of related links and other guff from upvoting itself.
+
+The word-soup is a collection of words along with their word count.
+
+These two soups are used to calculate the "link-score" or "word-score" of an
+article using couchdb views. The link-score is calculated by comparing all the
+links in all the articles and counting up how many of those correspond to the
+URL of the given article. The word-score counts up the number of words in
+a given article that are also in starred articles.
+
+linkscore is calculated by retrieving a global link-soup with all the (scored)
+links for all articles a week old or younger, then iterating through all the
+articles with a link-score-update date older than one day ago, and sticking
+a link-score in there if a link exists to that article.
+
+The global link-soup should also list a few "popular" articles, which are not
+found among the rss feeds.
+
+word-score is calculated by retrieving a global word-soup with all the
+(starred) words for all the articles ever. Because these get heavily cached by
+couch, they can be recalculated cheaply. We score articles by adding up the
+scores of the words which match the word soup of that article.
+

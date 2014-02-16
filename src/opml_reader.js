@@ -6,7 +6,14 @@ var request = require('request');
 
 exports.OPMLReader = OPMLReader;
 
-
+/**
+ * Handles the reading in of OPML files and creating feeds from them, and
+ * creation of OPML files from a series of feeds.
+ * @param conn the connection to the database.
+ * @param articleProvider the article provider to use for signalling article
+ * updates
+ * @returns an OPML Reader object.
+ */
 function OPMLReader(conn, articleProvider) {
     this.conn = conn;
     this.articleProvider = articleProvider;
@@ -17,6 +24,11 @@ function OPMLReader(conn, articleProvider) {
     this.findAll = findAll;
 }
 
+/**
+ * Adds an OPML stream to the database. This will extract all the feeds and
+ * save them to the database
+ * @param stream The OPML stream.
+ */
 function addOPML(stream) {
     stream.pipe(new OpmlParser())
         .on('feed', function feed(item) {
@@ -34,9 +46,16 @@ function addOPML(stream) {
          }.bind(this));
 }
 
+/**
+ * Gets a function for saving an article for the given feed url.
+ * @param feedxmlurl the XML URL for the feed (as distinct from the HTML link
+ * to the website).
+ * @return a function which can be used to save articles.
+ */
 function getArticle(feedxmlurl) {
     return function(item) {
         var article = {
+            guid: item.guid,
             type: 'article',
             title: item.title,
             description: item.description,
@@ -47,10 +66,16 @@ function getArticle(feedxmlurl) {
             image: item.image,
             fromfeedurl: feedxmlurl,
         };
-        this.articleProvider.save(item.guid, article);
+        this.articleProvider.save(article);
     }
 }
 
+/**
+ * Adds the given feed to the database. This will also update the database with
+ * the latest articles from the feed URL.
+ * @param xmlurl the XML URL for the feed.
+ * @param folder the folder to categorise the feed in.
+ */
 function addFeed(xmlurl, folder) {
     console.log("adding feed: " + xmlurl);
     var feedstream = request(xmlurl);
@@ -71,11 +96,21 @@ function addFeed(xmlurl, folder) {
         .on('data', getArticle(xmlurl).bind(this));
 }
 
+/**
+ * Updates a given feed, adding all new articles to the database.
+ * @param feedxmlurl the XML URL for the feed.
+ * @param feedstream The stream of the feed to update.
+ */
 function updateFeed(feedxmlurl, feedstream) {
     feedstream.pipe(new FeedParser())
         .on('data', getArticle(feedxmlurl).bind(this));
 }
 
+/**
+ * Finds all feeds.
+ * @param callback the callback to call with (error, docs) with a list of
+ * documents containing all the feeds.
+ */
 function findAll(callback) {
     this.conn.db.view('feeds/all', function(error, result) {
         if (error) {
@@ -90,6 +125,9 @@ function findAll(callback) {
     });
 }
 
+/**
+ * Updates all the feeds that haven't been updated recently.
+ */
 function updateAll() {
     this.conn.db.view('feeds/all', function(error, result) {
         if (error) {

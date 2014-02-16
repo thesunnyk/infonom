@@ -3,6 +3,12 @@ var dbMan = require('cradle');
 
 exports.DBConn = DBConn;
 
+/**
+ * Creates a database connection. Currently assumes that there is no password
+ * to get into the db.
+ * @param host the host for the database connection.
+ * @param port the port for the database connection.
+ */
 function DBConn(host, port) {
     var self = this;
     this.connection= new (dbMan.Connection)(host, port, {
@@ -25,6 +31,11 @@ function DBConn(host, port) {
     this.installDb = installDb;
 }
 
+/**
+ * Prints the result of a calculation. Convenience function
+ * @param err the error for the computation.
+ * @param res the result of the computation.
+ */
 function printResult(err, res) {
     if (err) {
         console.log("Error: " + err);
@@ -33,6 +44,10 @@ function printResult(err, res) {
     }
 }
 
+/**
+ * Installs the database and all views. This is useful for upgrades and initial
+ * startup with no database details.
+ */
 function installDb() {
     console.log("installing database");
     this.db.save("_design/articles", {
