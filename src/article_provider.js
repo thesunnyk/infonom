@@ -1,6 +1,8 @@
 
 exports.ArticleProvider = ArticleProvider;
 
+var linkParserFactory = require('./link_parser');
+
 /**
  * Creates an article provider.
  * @param dbConn the database connection.
@@ -12,6 +14,8 @@ function ArticleProvider(dbConn) {
     this.byDate = byDate;
     this.bookmarked = bookmarked;
     this.save = save;
+    this.calculateLinkSoup = calculateLinkSoup;
+    this.linkParser = new linkParserFactory.LinkParser();
 }
 
 /**
@@ -28,14 +32,21 @@ function save(item) {
         link: item.link,
         date: item.date,
         image: item.image,
-        fromfeedurl: item.fromfeedurl
+        fromfeedurl: item.fromfeedurl,
+        linkSoup: this.calculateLinkSoup(item.description)
     };
+
 
     this.dbConn.db.save(article);
 }
 
 /**
  * Saves the given article to the database.
+ * There are a couple of article chunks that form the main data structure. The
+ * first is the article itself, along with a word and link soup. This is
+ * immutable data. Secondly, there is the article metadata, which includes
+ * bookmarked status, starred status, word and link scores, and the time they
+ * were last updated.
  * @param item the article to save.
  */
 function saveArticleData(id, item) {
@@ -46,7 +57,7 @@ function saveArticleData(id, item) {
         starred: item.starred,
     };
 
-    this.dbConn.db.save(article);
+    this.dbConn.db.save(articleData);
 }
 
 /**
@@ -74,6 +85,7 @@ function calculateWordSoup(item) {
  * @param item the article to calculate word soup for.
  */
 function calculateLinkSoup(item) {
+    return this.linkParser.parse(item);
 }
 
 /**
