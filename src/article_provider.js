@@ -2,6 +2,7 @@
 exports.ArticleProvider = ArticleProvider;
 
 var linkParserFactory = require('./link_parser');
+var wordParserFactory = require('./words_parser');
 
 /**
  * Creates an article provider.
@@ -15,7 +16,9 @@ function ArticleProvider(dbConn) {
     this.bookmarked = bookmarked;
     this.save = save;
     this.calculateLinkSoup = calculateLinkSoup;
+    this.calculateWordSoup = calculateWordSoup;
     this.linkParser = new linkParserFactory.LinkParser();
+    this.wordParser = new wordParserFactory.WordParser();
 }
 
 /**
@@ -33,7 +36,8 @@ function save(item) {
         date: item.date,
         image: item.image,
         fromfeedurl: item.fromfeedurl,
-        linkSoup: this.calculateLinkSoup(item.description)
+        linkSoup: this.calculateLinkSoup(item.description),
+        wordSoup: this.calculateWordSoup(item.description)
     };
 
 
@@ -78,6 +82,7 @@ function getGlobalLinkSoup() {
  * @param item the article to calculate word soup for.
  */
 function calculateWordSoup(item) {
+    return this.wordParser.parse(item);
 }
 
 /**
