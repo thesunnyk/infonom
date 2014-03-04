@@ -89,7 +89,46 @@ function installDb() {
             }
         },
     }, printResult);
-    
+    this.db.save("_design/linksoup", {
+        language: "javascript",
+        views: {
+            all: {
+                map: function (doc) {
+                    // TODO Filter out non-starred articles
+                    if (doc.type === "article") {
+                        var linkSoup = doc.linkSoup;
+                        for (item in linkSoup) {
+                            var count = linkSoup[item];
+                            emit(item, count);
+                        }
+                    }
+                },
+                reduce: function (key, values, rereduce) {
+                    return sum(values);
+                }
+            }
+        }
+    }, printResult);
+    this.db.save("_design/wordsoup", {
+        language: "javascript",
+        views: {
+            all: {
+                map: function (doc) {
+                    // TODO Filter out non-starred articles
+                    if (doc.type === "article") {
+                        var wordSoup = doc.wordSoup;
+                        for (item in wordSoup) {
+                            var count = wordSoup[item];
+                            emit(item, count);
+                        }
+                    }
+                },
+                reduce: function (key, values, rereduce) {
+                    return sum(values);
+                }
+            }
+        }
+    }, printResult);
 };
 
 

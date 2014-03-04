@@ -17,6 +17,8 @@ function ArticleProvider(dbConn) {
     this.save = save;
     this.calculateLinkSoup = calculateLinkSoup;
     this.calculateWordSoup = calculateWordSoup;
+    this.getGlobalWordSoup = getGlobalWordSoup;
+    this.getGlobalLinkSoup = getGlobalLinkSoup;
     this.linkParser = new linkParserFactory.LinkParser();
     this.wordParser = new wordParserFactory.WordParser();
 }
@@ -69,12 +71,36 @@ function saveArticleData(id, item) {
  * articles.
  */
 function getGlobalWordSoup() {
+    this.dbConn.db.view('wordsoup/all', {group: true},
+        function(error, result) {
+        if (error) {
+            callback(error);
+        } else {
+            var docs = [];
+            result.forEach(function (row) {
+                docs.push(row);
+            });
+            callback(null, docs);
+        }
+    });
 }
 
 /**
  * Gets the global link soup. This can be used to calculate points for links.
  */
 function getGlobalLinkSoup() {
+    this.dbConn.db.view('linksoup/all', {group: true},
+        function(error, result) {
+        if (error) {
+            callback(error);
+        } else {
+            var docs = [];
+            result.forEach(function (row) {
+                docs.push(row);
+            });
+            callback(null, docs);
+        }
+    });
 }
 
 /**
