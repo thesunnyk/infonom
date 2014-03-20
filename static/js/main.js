@@ -81,7 +81,7 @@ function ArticlesViewModel() {
                     showRespond: ko.observable(false),
                     starred: ko.observable(v.starred),
                     bookmarked: ko.observable(v.bookmarked),
-                    _id: v._id,
+                    guid: v.guid,
                     title: v.title,
                     description: v.description,
                     link: v.link,
@@ -130,10 +130,10 @@ function ArticlesViewModel() {
     }
  
     this.getInteresting = function getInteresting() {
-        this.getItem("Interesting", "/interesting.json");
+        this.getItem("Interesting", "/node/interesting");
     }
     this.getPopular = function getPopular() {
-        this.getItem("Popular", "/popular.json");
+        this.getItem("Popular", "/node/popular");
     }
     this.getLatest = function getLatest() {
         this.getItem("Latest", "/node/articles");

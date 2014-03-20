@@ -95,3 +95,10 @@ word-score is calculated by retrieving a global word-soup with all the
 couch, they can be recalculated cheaply. We score articles by adding up the
 scores of the words which match the word soup of that article.
 
+TODOs:
+------
+
+* Use "then" notation for nested callbacks
+* AMD style requires
+* Encapsulate db better.
+* Actually calculate link and word scores.

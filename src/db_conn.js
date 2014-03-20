@@ -38,7 +38,8 @@ function DBConn(host, port) {
  */
 function printResult(err, res) {
     if (err) {
-        console.log("Error: " + err);
+        console.log("Error: ");
+        console.log(err);
     } else {
         console.log("Success!");
     }
@@ -50,15 +51,56 @@ function printResult(err, res) {
  */
 function installDb() {
     console.log("installing database");
-    this.db.save("_design/articles", {
+    this.db.save("_design/article_data", {
         language: "javascript",
         views: {
             all: {
                 map: function(doc) {
-                        if (doc.type === "article") {
+                        if (doc.type === "article_data") {
                             emit(doc._id, doc);
                         }
                      },
+            },
+            by_guid: {
+                map: function(doc) {
+                    if (doc.type === "article_data") {
+                        emit(doc.guid, doc);
+                    }
+                }
+            },
+            bookmarked: {
+                map: function(doc) {
+                    if (doc.type === "article_data"
+                        && doc.bookmarked) {
+                        emit(doc.date, doc);
+                    }
+                }
+            },
+            by_link_score: {
+                map: function(doc) {
+                    if (doc.type === "article_data") {
+                        emit(doc.linkScore, doc);
+                    }
+                }
+            },
+            by_word_score: {
+                map: function(doc) {
+                    if (doc.type === "article_data") {
+                        emit(doc.wordScore, doc);
+                    }
+                }
+            }
+        },
+    }, printResult);
+    this.db.save("_design/articles", {
+        language: "javascript",
+        views: {
+            by_guid: {
+                map: function(doc) {
+                    if (doc.type === "article") {
+                        emit(doc.guid, doc);
+                    }
+                }
             },
             by_date: {
                 map: function(doc) {
@@ -66,16 +108,8 @@ function installDb() {
                         emit(doc.date, doc);
                     }
                 },
-            },
-            bookmarked: {
-                map: function(doc) {
-                    if (doc.type === "article"
-                        && doc.bookmarked) {
-                        emit(doc.date, doc);
-                    }
-                }
             }
-        },
+        }
     }, printResult);
     this.db.save("_design/feeds", {
         language: "javascript",
@@ -94,8 +128,7 @@ function installDb() {
         views: {
             all: {
                 map: function (doc) {
-                    // TODO Filter out non-starred articles
-                    if (doc.type === "article") {
+                    if (doc.type === "article_data") {
                         var linkSoup = doc.linkSoup;
                         for (item in linkSoup) {
                             var count = linkSoup[item];
@@ -114,8 +147,7 @@ function installDb() {
         views: {
             all: {
                 map: function (doc) {
-                    // TODO Filter out non-starred articles
-                    if (doc.type === "article") {
+                    if (doc.type === "article_data" && doc.starred) {
                         var wordSoup = doc.wordSoup;
                         for (item in wordSoup) {
                             var count = wordSoup[item];
