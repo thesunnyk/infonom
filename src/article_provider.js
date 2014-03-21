@@ -20,6 +20,7 @@ function ArticleProvider(dbConn) {
     this.update = update;
     this.calculateLinkSoup = calculateLinkSoup;
     this.calculateWordSoup = calculateWordSoup;
+    this.calculateScore = calculateScore;
     this.getGlobalWordSoup = getGlobalWordSoup;
     this.getGlobalLinkSoup = getGlobalLinkSoup;
     this.linkParser = new linkParserFactory.LinkParser();
@@ -105,16 +106,15 @@ function save(item) {
     var self = this;
     function dbCallback(wordSoup, linkSoup, res) {
         if (res.length === 0) {
-            // TODO Calculate scores.
-            item.linkSoup = this.calculateLinkSoup(item.description),
-            item.wordSoup = this.calculateWordSoup(item.description),
-            item.linkScore = 0;
-            item.wordScore = 0;
+            item.linkSoup = self.calculateLinkSoup(item.description),
+            item.wordSoup = self.calculateWordSoup(item.description),
+            item.linkScore = self.calculateScore(item.linkSoup, linkSoup);
+            item.wordScore = self.calculateScore(item.wordSoup, wordSoup);
             self.dbConn.db.save([self.makeArticleData(item), self.makeArticle(item)]);
         }
     }
     function linkSoupCallback(wordSoup, linkSoup) {
-        self.dbConn.db.view('article_data/by_word_score', {key: item.guid}, callbackOf(console.log,
+        self.dbConn.db.view('article_data/by_guid', {key: item.guid}, callbackOf(console.log,
                     underscore.partial(dbCallback, wordSoup, linkSoup)));
     }
     function wordSoupCallback(wordSoup) {
@@ -128,6 +128,7 @@ function update(item) {
     function saveArticleData(res) {
         if (res.length > 0) {
             var oldVal = res[0].value;
+            var newVal = underscore.defaults(item, oldVal);
             self.dbConn.db.save(oldVal._id, oldVal._rev, self.makeArticleData(item));
         }
     }
@@ -139,28 +140,14 @@ function update(item) {
  * articles.
  */
 function getGlobalWordSoup(callback) {
-    function copyDocs(result) {
-        var docs = [];
-        result.forEach(function (row) {
-            docs.push(row);
-        });
-        return docs
-    }
-    this.dbConn.db.view('wordsoup/all', {group: true}, callbackWith(callback, copyDocs));
+    this.dbConn.db.view('wordsoup/all', {group: true}, callbackWith(callback, fixGlobalSoup));
 }
 
 /**
  * Gets the global link soup. This can be used to calculate points for links.
  */
 function getGlobalLinkSoup(callback) {
-    function copyDocs(result) {
-        var docs = [];
-        result.forEach(function (row) {
-            docs.push(row);
-        });
-        return docs;
-    }
-    this.dbConn.db.view('linksoup/all', {group: true}, callbackWith(callback, copyDocs));
+    this.dbConn.db.view('linksoup/all', {group: true}, callbackWith(callback, fixGlobalSoup));
 }
 
 /**
@@ -180,17 +167,30 @@ function calculateLinkSoup(item) {
 }
 
 /**
- * Calculate the link score for the item.
- * @param item the article to calculate word soup for.
+ * Takes key-value pairs from a couchdb mapreduce and remaps them to a set of
+ * key-value pairs as searchable by javascript.
  */
-function calculateLinkScore(item) {
+function fixGlobalSoup(globalSoup) {
+    var fixed = {};
+    for (index in globalSoup) {
+        var item = globalSoup[index];
+        fixed[item.key] = item.value;
+    }
+    return fixed;
 }
 
 /**
- * Calculate the word score for the item.
- * @param item the article to calculate word soup for.
+ * Calculate the score for the item.
+ * @param item the article to calculate soup for.
  */
-function calculateWordScore(item) {
+function calculateScore(soup, globalSoup) {
+    var score = 0;
+    for (index in soup) {
+        if (globalSoup[index]) {
+            score += globalSoup[index];
+        }
+    }
+    return score;
 }
 
 /**
