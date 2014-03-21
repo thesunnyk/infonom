@@ -88,6 +88,8 @@ function ArticlesViewModel() {
                     date: v.date,
                     author: v.author,
                     fromfeedurl: v.fromfeedurl,
+                    linkScore: v.linkScore,
+                    wordScore: v.wordScore,
                     responses: []
                 };
                 d.publication = ko.computed(function() {

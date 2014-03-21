@@ -69,7 +69,9 @@ function extractArticle(article, articleData) {
         image: article.image,
         fromfeedurl: articleData.fromfeedurl,
         bookmarked: articleData.bookmarked,
-        starred: articleData.starred
+        starred: articleData.starred,
+        linkScore: articleData.linkScore,
+        wordScore: articleData.wordScore
     };
 }
 
