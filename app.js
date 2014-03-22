@@ -90,7 +90,6 @@ function addFeed(req, res) {
 
 dbConn.installDb();
 
-opmlReader.updateAll();
 
 var intId = setInterval(opmlReader.updateAll, 3600 * 1000);
 
@@ -115,3 +114,5 @@ app.use("/", express.static(__dirname + "/static"));
 
 app.listen(process.env.PORT);
 console.log('Listening on port ' + process.env.PORT);
+// Update all the feeds once ready.
+opmlReader.updateAll();
