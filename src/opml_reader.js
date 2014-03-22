@@ -102,6 +102,7 @@ function addFeed(xmlurl, folder) {
  * @param feedstream The stream of the feed to update.
  */
 function updateFeed(feedxmlurl, feedstream) {
+    console.log("Updating " + feedxmlurl);
     feedstream.pipe(new FeedParser())
         .on('data', getArticle(feedxmlurl).bind(this));
 }

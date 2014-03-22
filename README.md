@@ -101,4 +101,12 @@ TODOs:
 * Use "then" notation for nested callbacks
 * AMD style requires
 * Encapsulate db better.
-* Actually calculate link and word scores.
+* Only "read" one item at a time
+* Refresh that actually works.
+* Add accounts
+* The "blog" portion of the site.
+* RSS item versioning.
+* Check before adding RSS Feed.
+* HTML META checking
+* Twitter integration.
+* Bookmark import and twitter import.
