@@ -90,7 +90,9 @@ function addFeed(req, res) {
 
 dbConn.installDb();
 
-var intId = setInterval(opmlReader.updateAll(), 3600 * 1000);
+opmlReader.updateAll();
+
+var intId = setInterval(opmlReader.updateAll, 3600 * 1000);
 
 app.use(express.bodyParser());
 
