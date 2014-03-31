@@ -99,15 +99,13 @@ TODOs:
 ------
 
 * Use "then" notation for nested callbacks
-* AMD style requires (client and server)
 * Encapsulate db better.
-* Only "read" one item at a time
 * Mark read once finished.
 * Refresh that actually works.
 * Add accounts
 * The "blog" portion of the site.
 * RSS item versioning.
 * Check before adding RSS Feed.
-* HTML META checking
+* HTML META checking for RSS Discovery
 * Twitter integration.
 * Bookmark import and twitter import.

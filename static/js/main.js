@@ -19,7 +19,7 @@ requirejs.config({
     }
 });
 
-require(['jquery', 'knockout', 'Hyphenator', 'hyphengb'], function($, ko, hyphen, hyphenpat) {
+define(['jquery', 'knockout', 'Hyphenator', 'hyphengb'], function($, ko, hyphen, hyphenpat) {
 
     function MenuViewModel(articles, settings, write) {
         this.selected = ko.observable();
