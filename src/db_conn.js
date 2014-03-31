@@ -45,6 +45,15 @@ function printResult(err, res) {
     }
 }
 
+function save(item) {
+    // Save array, save IDs.
+    this.db.save(item);
+}
+
+function update(id, item) {
+}
+
+
 /**
  * Installs the database and all views. This is useful for upgrades and initial
  * startup with no database details.

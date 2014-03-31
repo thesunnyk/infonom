@@ -99,9 +99,10 @@ TODOs:
 ------
 
 * Use "then" notation for nested callbacks
-* AMD style requires
+* AMD style requires (client and server)
 * Encapsulate db better.
 * Only "read" one item at a time
+* Mark read once finished.
 * Refresh that actually works.
 * Add accounts
 * The "blog" portion of the site.
