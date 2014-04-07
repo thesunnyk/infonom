@@ -1,4 +1,4 @@
-define(['cradle'], function(dbMan) {
+define(['cradle', 'q', 'underscore'], function(dbMan, q, underscore) {
 
     /**
     * Creates a database connection. Currently assumes that there is no password
@@ -12,8 +12,8 @@ define(['cradle'], function(dbMan) {
             cache: true,
             raw: false
         });
-        this.db = this.connection.database('test');
-        this.db.exists(function(err, exists) {
+        this._db = this.connection.database('test');
+        this._db.exists(function(err, exists) {
             if (err) {
                 console.log('error', err);
             } else if(exists) {
@@ -26,6 +26,10 @@ define(['cradle'], function(dbMan) {
         });
         
         this.installDb = installDb;
+        this.saveId = saveId;
+        this.save = save;
+        this.update = update;
+        this.view = view;
     }
 
     /**
@@ -42,12 +46,54 @@ define(['cradle'], function(dbMan) {
         }
     }
 
-    function save(item) {
-        // Save array, save IDs.
-        this.db.save(item);
+    function deferCallback(deferred) {
+        return function (err, res) {
+            if (err) {
+                deferred.reject(new Error(err));
+            } else {
+                deferred.resolve(res);
+            }
+        }
     }
 
-    function update(id, item) {
+    function save(item) {
+        var deferred = q.defer();
+        // Save array, save IDs.
+        this._db.save(item, deferCallback(deferred));
+        return deferred.promise;
+    }
+
+    function saveId(id, rev, val) {
+        var deferred = q.defer();
+        this._db.save(id, rev, val, deferCallback(deferred));
+        return deferred.promise;
+    }
+
+    function throwError(msg) {
+        return function () {
+            throw new Error(msg);
+        }
+    }
+
+    function update(view, key, item) {
+        var self = this;
+        function saveData(res) {
+            if (res.length > 0) {
+                var oldVal = res[0].value;
+                var newVal = underscore.defaults(item, oldVal);
+                var x = self.saveId(oldVal._id, oldVal._rev, newVal);
+                return x;
+            }
+            return Q.fcall(throwError("No existing row."));
+        }
+
+        return this.view(view, {key: key}).then(saveData);
+    }
+
+    function view(view, params) {
+        var deferred = q.defer();
+        this._db.view(view, params, deferCallback(deferred));
+        return deferred.promise;
     }
 
 
@@ -57,7 +103,7 @@ define(['cradle'], function(dbMan) {
     */
     function installDb() {
         console.log("installing database");
-        this.db.save("_design/article_data", {
+        this._db.save("_design/article_data", {
             language: "javascript",
             views: {
                 all: {
@@ -98,7 +144,7 @@ define(['cradle'], function(dbMan) {
                 }
             },
         }, printResult);
-        this.db.save("_design/articles", {
+        this._db.save("_design/articles", {
             language: "javascript",
             views: {
                 by_guid: {
@@ -117,7 +163,7 @@ define(['cradle'], function(dbMan) {
                 }
             }
         }, printResult);
-        this.db.save("_design/feeds", {
+        this._db.save("_design/feeds", {
             language: "javascript",
             views: {
                 all: {
@@ -129,7 +175,7 @@ define(['cradle'], function(dbMan) {
                 }
             },
         }, printResult);
-        this.db.save("_design/linksoup", {
+        this._db.save("_design/linksoup", {
             language: "javascript",
             views: {
                 all: {
@@ -148,7 +194,7 @@ define(['cradle'], function(dbMan) {
                 }
             }
         }, printResult);
-        this.db.save("_design/wordsoup", {
+        this._db.save("_design/wordsoup", {
             language: "javascript",
             views: {
                 all: {

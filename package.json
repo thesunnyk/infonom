@@ -11,6 +11,7 @@
     "opmlparser": "0.5.0",
     "underscore": "1.6.0",
     "sax": "0.6.0",
-    "requirejs": "2.1.11"
+    "requirejs": "2.1.11",
+    "q": "1.0.1"
   }
 }

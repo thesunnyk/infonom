@@ -37,7 +37,7 @@ define(['opmlparser', 'feedparser', 'article_provider', 'request'],
                     lastupdate: 0
                 };
 
-                this.conn.db.save(toSave);
+                this.conn.save(toSave);
             }.bind(this));
     }
 
@@ -86,7 +86,7 @@ define(['opmlparser', 'feedparser', 'article_provider', 'request'],
                     text: item.description,
                     lastupdate: now.getTime()
                 }
-                this.conn.db.save(toSave);
+                this.conn.save(toSave);
             }.bind(this))
             .on('data', getArticle(xmlurl).bind(this));
     }
@@ -104,20 +104,15 @@ define(['opmlparser', 'feedparser', 'article_provider', 'request'],
 
     /**
     * Finds all feeds.
-    * @param callback the callback to call with (error, docs) with a list of
-    * documents containing all the feeds.
+    * @return a promise with the result.
     */
-    function findAll(callback) {
-        this.conn.db.view('feeds/all', function(error, result) {
-            if (error) {
-                callback(error);
-            } else {
-                var docs = [];
-                result.forEach(function (row) {
-                    docs.push(row);
-                });
-                callback(null, docs);
-            }
+    function findAll() {
+        return this.conn.view('feeds/all').then(function(result) {
+            var docs = [];
+            result.forEach(function (row) {
+                docs.push(row);
+            });
+            return docs;
         });
     }
 
@@ -125,20 +120,17 @@ define(['opmlparser', 'feedparser', 'article_provider', 'request'],
     * Updates all the feeds that haven't been updated recently.
     */
     function updateAll() {
-        this.conn.db.view('feeds/all', function(error, result) {
-            if (error) {
-            } else {
-                var docs = [];
-                result.forEach(function (row) {
-                    var now = new Date();
-                    if (((now.getTime() - row.lastupdate)  / 1000) > (3600 * 24)) {
-                        var stream = request(row.xmlurl);
-                        this.updateFeed(row.xmlurl, stream);
-                        row.lastupdate = now.getTime();
-                        this.conn.db.save(row);
-                    }
-                }.bind(this));
-            }
+        this.conn.view('feeds/all').then(function(result) {
+            var docs = [];
+            result.forEach(function (row) {
+                var now = new Date();
+                if (((now.getTime() - row.lastupdate)  / 1000) > (3600 * 24)) {
+                    var stream = request(row.xmlurl);
+                    this.updateFeed(row.xmlurl, stream);
+                    row.lastupdate = now.getTime();
+                    this.conn.save(row);
+                }
+            }.bind(this));
         }.bind(this));
     }
 

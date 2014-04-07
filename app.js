@@ -16,48 +16,33 @@ requirejs(['express', 'express-browserid', 'article_provider',
     var articleProvider = new apFactory.ArticleProvider(dbConn);
     var opmlReader = new opmlFactory.OPMLReader(dbConn, articleProvider);
 
+    function returnJson(res) {
+        return function jsonResult(docs) {
+            res.json(docs);
+        }
+    }
+
+    function returnError(res) {
+        return function jsonError(err) {
+            console.log('error', err);
+            res.json({ error: 'error'});
+        }
+    }
+
     function articles(req, res) {
-        articleProvider.byDate(0, 20, function(err, docs) {
-            if (err) {
-                console.log('error', err);
-                res.json({ error: 'error'});
-            } else {
-                res.json(docs);
-            }
-        });
+        articleProvider.byDate(0, 20).then(returnJson(res)).fail(returnError(res));
     }
 
     function bookmarked(req, res) {
-        articleProvider.bookmarked(0, 20, function(err, docs) {
-            if (err) {
-                console.log('error', err);
-                res.json('error', err);
-            } else {
-                res.json(docs);
-            }
-        });
+        articleProvider.bookmarked(0, 20).then(returnJson(res)).fail(returnError(res));
     }
 
     function popular(req, res) {
-        articleProvider.byLinkScore(0, 20, function(err, docs) {
-            if (err) {
-                console.log('error', err);
-                res.json('error', err);
-            } else {
-                res.json(docs);
-            }
-        });
+        articleProvider.byLinkScore(0, 20).then(returnJson(res)).fail(returnError(res));
     }
 
     function interesting(req, res) {
-        articleProvider.byWordScore(0, 20, function(err, docs) {
-            if (err) {
-                console.log('error', err);
-                res.json('error', err);
-            } else {
-                res.json(docs);
-            }
-        });
+        articleProvider.byWordScore(0, 20).then(returnJson(res)).fail(returnError(res));
     }
 
     function updateArticle(req, res) {
@@ -66,14 +51,7 @@ requirejs(['express', 'express-browserid', 'article_provider',
     }
 
     function feeds(req, res) {
-        opmlReader.findAll(function(err, docs) {
-            if (err) {
-                console.log('error', err);
-                res.json({error: 'error'});
-            } else {
-                res.json(docs)
-            }
-        });
+        opmlReader.findAll().then(returnJson(res)).fail(returnError(res));
     }
 
     function upload(req, res) {

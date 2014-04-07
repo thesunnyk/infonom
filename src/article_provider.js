@@ -1,5 +1,5 @@
-define(['link_parser', 'words_parser', 'underscore'],
-        function(linkParserFactory, wordParserFactory, underscore) {
+define(['link_parser', 'words_parser', 'underscore', 'q'],
+        function(linkParserFactory, wordParserFactory, underscore, q) {
 
     /**
     * Creates an article provider.
@@ -71,26 +71,6 @@ define(['link_parser', 'words_parser', 'underscore'],
         };
     }
 
-    function callbackWith(callback, func) {
-        return function cwFunc(err, res) {
-            if (err) {
-                callback(err);
-            } else {
-                callback(null, func(res));
-            }
-        }
-    }
-
-    function callbackOf(callback, func) {
-        return function coFunc(err, res) {
-            if (err) {
-                callback(err);
-            } else {
-                func(res);
-            }
-        }
-    }
-
     /**
     * Saves the given article to the database.
     * There are a couple of article chunks that form the main data structure. The
@@ -102,50 +82,41 @@ define(['link_parser', 'words_parser', 'underscore'],
     */
     function save(item) {
         var self = this;
-        function dbCallback(wordSoup, linkSoup, res) {
+        function dbCallback(data) {
+            var wordSoup = data[0];
+            var linkSoup = data[1];
+            var res = data[2];
             if (res.length === 0) {
                 item.linkSoup = self.calculateLinkSoup(item.description),
                 item.wordSoup = self.calculateWordSoup(item.description),
                 item.linkScore = self.calculateScore(item.linkSoup, linkSoup);
                 item.wordScore = self.calculateScore(item.wordSoup, wordSoup);
-                self.dbConn.db.save([self.makeArticleData(item), self.makeArticle(item)]);
+                return self.dbConn.save([self.makeArticleData(item), self.makeArticle(item)]);
             }
         }
-        function linkSoupCallback(wordSoup, linkSoup) {
-            self.dbConn.db.view('article_data/by_guid', {key: item.guid}, callbackOf(console.log,
-                        underscore.partial(dbCallback, wordSoup, linkSoup)));
+        function linkSoupCallback() {
+            return self.dbConn.view('article_data/by_guid', {key: item.guid});
         }
-        function wordSoupCallback(wordSoup) {
-            self.getGlobalLinkSoup(callbackOf(console.log, underscore.partial(linkSoupCallback, wordSoup)));
-        }
-        this.getGlobalWordSoup(callbackOf(console.log, wordSoupCallback));
+        return q.all([this.getGlobalWordSoup(), this.getGlobalLinkSoup(), linkSoupCallback()]).then(dbCallback);
     }
 
     function update(item) {
-        var self = this;
-        function saveArticleData(res) {
-            if (res.length > 0) {
-                var oldVal = res[0].value;
-                var newVal = underscore.defaults(item, oldVal);
-                self.dbConn.db.save(oldVal._id, oldVal._rev, self.makeArticleData(item));
-            }
-        }
-        this.dbConn.db.view('article_data/by_guid', {key: item.guid}, callbackOf(console.log, saveArticleData));
+        return this.dbConn.update('article_data/by_guid', item.guid, this.makeArticleData(item));
     }
 
     /**
     * Gets the global word soup. This can be used to calculate points for
     * articles.
     */
-    function getGlobalWordSoup(callback) {
-        this.dbConn.db.view('wordsoup/all', {group: true}, callbackWith(callback, fixGlobalSoup));
+    function getGlobalWordSoup() {
+        return this.dbConn.view('wordsoup/all', {group: true}).then(fixGlobalSoup);
     }
 
     /**
     * Gets the global link soup. This can be used to calculate points for links.
     */
-    function getGlobalLinkSoup(callback) {
-        this.dbConn.db.view('linksoup/all', {group: true}, callbackWith(callback, fixGlobalSoup));
+    function getGlobalLinkSoup() {
+        return this.dbConn.view('linksoup/all', {group: true}).then(fixGlobalSoup);
     }
 
     /**
@@ -195,100 +166,92 @@ define(['link_parser', 'words_parser', 'underscore'],
     * Gets all articles, sorted by date.
     * @param offset the offset of the articles.
     * @param count the number of articles to retrieve.
-    * @param callback the callback function to return articles to.
     */
-    function byDate(offset, count, callback) {
+    function byDate(offset, count) {
         var self = this;
-        function extractArticles(articles, articleDatas) {
-            var docs = [];
-            articles.forEach(function (article) {
-                var articleData = underscore.findWhere(articleDatas, {key: article.guid}).value;
-                docs.push(extractArticle(article, articleData));
-            });
-            return docs;
-        }
         function recvByDate(articles) {
+            function extractArticles(articleDatas) {
+                var docs = [];
+                articles.forEach(function (article) {
+                    var articleData = underscore.findWhere(articleDatas, {key: article.guid}).value;
+                    docs.push(extractArticle(article, articleData));
+                });
+                return docs;
+            }
             var guids = underscore.pluck(underscore.pluck(articles, 'value'), 'guid');
-            self.dbConn.db.view('article_data/by_guid', {keys: guids}, callbackWith(callback,
-                        underscore.partial(extractArticles, articles)));
+            return self.dbConn.view('article_data/by_guid', {keys: guids}).then(extractArticles);
         }
-        this.dbConn.db.view('articles/by_date', {skip: offset, limit: count, descending: true},
-                callbackOf(callback, recvByDate));
+        return this.dbConn.view('articles/by_date', {skip: offset, limit: count, descending: true})
+            .then(recvByDate);
     }
 
     /**
     * Gets all bookmarked articles.
     * @param offset the offset of the articles.
     * @param count the number of articles to retrieve.
-    * @param callback the callback function to return articles to.
     */
-    function bookmarked(offset, count, callback) {
+    function bookmarked(offset, count) {
         var self = this;
-        function extractArticleData(articleDatas, articles) {
-            var docs = [];
-            articleDatas.forEach(function (articleData) {
-                var article = underscore.findWhere(articles, {key: articleData.guid}).value;
-                docs.push(extractArticle(article, articleData));
-            });
-            return docs;
-        }
         function recvBookmarked(articleDatas) {
+            function extractArticleData(articles) {
+                var docs = [];
+                articleDatas.forEach(function (articleData) {
+                    var article = underscore.findWhere(articles, {key: articleData.guid}).value;
+                    docs.push(extractArticle(article, articleData));
+                });
+                return docs;
+            }
             var guids = underscore.pluck(underscore.pluck(articleDatas, 'value'), 'guid');
-            self.dbConn.db.view('articles/by_guid', {keys: guids}, callbackWith(callback,
-                        underscore.partial(extractArticleData, articleDatas)));
+            return self.dbConn.view('articles/by_guid', {keys: guids}).then(extractArticleData);
         }
-        this.dbConn.db.view('article_data/bookmarked', {skip: offset, limit: count, descending: true},
-                callbackOf(callback, recvBookmarked));
+        return this.dbConn.view('article_data/bookmarked', {skip: offset, limit: count, descending: true})
+            .then(recvBookmarked);
     }
 
     /**
     * Gets all bookmarked articles.
     * @param offset the offset of the articles.
     * @param count the number of articles to retrieve.
-    * @param callback the callback function to return articles to.
     */
-    function byLinkScore(offset, count, callback) {
+    function byLinkScore(offset, count) {
         var self = this;
-        function extractArticleData(articleDatas, articles) {
-            var docs = [];
-            articleDatas.forEach(function (articleData) {
-                var article = underscore.findWhere(articles, {key: articleData.guid}).value;
-                docs.push(extractArticle(article, articleData));
-            });
-            return docs;
-        }
         function recvBookmarked(articleDatas) {
+            function extractArticleData(articles) {
+                var docs = [];
+                articleDatas.forEach(function (articleData) {
+                    var article = underscore.findWhere(articles, {key: articleData.guid}).value;
+                    docs.push(extractArticle(article, articleData));
+                });
+                return docs;
+            }
             var guids = underscore.pluck(underscore.pluck(articleDatas, 'value'), 'guid');
-            self.dbConn.db.view('articles/by_guid', {keys: guids}, callbackWith(callback,
-                        underscore.partial(extractArticleData, articleDatas)));
+            return self.dbConn.view('articles/by_guid', {keys: guids}).then(extractArticleData);
         }
-        this.dbConn.db.view('article_data/by_link_score', {skip: offset, limit: count, descending: true},
-                callbackOf(callback, recvBookmarked));
+        return this.dbConn.view('article_data/by_link_score', {skip: offset, limit: count, descending: true})
+            .then(recvBookmarked);
     }
 
     /**
     * Gets all bookmarked articles.
     * @param offset the offset of the articles.
     * @param count the number of articles to retrieve.
-    * @param callback the callback function to return articles to.
     */
-    function byWordScore(offset, count, callback) {
+    function byWordScore(offset, count) {
         var self = this;
-        function extractArticleData(articleDatas, articles) {
-            var docs = [];
-            articleDatas.forEach(function (articleData) {
-                var article = underscore.findWhere(articles, {key: articleData.guid}).value;
-                docs.push(extractArticle(article, articleData));
-            });
-            return docs;
-        }
         function recvBookmarked(articleDatas) {
+            function extractArticleData(articles) {
+                var docs = [];
+                articleDatas.forEach(function (articleData) {
+                    var article = underscore.findWhere(articles, {key: articleData.guid}).value;
+                    docs.push(extractArticle(article, articleData));
+                });
+                return docs;
+            }
             var guids = underscore.pluck(underscore.pluck(articleDatas, 'value'), 'guid');
-            self.dbConn.db.view('articles/by_guid', {keys: guids}, callbackWith(callback,
-                        underscore.partial(extractArticleData, articleDatas)));
+            return self.dbConn.view('articles/by_guid', {keys: guids}).then(extractArticleData);
         }
-        this.dbConn.db.view('article_data/by_word_score', {skip: offset, limit: count, descending: true},
-                callbackOf(callback, recvBookmarked));
+        return this.dbConn.view('article_data/by_word_score', {skip: offset, limit: count, descending: true})
+            .then(recvBookmarked);
     }
 
     return { ArticleProvider: ArticleProvider };

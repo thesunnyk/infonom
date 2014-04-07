@@ -98,8 +98,6 @@ scores of the words which match the word soup of that article.
 TODOs:
 ------
 
-* Use "then" notation for nested callbacks
-* Encapsulate db better.
 * Mark read once finished.
 * Refresh that actually works.
 * Add accounts
