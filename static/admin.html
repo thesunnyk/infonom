@@ -14,10 +14,10 @@
 
         <link rel="stylesheet" href="css/normalize.css">
         <link rel="stylesheet" href="css/main.css">
-        <link rel="stylesheet" href="css/persona-buttons.css">
+        <link rel="stylesheet" href="css/mochi.css">
         <script src="js/vendor/modernizr-2.6.2.min.js"></script>
     </head>
-    <body>
+    <body class="mochi">
         <!--[if lt IE 7]>
             <p class="chromeframe">You are using an <strong>outdated</strong> browser. Please
             <a href="http://browsehappy.com/">upgrade your browser</a> or
@@ -28,31 +28,38 @@
         <!-- Add your site or application content here -->
 
         <header>
-            <h1>Infonom</h1>
+            <div class="mochi-header-content">Infonom</div>
         </header>
         <main>
             <section class="menu" id="menuSection">
-                <ul>
-                    <a href="#" id="interesting" data-bind="click: selectInteresting, css: {selected: selected() === 'interesting'}">
-                        <li><span class="icon">&#xf12a;</span>&nbsp;Interesting</li></a>
-                    <a href="#" id="popular" data-bind="click: selectPopular, css: {selected: selected() === 'popular'}">
-                        <li><span class="icon">&#xf164;</span>&nbsp;Popular</li></a>
-                    <a href="#" id="latest" data-bind="click: selectLatest, css: {selected: selected() === 'latest'}">
-                        <li><span class="icon">&#xf0c9;</span>&nbsp;Latest</li></a>
-                    <a href="#" id="bookmarks" data-bind="click: selectBookmarks, css: {selected: selected() === 'bookmarks'}">
-                        <li><span class="icon">&#xf02e;</span>&nbsp;Bookmarks</li></a>
-                    <a href="#" id="write" data-bind="click: selectWrite, css: {selected: selected() === 'write'}">
-                        <li><span class="icon">&#xf040;</span>&nbsp;Write</li></a>
-                    <a href="#" id="settings" data-bind="click: selectSettings, css: {selected: selected() === 'settings'}">
-                        <li><span class="icon">&#xf013;</span>&nbsp;Settings</li></a>
-                </ul>
+                <div class="mochi-view-select-button">
+                    <div class="mochi-button-decorator mochi-button-decorator-left">
+                        <div class="mochi-button-decorator-bookend">(</div>
+                    </div>
+                    <button class="mochi-button-base" id="interesting" data-bind="click: selectInteresting, css: {active: selected() === 'interesting'}">
+                        <span class="icon">&#xf12a;</span>&nbsp;Interesting</button>
+                    <button class="mochi-button-base" id="popular" data-bind="click: selectPopular, css: {active: selected() === 'popular'}">
+                        <span class="icon">&#xf164;</span>&nbsp;Popular</button>
+                    <button class="mochi-button-base" id="latest" data-bind="click: selectLatest, css: {active: selected() === 'latest'}">
+                        <span class="icon">&#xf0c9;</span>&nbsp;Latest</button>
+                    <button class="mochi-button-base" id="bookmarks" data-bind="click: selectBookmarks, css: {active: selected() === 'bookmarks'}">
+                        <span class="icon">&#xf02e;</span>&nbsp;Bookmarks</button>
+                    <button class="mochi-button-base" id="write" data-bind="click: selectWrite, css: {active: selected() === 'write'}">
+                        <span class="icon">&#xf040;</span>&nbsp;Write</button>
+                    <button class="mochi-button-base" id="settings" data-bind="click: selectSettings, css: {active: selected() === 'settings'}">
+                        <span class="icon">&#xf013;</span>&nbsp;Settings</button>
+                    <div class="mochi-button-decorator mochi-button-decorator-right">
+                        <div class="mochi-button-decorator-bookend">)</div>
+                    </div>
+                    <div class="mochi-button-bar" style="width: 39px; transform: translateX(68px);"></div>
+                </div>
             </section>
 
             <section class="read" id="readSection">
                 <div class="interesting" data-bind="visible: visible">
-                    <h2 data-bind="text: readHeader">Interesting</h2>
+                    <div class="mochi-subheader-content" data-bind="text: readHeader">Interesting</div>
                     <div class="items" data-bind="foreach: items">
-                        <div class="item">
+                        <div class="mochi-item item">
                         <div class="title">
                             <span class="actions">
                                 <a href="#" data-bind="click: bookmark">
@@ -64,7 +71,7 @@
                                 <span class="icon">&#xf064;</span>
                             </span>
 
-                            <h3 class="title">
+                            <h3 class="title mochi-list-header">
                             <a href="#" data-bind="click: $parent.expand">
                                 <span class="icon" data-bind="visible: !itemShown()">&#xf138;</span>
                                 <span class="icon" data-bind="visible: itemShown">&#xf13a;</span>
@@ -102,7 +109,17 @@
                         </div>
                     </div>
                     <div id="replace">
-                        <a href="#"><span class="icon">&#xf0e7;</span> Replace</a>
+                        <button class="mochi-button">
+                            <div class="mochi-button-decorator mochi-button-decorator-left">
+                                <div class="mochi-button-decorator-bookend">(</div>
+                            </div>
+                            <div class="mochi-button-base">
+                                <span class="icon">&#xf0e7;</span> Replace
+                            </div>
+                            <div class="mochi-button-decorator mochi-button-decorator-right">
+                                <div class="mochi-button-decorator-bookend">)</div>
+                            </div>
+                        </button>
                     </div>
                 </div>
             </section>

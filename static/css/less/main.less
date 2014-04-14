@@ -5,10 +5,10 @@
 
 @font-face {
   font-family: 'FontAwesome';
-  src: url('../font/fontawesome-webfont.eot?v=4.0.1');
-  src: url('../font/fontawesome-webfont.eot?#iefix&v=4.0.1') format('embedded-opentype'),
-    url('../font/fontawesome-webfont.woff?v=4.0.1') format('woff'),
-    url('../font/fontawesome-webfont.ttf?v=4.0.1') format('truetype');
+  src: url('../fonts/fontawesome-webfont.eot?v=4.0.1');
+  src: url('../fonts/fontawesome-webfont.eot?#iefix&v=4.0.1') format('embedded-opentype'),
+    url('../fonts/fontawesome-webfont.woff?v=4.0.1') format('woff'),
+    url('../fonts/fontawesome-webfont.ttf?v=4.0.1') format('truetype');
   font-weight: normal;
   font-style: normal;
 }
@@ -17,39 +17,13 @@
     font-family: 'FontAwesome';
 }
 
-h1, h2, h3 {
-    color: @headingColor;
-}
 
 body {
-	font-family: 'Source Sans Pro', sans-serif;
-	font-size: 11pt;
-	color: @textColor;
-    background: @background;
-    > header {
-        padding-left: 10pt;
-        padding-right: 10pt;
-        background-color: @footerBackground;
-    }
-    > main {
-    }
+    padding-left: 1em;
 	> footer {
 		order: 2;
 		font-size: smaller;
-		background: @footerBackground;
-		border-top: solid 1pt @border;
 		padding: 5pt;
-		ul {
-			text-align: center;
-			border-bottom: 1pt solid @border;
-			border-top: 1pt solid @border;
-			padding: 5pt;
-			li {
-				display: inline;
-				margin-left: 10pt;
-				margin-left: 10pt;
-			}
-		}
 		.authorised {
 			float: right;
 			margin-left: 30pt;
@@ -70,72 +44,36 @@ section {
     clear: both;
 }
 
-a {
-	color: @linkColor;
-}
-
-a:hover {
-	color: @linkHover;
-}
-
 #menuSection {
-    > ul {
-        border-top: 1pt solid @border;
-        border-bottom: 1pt solid @border;
-        padding: 0;
-        margin: 0;
-        list-style-type: none;
-        :last-child {
-            border-right: none;
-        }
-    }
-    a {
-        text-decoration: none;
-        border-right: 1pt solid @menusplit;
-    }
-
-    a.selected {
-        color: @highlight;
-    }
-    li {
-        display: inline-block;
-        padding: 0.5em;
-        padding-left: 1em;
-        padding-right: 1em;
+    .mochi-button-base {
+        width: 80px;
     }
 }
 
 #readSection {
-    padding: 1em;
-    padding-top: 0;
     margin: 0;
-    div#replace {
-      max-width: 40em;
-      text-align: right;
-      a {
-        text-decoration: none;
-        font-size: 2em;
-      }
-    }
     div.items {
         list-style-type: none;
         div.item {
             margin-bottom: 1em;
             max-width: 40em;
             div.article {
-                background-color: @articleBackground;
                 padding: 1em;
                 padding-left: 1.2em;
                 padding-right: 1.5em;
+                text-align: justify;
                 p {
                     max-width: 36em;
                     text-align: justify;
                 }
                 img {
                   max-width: 100%;
+                  border: 1pt solid #bbb;
+                  padding: 2pt;
                 }
             }
             a {
+                color: #444;
                 text-decoration: none;
             }
             div.title {
