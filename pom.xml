@@ -20,9 +20,15 @@
       <artifactId>scala-library</artifactId>
       <version>2.11.1</version>
     </dependency>
+    <!-- For the web server. -->
     <dependency>
         <groupId>io.spray</groupId>
       <artifactId>spray-can</artifactId>
+      <version>1.2.1</version>
+    </dependency>
+    <dependency>
+        <groupId>io.spray</groupId>
+      <artifactId>spray-io</artifactId>
       <version>1.2.1</version>
     </dependency>
     <dependency>
