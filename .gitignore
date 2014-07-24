@@ -13,5 +13,6 @@ main.css
 pids
 logs
 results
+target
 
 npm-debug.log
