@@ -1,17 +1,29 @@
 package org.teamchoko.infonom
 
-import akka.actor.{ActorSystem, Props}
+import akka.actor.{ActorSystem, Actor, Props}
 import akka.io.IO
 import spray.can.Http
+
+class DemoService extends Actor {
+  def receive = {
+    case _: Http.Connected => sender ! Http.Register(self)
+  }
+}
 
 /**
  * Hello world!
  *
  */
-object Main extends App with MySslConfiguration {
+object App {
+  def message = "Hello World"
+
   implicit val system = ActorSystem()
 
-  val handler = system.actorOf(Props[DemoService], name = "handler")
+  val myListener = system.actorOf(Props[DemoService], name = "handler")
 
-  IO(Http) ! Http.Bind(handler, interface = "localhost", port = 8080)
+  def main(args: Array[String]) : Unit = {
+    println(message)
+    IO(Http) ! Http.Bind(myListener, interface = "localhost", port = 8080)
+  }
+
 }
