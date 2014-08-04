@@ -27,6 +27,16 @@
       <artifactId>scala-library</artifactId>
       <version>${scala.version}</version>
     </dependency>
+    <dependency>
+        <groupId>com.typesafe.akka</groupId>
+        <artifactId>akka-actor_${scala.version.alias}</artifactId>
+        <version>${akka.version}</version>
+    </dependency>
+    <dependency>
+        <groupId>io.spray</groupId>
+      <artifactId>spray-util</artifactId>
+      <version>${spray.version}</version>
+    </dependency>
     <!-- For the web server. -->
     <dependency>
         <groupId>io.spray</groupId>
@@ -42,11 +52,6 @@
         <groupId>io.spray</groupId>
       <artifactId>spray-routing</artifactId>
       <version>${spray.version}</version>
-    </dependency>
-    <dependency>
-        <groupId>com.typesafe.akka</groupId>
-        <artifactId>akka-actor_${scala.version.alias}</artifactId>
-        <version>${akka.version}</version>
     </dependency>
     <dependency>
       <groupId>org.scalatest</groupId>
