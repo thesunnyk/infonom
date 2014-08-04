@@ -28,7 +28,7 @@ trait MyService extends HttpService {
       get {
         respondWithMediaType(`text/html`) { // XML is marshalled to `text/xml` by default, so we simply override here
           complete {
-            "BLAG"
+            HttpResponse(entity = "PONG")
           }
         }
       }

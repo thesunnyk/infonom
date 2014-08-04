@@ -6,6 +6,8 @@ import spray.can.Http
 
 object Boot extends App {
 
+  def message = "Hello World"
+
   // we need an ActorSystem to host our application in
   implicit val system = ActorSystem("on-spray-can")
 
