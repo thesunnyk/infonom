@@ -1,7 +1,15 @@
 package org.teamchoko.infonom
 
-// this trait defines our service behavior independently from the service actor
+import scala.concurrent.ExecutionContext
+import org.http4s.server.HttpService
+import org.http4s.dsl._
+
 trait MyService {
   val hello = "Hello"
+
+  def service(implicit executionContext: ExecutionContext = ExecutionContext.global): HttpService = {
+    case GET -> Root / "ping" =>
+      Ok("pong")
+  }
 
 }

@@ -18,7 +18,6 @@
     <scala.version.alias>2.10</scala.version.alias>
     <scalatest.version>2.2.0</scalatest.version>
     <http4s.version>0.3.0</http4s.version>
-    <blaze.version>0.2.0</blaze.version>
     <main.class>org.teamchoko.infonom.Boot</main.class>
   </properties>
 
@@ -35,8 +34,28 @@
     </dependency>
     <dependency>
         <groupId>org.http4s</groupId>
-        <artifactId>blaze-core_${scala.version.alias}</artifactId>
-        <version>${blaze.version}</version>
+        <artifactId>http4s-dsl_${scala.version.alias}</artifactId>
+        <version>${http4s.version}</version>
+    </dependency>
+    <dependency>
+        <groupId>org.http4s</groupId>
+        <artifactId>http4s-json4s_${scala.version.alias}</artifactId>
+        <version>${http4s.version}</version>
+    </dependency>
+    <dependency>
+        <groupId>org.http4s</groupId>
+        <artifactId>http4s-blazecore_${scala.version.alias}</artifactId>
+        <version>${http4s.version}</version>
+    </dependency>
+    <dependency>
+        <groupId>org.http4s</groupId>
+        <artifactId>http4s-blazeserver_${scala.version.alias}</artifactId>
+        <version>${http4s.version}</version>
+    </dependency>
+    <dependency>
+        <groupId>org.http4s</groupId>
+        <artifactId>http4s-blazeclient_${scala.version.alias}</artifactId>
+        <version>${http4s.version}</version>
     </dependency>
     <dependency>
       <groupId>org.scalatest</groupId>
