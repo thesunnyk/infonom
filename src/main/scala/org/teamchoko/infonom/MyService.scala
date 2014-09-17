@@ -8,7 +8,7 @@ trait MyService {
   val hello = "Hello"
 
   def service(implicit executionContext: ExecutionContext = ExecutionContext.global): HttpService = {
-    case GET -> Root / "ping" =>
+    case GET -> Root =>
       Ok("pong")
   }
 
