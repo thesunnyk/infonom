@@ -1,6 +1,6 @@
-import java.net.URLEncoder
+package org.teamchoko.infonom
 
-case class Config(url: String)
+import java.net.URLEncoder
 
 object CouchUri {
   def sep = "/"
@@ -14,6 +14,9 @@ object CouchUri {
     path(db, "_design", designDocId, "_view", viewName) + query(kvs:_*)
 }
 
+// Use argonaut for JSON parsing.
+
 class Couchdb(host: String, port: Int) {
+  def getArticles(count: Int = 10, offset: Int = 0) : Seq[Article] = ???
 }
 

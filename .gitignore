@@ -8,6 +8,8 @@ lib-cov
 *.out
 *.pid
 *.gz
+.classpath
+.project
 .tags
 main.css
 

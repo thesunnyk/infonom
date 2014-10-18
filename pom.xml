@@ -10,14 +10,27 @@
   <name>infonom</name>
   <url>http://maven.apache.org</url>
 
+  <repositories>
+      <repository>
+          <snapshots><enabled>false</enabled></snapshots>
+          <id>central</id>
+          <name>bintray</name>
+          <url>http://jcenter.bintray.com</url>
+      </repository>
+  </repositories>
+
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <maven.compiler.source>1.7</maven.compiler.source>
     <maven.compiler.target>${maven.compiler.source}</maven.compiler.target>
-    <scala.version>2.10.3</scala.version>
-    <scala.version.alias>2.10</scala.version.alias>
+    <scala.version>2.11.2</scala.version>
+    <scala.version.alias>2.11</scala.version.alias>
     <scalatest.version>2.2.0</scalatest.version>
     <http4s.version>0.3.0</http4s.version>
+    <joda-time.version>2.5</joda-time.version>
+    <joda-convert.version>1.7</joda-convert.version>
+    <argonaut.version>6.0.4</argonaut.version>
+    <markwrap.version>1.0.2</markwrap.version>
     <main.class>org.teamchoko.infonom.Boot</main.class>
   </properties>
 
@@ -26,6 +39,26 @@
       <groupId>org.scala-lang</groupId>
       <artifactId>scala-library</artifactId>
       <version>${scala.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>joda-time</groupId>
+      <artifactId>joda-time</artifactId>
+      <version>${joda-time.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.joda</groupId>
+      <artifactId>joda-convert</artifactId>
+      <version>${joda-convert.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.clapper</groupId>
+      <artifactId>markwrap_${scala.version.alias}</artifactId>
+      <version>${markwrap.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>io.argonaut</groupId>
+      <artifactId>argonaut_${scala.version.alias}</artifactId>
+      <version>${argonaut.version}</version>
     </dependency>
     <dependency>
         <groupId>org.http4s</groupId>
