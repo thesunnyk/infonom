@@ -17,6 +17,12 @@
           <name>bintray</name>
           <url>http://jcenter.bintray.com</url>
       </repository>
+      <repository>
+          <snapshots><enabled>false</enabled></snapshots>
+          <id>scalaz</id>
+          <name>bintray scalaz</name>
+          <url>http://dl.bintray.com/scalaz/releases</url>
+      </repository>
   </repositories>
 
   <properties>
@@ -29,7 +35,9 @@
     <http4s.version>0.3.0</http4s.version>
     <joda-time.version>2.5</joda-time.version>
     <joda-convert.version>1.7</joda-convert.version>
-    <argonaut.version>6.0.4</argonaut.version>
+    <scalaz.version>7.1.0</scalaz.version>
+    <scalaz-stream.version>0.5a</scalaz-stream.version>
+    <argonaut.version>6.1-M4</argonaut.version>
     <markwrap.version>1.0.2</markwrap.version>
     <main.class>org.teamchoko.infonom.Boot</main.class>
   </properties>
@@ -54,6 +62,16 @@
       <groupId>org.clapper</groupId>
       <artifactId>markwrap_${scala.version.alias}</artifactId>
       <version>${markwrap.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.scalaz</groupId>
+      <artifactId>scalaz-core_${scala.version.alias}</artifactId>
+      <version>${scalaz.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.scalaz.stream</groupId>
+      <artifactId>scalaz-stream_${scala.version.alias}</artifactId>
+      <version>${scalaz-stream.version}</version>
     </dependency>
     <dependency>
       <groupId>io.argonaut</groupId>

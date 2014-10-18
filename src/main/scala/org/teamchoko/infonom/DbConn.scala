@@ -1,6 +1,10 @@
 package org.teamchoko.infonom
 
+import scala.collection.immutable.Stream
 import java.net.URLEncoder
+import java.util.UUID
+import scalaz.stream.Process
+import scalaz.concurrent.Task
 
 object CouchUri {
   def sep = "/"
@@ -16,7 +20,15 @@ object CouchUri {
 
 // Use argonaut for JSON parsing.
 
+case class CouchEntity[T](item: T, id: UUID, rev: UUID, entityType: String)
+
 class Couchdb(host: String, port: Int) {
-  def getArticles(count: Int = 10, offset: Int = 0) : Seq[Article] = ???
+  def getArticles(count: Int = 10, offset: Int = 0) : Process[Task, CouchEntity[Article]] = ???
+
+  def getCompleteArticle(article: CouchEntity[Article]) : CompleteArticle = ???
+
+  def updateArticle(article: CouchEntity[Article], newArticle: Article) : CouchEntity[Article] = ???
+
+  def getCategories(count: Int = 10, offset: Int = 0) : Process[Task, CouchEntity[Category]] = ???
 }
 

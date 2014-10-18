@@ -13,13 +13,19 @@ case class Comment(author: Author, text: String, pubDate: DateTime)
 case class Article(heading: String,
                    text: String,
                    textFilter: TextFilter,
+                   draft: Boolean,
                    extract: Option[String],
                    pullquote: Option[String],
-                   comments: Seq[Comment],
-                   categories: Seq[Category],
                    pubDate: DateTime,
                    author: Author,
                    uri: URI)
+
+trait CompleteArticle
+{
+  val article: Article
+  val comments: List[Comment]
+  val categories: List[Category]
+}
 
 case class RssFeed(folder: String, htmlurl: URI, xmlurl: URI, title: String, text: String, lastUpdate: DateTime)
 
