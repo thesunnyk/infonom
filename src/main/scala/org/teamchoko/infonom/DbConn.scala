@@ -5,6 +5,10 @@ import java.net.URLEncoder
 import java.util.UUID
 import scalaz.stream.Process
 import scalaz.concurrent.Task
+import java.net.URI
+import org.http4s.Status
+import org.http4s.Method
+import org.http4s.EntityDecoder
 
 object CouchUri {
   def sep = "/"
@@ -22,8 +26,10 @@ object CouchUri {
 
 case class CouchEntity[T](item: T, id: UUID, rev: UUID, entityType: String)
 
-class Couchdb(host: String, port: Int) {
+class Couchdb(host: URI) {
+
   def getArticles(count: Int = 10, offset: Int = 0) : Process[Task, CouchEntity[Article]] = ???
+    // Method.GET("https://www.google.com").on(Status.Ok)(EntityDecoder.text)
 
   def getCompleteArticle(article: CouchEntity[Article]) : CompleteArticle = ???
 
