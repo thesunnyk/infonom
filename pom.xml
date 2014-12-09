@@ -32,7 +32,7 @@
     <scala.version>2.11.2</scala.version>
     <scala.version.alias>2.11</scala.version.alias>
     <scalatest.version>2.2.0</scalatest.version>
-    <http4s.version>0.3.0</http4s.version>
+    <http4s.version>0.4.2</http4s.version>
     <joda-time.version>2.5</joda-time.version>
     <joda-convert.version>1.7</joda-convert.version>
     <scalaz.version>7.1.0</scalaz.version>
@@ -58,7 +58,7 @@
       <artifactId>joda-convert</artifactId>
       <version>${joda-convert.version}</version>
     </dependency>
-    <dependency>
+    <dependency><!-- For markdown. -->
       <groupId>org.clapper</groupId>
       <artifactId>markwrap_${scala.version.alias}</artifactId>
       <version>${markwrap.version}</version>

@@ -12,7 +12,7 @@ trait MyService {
   val hello = "Hello"
   // TODO Use markwrap to parse textile code.
 
-  def service: HttpService = {
+  def service(implicit executionContext: ExecutionContext) = HttpService {
     case Request(Method.GET, Uri(_, _, "/", _, _), _, _, _, _) =>
       ResponseBuilder(Status.Ok, "pong")
   }
