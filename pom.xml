@@ -23,21 +23,27 @@
           <name>bintray scalaz</name>
           <url>http://dl.bintray.com/scalaz/releases</url>
       </repository>
+      <repository>
+          <snapshots><enabled>false</enabled></snapshots>
+          <id>doobie</id>
+          <name>bintray doobie</name>
+          <url>http://dl.bintray.com/tpolecat/maven</url>
+      </repository>
   </repositories>
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <maven.compiler.source>1.7</maven.compiler.source>
     <maven.compiler.target>${maven.compiler.source}</maven.compiler.target>
-    <scala.version>2.11.2</scala.version>
+    <scala.version>2.11.4</scala.version>
     <scala.version.alias>2.11</scala.version.alias>
-    <scalatest.version>2.2.0</scalatest.version>
+    <scalatest.version>2.2.1</scalatest.version>
     <http4s.version>0.4.2</http4s.version>
     <joda-time.version>2.5</joda-time.version>
     <joda-convert.version>1.7</joda-convert.version>
     <scalaz.version>7.1.0</scalaz.version>
-    <scalaz-stream.version>0.5a</scalaz-stream.version>
-    <argonaut.version>6.1-M4</argonaut.version>
+    <scalaz-stream.version>0.6a</scalaz-stream.version>
+    <doobie.version>0.2-SNAPSHOT</doobie.version>
     <markwrap.version>1.0.2</markwrap.version>
     <main.class>org.teamchoko.infonom.Boot</main.class>
   </properties>
@@ -64,6 +70,11 @@
       <version>${markwrap.version}</version>
     </dependency>
     <dependency>
+        <groupId>org.tpolecat</groupId>
+        <artifactId>doobie-core_${scala.version.alias}</artifactId>
+        <version>${doobie.version}</version>
+    </dependency>
+    <dependency>
       <groupId>org.scalaz</groupId>
       <artifactId>scalaz-core_${scala.version.alias}</artifactId>
       <version>${scalaz.version}</version>
@@ -72,11 +83,6 @@
       <groupId>org.scalaz.stream</groupId>
       <artifactId>scalaz-stream_${scala.version.alias}</artifactId>
       <version>${scalaz-stream.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>io.argonaut</groupId>
-      <artifactId>argonaut_${scala.version.alias}</artifactId>
-      <version>${argonaut.version}</version>
     </dependency>
     <dependency>
         <groupId>org.http4s</groupId>
@@ -91,11 +97,6 @@
     <dependency>
         <groupId>org.http4s</groupId>
         <artifactId>http4s-blazeserver_${scala.version.alias}</artifactId>
-        <version>${http4s.version}</version>
-    </dependency>
-    <dependency>
-        <groupId>org.http4s</groupId>
-        <artifactId>http4s-blazeclient_${scala.version.alias}</artifactId>
         <version>${http4s.version}</version>
     </dependency>
     <dependency>
