@@ -22,7 +22,7 @@ object ArticleRenderer {
 	  article.extract.map(extract => p(extract)).getOrElse(""),
 	  p("by", articleInfo.author.uri.map(uri => a(href := uri.toString)((articleInfo.author.name))).getOrElse(span(
 	      articleInfo.author.name)), "on", span(renderDate(article.pubDate))),
-	  div(raw(renderArticleText(article)))
+      div(article.pullquote.map(x => span(x)).getOrElse(""), raw(renderArticleText(article)))
     ))
   }
 
