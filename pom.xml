@@ -45,6 +45,7 @@
     <scalaz-stream.version>0.6a</scalaz-stream.version>
     <doobie.version>0.2-SNAPSHOT</doobie.version>
     <markwrap.version>1.0.2</markwrap.version>
+    <scalatags.version>0.4.2</scalatags.version>
     <main.class>org.teamchoko.infonom.Boot</main.class>
   </properties>
 
@@ -68,6 +69,11 @@
       <groupId>org.clapper</groupId>
       <artifactId>markwrap_${scala.version.alias}</artifactId>
       <version>${markwrap.version}</version>
+    </dependency>
+    <dependency>
+        <groupId>com.scalatags</groupId>
+        <artifactId>scalatags_${scala.version.alias}</artifactId>
+        <version>${scalatags.version}</version>
     </dependency>
     <dependency>
         <groupId>org.tpolecat</groupId>
