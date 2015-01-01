@@ -16,8 +16,9 @@ class ArticleRendererSpec extends FlatSpec with Matchers {
     }
 
     ArticleRenderer.render(complete) should equal("<!DOCTYPE html><html><head><title>heading</title></head>" +
-    "<body><h1>heading</h1><p>by<span>name</span>on<span>10 May 2013</span></p>" +
-    "<div><p>some <em>things</em> are <strong>stuff</strong></p></div></body></html>")
+    "<body><div class=\"h-entry\"><h1 class=\"p-name\">heading</h1><p>by<span class=\"p-author\">name</span>" +
+    "on<span class=\"dt-published\">10 May 2013</span></p>" +
+    "<div class=\"e-content\"><p>some <em>things</em> are <strong>stuff</strong></p></div></div></body></html>")
 
 	}
 }

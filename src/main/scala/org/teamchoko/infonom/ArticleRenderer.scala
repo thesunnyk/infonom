@@ -14,15 +14,32 @@ object ArticleRenderer {
   }
 
   def renderDate(date: DateTime): String = DateTimeFormat.forPattern("dd MMM yyyy").print(date)
+  
+  def renderHeader(articleInfo: CompleteArticle): List[Modifier] = {
+    val article = articleInfo.article
+     List(
+      article.extract.map(extract => p(`class` := "extract, p-summary")(extract)).getOrElse(""),
+	  p("by", articleInfo.author.uri.map {
+        uri => a(`class`:= "p-author", href := uri.toString, (articleInfo.author.name))
+	  }.getOrElse(span(`class`:= "p-author")(articleInfo.author.name)),
+	  "on", span(`class` := "dt-published", renderDate(article.pubDate)))
+	)
+  }
+  
+  def renderPullquote(article: Article): Modifier =
+    article.pullquote.map(x => span(`class` := "pullquote", x)).getOrElse("")
+  
+  def renderEntry(articleInfo: CompleteArticle): List[Modifier] = {
+    h1(`class` := "p-name", articleInfo.article.heading) ::
+    renderHeader(articleInfo) :::
+    List(div(`class` := "e-content", renderPullquote(articleInfo.article),
+        raw(renderArticleText(articleInfo.article))))
+  }
 
   def render(articleInfo: CompleteArticle) = {
     val article = articleInfo.article
     "<!DOCTYPE html>" + html(head(title(article.heading)), body(
-	  h1(article.heading),
-	  article.extract.map(extract => p(extract)).getOrElse(""),
-	  p("by", articleInfo.author.uri.map(uri => a(href := uri.toString)((articleInfo.author.name))).getOrElse(span(
-	      articleInfo.author.name)), "on", span(renderDate(article.pubDate))),
-      div(article.pullquote.map(x => span(x)).getOrElse(""), raw(renderArticleText(article)))
+        div(`class` := "h-entry", renderEntry(articleInfo))
     ))
   }
 
