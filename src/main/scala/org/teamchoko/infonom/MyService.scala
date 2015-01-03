@@ -10,9 +10,8 @@ import org.http4s.ResponseBuilder
 
 trait MyService {
   val hello = "Hello"
-  // TODO Use markwrap to parse textile code.
 
-  def service(implicit executionContext: ExecutionContext) = HttpService {
+  def service(implicit executionContext: ExecutionContext): HttpService = HttpService {
     case Request(Method.GET, Uri(_, _, "/", _, _), _, _, _, _) =>
       ResponseBuilder(Status.Ok, "pong")
   }

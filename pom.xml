@@ -38,7 +38,7 @@
     <scala.version>2.11.4</scala.version>
     <scala.version.alias>2.11</scala.version.alias>
     <scalatest.version>2.2.1</scalatest.version>
-    <http4s.version>0.4.2</http4s.version>
+    <http4s.version>0.5.2</http4s.version>
     <joda-time.version>2.5</joda-time.version>
     <joda-convert.version>1.7</joda-convert.version>
     <scalaz.version>7.1.0</scalaz.version>
