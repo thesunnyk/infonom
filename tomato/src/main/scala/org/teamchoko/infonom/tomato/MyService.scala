@@ -1,4 +1,4 @@
-package org.teamchoko.infonom
+package org.teamchoko.infonom.tomato
 
 import scala.concurrent.ExecutionContext
 import org.http4s.server.HttpService

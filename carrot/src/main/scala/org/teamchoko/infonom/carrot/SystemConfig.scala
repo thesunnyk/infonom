@@ -1,4 +1,4 @@
-package org.teamchoko.infonom
+package org.teamchoko.infonom.carrot
 
 import java.io.File
 import scalaz.\/.fromTryCatch

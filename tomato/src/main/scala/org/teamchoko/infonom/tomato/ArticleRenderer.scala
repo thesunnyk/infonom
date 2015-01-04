@@ -1,4 +1,4 @@
-package org.teamchoko.infonom
+package org.teamchoko.infonom.tomato
 
 import scalatags.Text.all._
 import scalatags.Text.tags2.title

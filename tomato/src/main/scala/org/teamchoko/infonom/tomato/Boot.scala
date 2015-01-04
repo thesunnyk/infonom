@@ -1,4 +1,4 @@
-package org.teamchoko.infonom
+package org.teamchoko.infonom.tomato
 
 import org.http4s.server.blaze.BlazeBuilder
 import scala.concurrent.ExecutionContext.Implicits.global

@@ -1,4 +1,4 @@
-package org.teamchoko.infonom
+package org.teamchoko.infonom.tomato
 
 import org.scalatest.FlatSpec
 import org.scalatest.Matchers

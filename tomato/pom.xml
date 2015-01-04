@@ -1,51 +1,19 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
+  <parent>
+      <groupId>org.teamchoko.infonom</groupId>
+      <artifactId>infonom</artifactId>
+      <version>1.0-SNAPSHOT</version>
+  </parent>
 
-  <groupId>teamchoko</groupId>
-  <artifactId>infonom</artifactId>
-  <version>1.0-SNAPSHOT</version>
+  <artifactId>tomato</artifactId>
   <packaging>jar</packaging>
 
-  <name>infonom</name>
-  <url>http://maven.apache.org</url>
-
-  <repositories>
-      <repository>
-          <snapshots><enabled>false</enabled></snapshots>
-          <id>central</id>
-          <name>bintray</name>
-          <url>http://jcenter.bintray.com</url>
-      </repository>
-      <repository>
-          <snapshots><enabled>false</enabled></snapshots>
-          <id>scalaz</id>
-          <name>bintray scalaz</name>
-          <url>http://dl.bintray.com/scalaz/releases</url>
-      </repository>
-      <repository>
-          <snapshots><enabled>false</enabled></snapshots>
-          <id>doobie</id>
-          <name>bintray doobie</name>
-          <url>http://dl.bintray.com/tpolecat/maven</url>
-      </repository>
-  </repositories>
+  <name>tomato</name>
+  <url>http://blog.quaddmg.com</url>
 
   <properties>
-    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <maven.compiler.source>1.7</maven.compiler.source>
-    <maven.compiler.target>${maven.compiler.source}</maven.compiler.target>
-    <scala.version>2.11.4</scala.version>
-    <scala.version.alias>2.11</scala.version.alias>
-    <scalatest.version>2.2.1</scalatest.version>
-    <http4s.version>0.5.2</http4s.version>
-    <joda-time.version>2.5</joda-time.version>
-    <joda-convert.version>1.7</joda-convert.version>
-    <scalaz.version>7.1.0</scalaz.version>
-    <scalaz-stream.version>0.6a</scalaz-stream.version>
-    <doobie.version>0.2-SNAPSHOT</doobie.version>
-    <markwrap.version>1.0.2</markwrap.version>
-    <scalatags.version>0.4.2</scalatags.version>
     <main.class>org.teamchoko.infonom.Boot</main.class>
   </properties>
 
@@ -79,6 +47,11 @@
         <groupId>org.tpolecat</groupId>
         <artifactId>doobie-core_${scala.version.alias}</artifactId>
         <version>${doobie.version}</version>
+    </dependency>
+    <dependency>
+        <groupId>org.teamchoko.infonom</groupId>
+        <artifactId>carrot</artifactId>
+        <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>org.scalaz</groupId>
