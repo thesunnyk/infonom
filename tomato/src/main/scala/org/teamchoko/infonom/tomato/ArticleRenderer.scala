@@ -5,6 +5,7 @@ import scalatags.Text.tags2.title
 import org.clapper.markwrap.{MarkWrap, MarkupType}
 import org.joda.time.DateTime
 import org.joda.time.format.DateTimeFormat
+import org.teamchoko.infonom.carrot.{Html, Textile, CompleteArticle, Article}
 
 object ArticleRenderer {
   

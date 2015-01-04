@@ -4,6 +4,8 @@ import org.scalatest.FlatSpec
 import org.scalatest.Matchers
 import org.joda.time.DateTime
 import java.net.URI
+import org.teamchoko.infonom.carrot.{Html, Textile, CompleteArticle, Article}
+import org.teamchoko.infonom.carrot.{Author, Category, Comment}
 
 class ArticleRendererSpec extends FlatSpec with Matchers {
 	"ArticleRenderer" should "render" in {
