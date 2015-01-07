@@ -1,5 +1,4 @@
-infonom
-=======
+# infonom #
 
 The Anti-social network. Infonom is a social network for people who dislike
 interacting with other people, and would much rather create and comment on the
@@ -9,11 +8,9 @@ blog/reader to "feel" much more like a social network.
 
 Currently, the app is in an unusable state.
 
-Concepts
-========
+# Concepts #
 
-Reading
--------
+## Reading ##
  * What should I read first? (based on others' votes, and your votes)
    - Different "sources" which "respond" to the toplevel constitute a vote.
      Votes decay over time. This counts as "voting" by others for Popular
@@ -36,8 +33,7 @@ Reading
    - The difference between a Share and a Like is that a Like is private and
      a Share is public.
 
-Writing
--------
+## Writing ##
  * How to write stuff so it's all in one place? (Tweets, Delicious, Articles,
    etc.)
  * Versioning. Individual versions may be public or private.
@@ -47,63 +43,35 @@ Writing
    - Private = like "delicious / Springpad": personal bookmark sorting. Public
      = sharing or responding
 
-Others' Reading
----------------
+## Others' Reading ##
  * What did I write recently
  * How to respond to it?
  * What was I referring to?
 
 
-Design
-------
+## Design ##
 
-Don't store any GUIDs. 
+Completely re-writing it in scala and in a microservices architecture. This
+will ensure that the deployment is *so cumbersome* that it will never have to
+work successfully.
 
-Articles can be searched by their GUID, as can article data and other pieces of
-metadata. We want this to be repeatable for each article, so we can check it.
-The metadata is the authoritative way to search for the article's contents. The
-article doesn't change, the various soups don't change. The metadata doesn't
-change. There's a tags data structure, which changes.
+### Data types ###
 
-Tags stores things like whether something is bookmarked, starred, or any future
-tagging (like commenting).
+* XML - This is an archival format for storage and backup.
+* Filesystem - These are raw HTML files
+* H2 database - Microservices tend to use H2 for state.
 
-There's two related structures: The word-soup and the link-soup. The link-soup
-is a collection of "substantial" links in the data structure. This means links
-that are not "top-level" (i.e. contain things like /something/something.html).
-Also, any links from the same domain as yours are also removed. This stops the
-kind of spamming of related links and other guff from upvoting itself.
+### Services ###
 
-The word-soup is a collection of words along with their word count.
-
-These two soups are used to calculate the "link-score" or "word-score" of an
-article using couchdb views. The link-score is calculated by comparing all the
-links in all the articles and counting up how many of those correspond to the
-URL of the given article. The word-score counts up the number of words in
-a given article that are also in starred articles.
-
-linkscore is calculated by retrieving a global link-soup with all the (scored)
-links for all articles a week old or younger, then iterating through all the
-articles with a link-score-update date older than one day ago, and sticking
-a link-score in there if a link exists to that article.
-
-The global link-soup should also list a few "popular" articles, which are not
-found among the rss feeds.
-
-word-score is calculated by retrieving a global word-soup with all the
-(starred) words for all the articles ever. Because these get heavily cached by
-couch, they can be recalculated cheaply. We score articles by adding up the
-scores of the words which match the word soup of that article.
+* *Lettuce* - Handles creating new articles, managing drafts, etc.
+* *Tomato* - Publishes new articles to static HTML files.
+* *Onion* - Publishes indexing files, including: Categories, Archives, Home
+  Page, By Author
+* *Ketchup* - SASS/LESS to CSS
+* *Jalapeno* - (Optional) ScalaJS
+* *Bread* - XML to tomato + onion and vice-versa.
 
 TODOs:
 ------
 
-* Mark read once finished.
-* Refresh that actually works.
-* Add accounts
-* The "blog" portion of the site.
-* RSS item versioning.
-* Check before adding RSS Feed.
-* HTML META checking for RSS Discovery
-* Twitter integration.
-* Bookmark import and twitter import.
+* Rewrite it in Scala

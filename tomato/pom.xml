@@ -49,6 +49,11 @@
         <version>${doobie.version}</version>
     </dependency>
     <dependency>
+        <groupId>io.argonaut</groupId>
+        <artifactId>argonaut_${scala.version.alias}</artifactId>
+        <version>${argonaut.version}</version>
+    </dependency>
+    <dependency>
         <groupId>org.teamchoko.infonom</groupId>
         <artifactId>carrot</artifactId>
         <version>${project.version}</version>
