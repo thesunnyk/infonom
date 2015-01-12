@@ -46,7 +46,7 @@
     <doobie.version>0.2-SNAPSHOT</doobie.version>
     <markwrap.version>1.0.2</markwrap.version>
     <scalatags.version>0.4.2</scalatags.version>
-    <argonaut.version>6.0.4</argonaut.version>
+    <argonaut.version>6.1-M5</argonaut.version>
   </properties>
 
   <modules>

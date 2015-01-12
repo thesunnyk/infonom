@@ -124,7 +124,8 @@
                 <artifactId>scala-maven-plugin</artifactId>
                 <version>3.2.0</version>
                 <configuration>
-                    <ccTestGoals>scalatest:test</ccTestGoals>
+                    <recompileMode>incremental</recompileMode>
+                    <useZincServer>true</useZincServer>
                 </configuration>
                 <executions>
 					<execution>
