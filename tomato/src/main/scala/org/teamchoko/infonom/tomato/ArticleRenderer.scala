@@ -37,7 +37,7 @@ object ArticleRenderer {
         raw(renderArticleText(articleInfo.article))))
   }
 
-  def render(articleInfo: CompleteArticle) = {
+  def render(articleInfo: CompleteArticle): String = {
     val article = articleInfo.article
     "<!DOCTYPE html>" + html(head(title(article.heading)), body(
         div(`class` := "h-entry", renderEntry(articleInfo))

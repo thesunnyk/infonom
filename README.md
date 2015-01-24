@@ -67,6 +67,7 @@ work successfully.
 * *Tomato* - Publishes new articles to static HTML files.
 * *Onion* - Publishes indexing files, including: Categories, Archives, Home
   Page, By Author
+* *Carrot* - Holds modelling information for the other services.
 * *Ketchup* - SASS/LESS to CSS
 * *Jalapeno* - (Optional) ScalaJS
 * *Bread* - XML to tomato + onion and vice-versa.
