@@ -14,7 +14,7 @@
   <url>http://blog.quaddmg.com</url>
 
   <properties>
-    <main.class>org.teamchoko.infonom.Boot</main.class>
+    <main.class>org.teamchoko.infonom.tomato.Boot</main.class>
   </properties>
 
   <dependencies>
