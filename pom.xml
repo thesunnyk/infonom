@@ -33,7 +33,7 @@
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <maven.compiler.source>1.7</maven.compiler.source>
+    <maven.compiler.source>1.8</maven.compiler.source>
     <maven.compiler.target>${maven.compiler.source}</maven.compiler.target>
     <scala.version>2.11.4</scala.version>
     <scala.version.alias>2.11</scala.version.alias>
@@ -47,9 +47,11 @@
     <markwrap.version>1.0.2</markwrap.version>
     <scalatags.version>0.4.2</scalatags.version>
     <argonaut.version>6.1-M5</argonaut.version>
+    <scala-xml.version>1.0.2</scala-xml.version>
   </properties>
 
   <modules>
+      <module>lettuce</module>
       <module>tomato</module>
       <module>carrot</module>
   </modules>

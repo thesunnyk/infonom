@@ -11,7 +11,7 @@ class ArticleRendererSpec extends FlatSpec with Matchers {
     val complete = new CompleteArticle {
       val article: Article = Article("heading", "some _things_ are *stuff*", Textile(), false, None, None,
         new DateTime(2013, 5, 10, 10, 10, 10), new URI("http://www.google.com"))
-      val comments: List[Comment] = Nil
+      val comments: List[CompleteComment] = Nil
       val categories: List[Category] = Nil
       val author: Author = Author("name", None, None)
     }
