@@ -35,6 +35,11 @@
       <version>${scalaz.version}</version>
     </dependency>
     <dependency>
+        <groupId>io.argonaut</groupId>
+        <artifactId>argonaut_${scala.version.alias}</artifactId>
+        <version>${argonaut.version}</version>
+    </dependency>
+    <dependency>
       <groupId>org.scalatest</groupId>
       <artifactId>scalatest_${scala.version.alias}</artifactId>
       <version>${scalatest.version}</version>

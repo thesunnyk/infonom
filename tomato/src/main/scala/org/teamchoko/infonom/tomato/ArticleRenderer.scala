@@ -1,11 +1,30 @@
 package org.teamchoko.infonom.tomato
 
-import scalatags.Text.all._
-import scalatags.Text.tags2.title
-import org.clapper.markwrap.{MarkWrap, MarkupType}
+import org.clapper.markwrap.MarkWrap
+import org.clapper.markwrap.MarkupType
 import org.joda.time.DateTime
 import org.joda.time.format.DateTimeFormat
-import org.teamchoko.infonom.carrot.{Html, Textile, CompleteArticle, Article}
+import org.teamchoko.infonom.carrot.Articles.Article
+import org.teamchoko.infonom.carrot.Articles.CompleteArticle
+import org.teamchoko.infonom.carrot.Articles.Html
+import org.teamchoko.infonom.carrot.Articles.Textile
+
+import scalatags.Text.all.Modifier
+import scalatags.Text.all.SeqNode
+import scalatags.Text.all.a
+import scalatags.Text.all.body
+import scalatags.Text.all.`class`
+import scalatags.Text.all.div
+import scalatags.Text.all.h1
+import scalatags.Text.all.head
+import scalatags.Text.all.href
+import scalatags.Text.all.html
+import scalatags.Text.all.p
+import scalatags.Text.all.raw
+import scalatags.Text.all.span
+import scalatags.Text.all.stringAttr
+import scalatags.Text.all.stringFrag
+import scalatags.Text.tags2.title
 
 object ArticleRenderer {
   

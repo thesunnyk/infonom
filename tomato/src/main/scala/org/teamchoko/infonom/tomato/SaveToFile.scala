@@ -1,17 +1,16 @@
 package org.teamchoko.infonom.tomato
 
 import java.io.File
-import org.joda.time.format.DateTimeFormatter
-import org.joda.time.format.DateTimeFormatterBuilder
+import java.io.FileWriter
+
 import org.joda.time.DateTime
+import org.joda.time.format.DateTimeFormatterBuilder
+import org.teamchoko.infonom.carrot.Articles.Article
+import org.teamchoko.infonom.carrot.Articles.CompleteArticle
 import org.teamchoko.infonom.tomato.Errors.StringError
+import org.teamchoko.infonom.tomato.Errors.checkTrue
 import org.teamchoko.infonom.tomato.Errors.extractErrors
 import org.teamchoko.infonom.tomato.Errors.success
-import org.teamchoko.infonom.tomato.Errors.failure
-import org.teamchoko.infonom.carrot.CompleteArticle
-import org.teamchoko.infonom.carrot.Article
-import org.teamchoko.infonom.tomato.Errors.checkTrue
-import java.io.FileWriter
 
 object SaveToFile {
 
