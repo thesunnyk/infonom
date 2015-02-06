@@ -16,9 +16,12 @@ class ArticleRendererSpec extends FlatSpec with Matchers {
       val author: Author = Author("name", None, None)
     }
 
-    ArticleRenderer.render(complete) should equal("<!DOCTYPE html><html><head><title>heading</title></head>" +
-    "<body><div class=\"h-entry\"><h1 class=\"p-name\">heading</h1><p>by<span class=\"p-author\">name</span>" +
-    "on<span class=\"dt-published\">10 May 2013</span></p>" +
+    ArticleRenderer.render(complete) should equal("<!DOCTYPE html><html><head><title>heading</title>" +
+    "<meta charset=\"utf-8\" /><meta http-equiv=\"X-UA-Compatible\" content=\"IE=edge,chrome=1\" />" +
+    "<meta name=\"description\" content=\"\" /><meta name=\"viewport\" content=\"width=device-width\" />" +
+    "<link rel=\"stylesheet\" href=\"/css/normalize.css\" /><link rel=\"stylesheet\" href=\"/css/main.css\" />" +
+    "</head><body><div class=\"h-entry\"><h1 class=\"p-name\">heading</h1><p>by " +
+    "<span class=\"p-author\">name</span> on <span class=\"dt-published\">10 May 2013</span></p>" +
     "<div class=\"e-content\"><p>some <em>things</em> are <strong>stuff</strong></p></div></div></body></html>")
 
 	}
