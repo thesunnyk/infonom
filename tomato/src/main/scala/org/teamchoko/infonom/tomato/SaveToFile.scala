@@ -28,7 +28,7 @@ object SaveToFile {
 
   def createFile(parent: File, article: Article): StringError[File] = for {
     _ <- checkTrue(parent.exists() && parent.isDirectory(), "Invalid parent")
-    file <- extractErrors(new File(parent, article.uri.toASCIIString()))
+    file <- extractErrors(new File(parent, article.uri.toASCIIString() + ".html"))
   } yield (file)
   
   def saveToFileIfNew(file: File, article: CompleteArticle): StringError[Unit] =
