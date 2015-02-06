@@ -30,6 +30,11 @@
       <version>${joda-convert.version}</version>
     </dependency>
     <dependency>
+        <groupId>org.slf4j</groupId>
+        <artifactId>slf4j-api</artifactId>
+        <version>${slf4j.version}</version>
+    </dependency>
+    <dependency>
       <groupId>org.scalaz</groupId>
       <artifactId>scalaz-core_${scala.version.alias}</artifactId>
       <version>${scalaz.version}</version>

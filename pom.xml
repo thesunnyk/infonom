@@ -48,6 +48,8 @@
     <scalatags.version>0.4.2</scalatags.version>
     <argonaut.version>6.1-M5</argonaut.version>
     <scala-xml.version>1.0.2</scala-xml.version>
+    <scalaj.version>1.1.3</scalaj.version>
+    <slf4j.version>1.7.10</slf4j.version>
   </properties>
 
   <modules>

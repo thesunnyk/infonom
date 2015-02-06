@@ -33,6 +33,16 @@
       <artifactId>joda-convert</artifactId>
       <version>${joda-convert.version}</version>
     </dependency>
+    <dependency>
+        <groupId>org.slf4j</groupId>
+        <artifactId>slf4j-api</artifactId>
+        <version>${slf4j.version}</version>
+    </dependency>
+    <dependency>
+        <groupId>org.slf4j</groupId>
+        <artifactId>slf4j-simple</artifactId>
+        <version>${slf4j.version}</version>
+    </dependency>
     <dependency><!-- For markdown. -->
       <groupId>org.clapper</groupId>
       <artifactId>markwrap_${scala.version.alias}</artifactId>

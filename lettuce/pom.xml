@@ -25,6 +25,16 @@
       <version>${scala.version}</version>
     </dependency>
     <dependency>
+        <groupId>org.slf4j</groupId>
+        <artifactId>slf4j-api</artifactId>
+        <version>${slf4j.version}</version>
+    </dependency>
+    <dependency>
+        <groupId>org.slf4j</groupId>
+        <artifactId>slf4j-simple</artifactId>
+        <version>${slf4j.version}</version>
+    </dependency>
+    <dependency>
       <groupId>org.scala-lang.modules</groupId>
       <artifactId>scala-xml_${scala.version.alias}</artifactId>
       <version>${scala-xml.version}</version>
@@ -39,6 +49,11 @@
       <artifactId>scalatest_${scala.version.alias}</artifactId>
       <version>${scalatest.version}</version>
       <scope>test</scope>
+    </dependency>
+    <dependency>
+        <groupId>org.scalaj</groupId>
+        <artifactId>scalaj-http_${scala.version.alias}</artifactId>
+        <version>${scalaj.version}</version>
     </dependency>
   </dependencies>
 
@@ -59,6 +74,9 @@
                               </goals>
                               <configuration>
                                   <mainClass>${main.class}</mainClass>
+                                  <arguments>
+                                      <argument>blog_2014_10_13.xml</argument>
+                                  </arguments>
                               </configuration>
                           </execution>
                       </executions>
