@@ -31,10 +31,8 @@ object SaveToFile {
     file <- extractErrors(new File(parent, article.uri.toASCIIString() + ".html"))
   } yield (file)
   
-  def saveToFileIfNew(file: File, article: CompleteArticle): StringError[Unit] =
-    if (file.exists()) {
-      success()
-    } else for {
+  def saveToFile(file: File, article: CompleteArticle): StringError[Unit] =
+    for {
       writer <- extractErrors(new FileWriter(file))
       articleString = ArticleRenderer.render(article)
       _ <- extractErrors(writer.write(articleString))
@@ -45,7 +43,7 @@ object SaveToFile {
     folder <- getDirectory(article.article.pubDate)
     _ <- createDirectory(folder)
     file <- createFile(folder, article.article)
-    _ <- saveToFileIfNew(file, article)
+    _ <- saveToFile(file, article)
   } yield () 
 
 }

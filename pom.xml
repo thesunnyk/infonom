@@ -43,7 +43,7 @@
     <joda-convert.version>1.7</joda-convert.version>
     <scalaz.version>7.1.0</scalaz.version>
     <scalaz-stream.version>0.6a</scalaz-stream.version>
-    <doobie.version>0.2-SNAPSHOT</doobie.version>
+    <doobie.version>0.2.0</doobie.version>
     <markwrap.version>1.0.2</markwrap.version>
     <scalatags.version>0.4.2</scalatags.version>
     <argonaut.version>6.1-M5</argonaut.version>
