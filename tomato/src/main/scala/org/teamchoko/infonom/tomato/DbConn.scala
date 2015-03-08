@@ -7,6 +7,7 @@ import org.teamchoko.infonom.carrot.Articles.{Category, Author, Comment, Article
 import org.teamchoko.infonom.carrot.Articles.{TextFilter, Html, Textile}
 import java.net.URI
 import org.joda.time.DateTime
+import java.sql.Timestamp
 
 object DbConn {
   def xa = DriverManagerTransactor[Task]("org.h2.Driver", "jdbc:h2:file:test.db", "sa", "")
@@ -15,7 +16,7 @@ object DbConn {
     Meta[String].nxmap(x => new URI(x), x => x.toASCIIString())
 
   implicit val DateTimeMeta: Meta[DateTime] =
-    Meta[Date].nxmap(x => new DateTime(x), x => x.toDate())
+    Meta[Timestamp].nxmap(x => new DateTime(x), x => new Timestamp(x.getMillis()))
 
   implicit val TextFilterMeta: Meta[TextFilter] =
     Meta[String].nxmap(
@@ -33,13 +34,13 @@ object DbConn {
   val getAuthors = sql"select name, email, uri from author".query[Author]
 
   def createAuthor(a: Author) = sql"""
-    insert into author (name, email, uri)
-    values (${a.name}, ${a.email}, ${a.uri})
-  """.update
+      insert into author (name, email, uri)
+      values (${a.name}, ${a.email}, ${a.uri})
+    """.update
 
   val lastVal = sql"select lastval()".query[Int].unique
   
-  def deleteAuthor(a: Author) = sql"delete from author where name = ${a.name}".update
+  def deleteAuthorById(aid: Int) = sql"delete from author where id = ${aid}".update
 
   val createAuthorTable = sql"""
       create table author (
@@ -52,24 +53,39 @@ object DbConn {
 
   val getCategory = sql"select name, uri from category".query[Category]
 
-  def getCategoryById(aid: Long) = sql"select name, uri from category where id = $aid".query[Category]
+  def getCategoryById(aid: Int) = sql"select name, uri from category where id = $aid".query[Category]
 
-  val createCategoryTable: Update0 = sql"""
-      create table category {
-        id serial,
-        name varchar not null,
-        uri varchar not null
-      }
+  def addCategory(cat: Category) = sql"""
+      insert into category (name, uri)
+      values (${cat.name}, ${cat.uri})
     """.update
 
-  def getCommentById(aid: Long) = sql"select body, pubdate from comment where id = $aid".query[Comment].list
+  def deleteCategoryById(aid: Int) = sql"""
+      delete from category where id = ${aid}
+    """.update
 
+  val createCategoryTable: Update0 = sql"""
+      create table category (
+        id serial primary key,
+        name varchar not null,
+        uri varchar not null
+      )
+    """.update
+
+  def getCommentById(aid: Int) = sql"select body, pubdate from comment where id = $aid".query[Comment]
+
+  def createComment(c: Comment) = sql"""
+      insert into comment (body, pubdate)
+      values (${c.text}, ${c.pubDate})
+    """.update
+
+  // TODO body should be text, and we should have a way of reading / writing it
   val createCommentTable: Update0 = sql"""
-      create table comment {
-        id serial,
-        body text,
-        pubdate timestamp
-      }
+      create table comment (
+        id serial primary key,
+        body longvarchar not null,
+        pubdate timestamp not null
+      )
     """.update
   
   case class CompleteCommentDb(articleid: Long, commentid: Long, authorid: Long)
@@ -95,11 +111,12 @@ object DbConn {
       where id = $aid
     """.query[Article].list
 
+  // TODO body should be text, and we should have a way of reading / writing it
   val createArticleTable: Update0 = sql"""
       create table article {
         id serial,
         heading varchar,
-        body text,
+        body longvarchar,
         textFilter varchar,
         draft bool,
         extract text,
