@@ -90,19 +90,19 @@ object DbConn {
   
   case class CompleteCommentDb(articleid: Long, commentid: Long, authorid: Long)
 
-  def getCompleteCommentById(aid: Long) = sql"""
+  def getCompleteCommentById(aid: Int) = sql"""
       select articleid, commentid, authorid
       from completecomment
       where id = $aid
     """.query[CompleteCommentDb].list
     
   val createCompleteCommentTable: Update0 = sql"""
-      create table completecomment {
+      create table completecomment (
         id serial,
         articleid long,
         commentid long,
         authorid long
-      }
+      )
     """.update
 
   def getArticleById(aid: Long) = sql"""
@@ -111,19 +111,26 @@ object DbConn {
       where id = $aid
     """.query[Article].list
 
+  def createArticle(a: Article) = sql"""
+      insert into article (heading, body, textfilter, draft, extract, pullquote, pubdate, uri)
+      values (${a.heading}, ${a.text}, ${a.textFilter}, ${a.draft}, ${a.extract},
+        ${a.pullquote}, ${a.pubDate}, ${a.uri})
+    """.update
+
   // TODO body should be text, and we should have a way of reading / writing it
+  // TODO draft bool does not work.
   val createArticleTable: Update0 = sql"""
-      create table article {
+      create table article (
         id serial,
         heading varchar,
         body longvarchar,
         textFilter varchar,
-        draft bool,
-        extract text,
-        pullquote text,
+        draft bool not null,
+        extract longvarchar,
+        pullquote longvarchar,
         pubdate timestamp,
         uri varchar
-      }
+      )
     """.update
 
   case class CompleteArticleDb(articleId: Long, completecommentid: Long, categoryid: Long, authorid: Long)

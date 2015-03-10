@@ -6,7 +6,7 @@ import org.scalatest.Matchers
 import java.net.URI
 import scalaz.concurrent.Task
 import DbConn._
-import org.teamchoko.infonom.carrot.Articles.{Author, Category, Comment}
+import org.teamchoko.infonom.carrot.Articles.{Author, Category, Comment, Article, Textile}
 import org.joda.time.DateTime
 
 class DbConnSpec extends FlatSpec with Matchers {
@@ -167,5 +167,21 @@ class DbConnSpec extends FlatSpec with Matchers {
 
   // TODO Actually insert and remove comments.
   // TODO Fix up articles, CompleteComment, and CompleteArticle
+
+  "Doobie Article SQL" should "typecheck create article table" in {
+    val analysis = DbConn.createArticleTable.analysis.transact(xaTest).run
+    analysis.alignmentErrors should equal(Nil)
+  }
+
+  it should "typecheck create article" in {
+    val article = Article("heading", "content", Textile(), false, None, None, new DateTime(0), new URI("/tmp"))
+    val analysis = (for {
+      _ <- DbConn.createArticleTable.run
+      analysisVal <- DbConn.createArticle(article).analysis
+    } yield analysisVal).transact(xaTest).run
+
+    analysis.alignmentErrors should equal(Nil)
+  }
+
 
 }
