@@ -301,7 +301,7 @@ class DbConnSpec extends FlatSpec with Matchers {
     fromDb should equal(None)
   }
 
-  // TODO Fix up articles, CompleteComment, and CompleteArticle
+  // TODO Fix up CompleteComment, and CompleteArticle
 
   "Doobie Article SQL" should "typecheck create article table" in {
     val analysis = DbConn.createArticleTable.analysis.transact(xaTest).run
@@ -319,5 +319,42 @@ class DbConnSpec extends FlatSpec with Matchers {
     analysis.alignmentErrors should equal(Nil)
   }
 
+  it should "create an article" in {
+    val article = Article("heading", "content", Textile(), false, None, None, new DateTime(0), new URI("/tmp"))
+    val fromDb = (for {
+      _ <- DbConn.createArticleTable.run
+      _ <- DbConn.createArticle(article).run
+      articleId <- DbConn.lastVal
+      articleVal <- DbConn.getArticleById(articleId).unique
+    } yield articleVal).transact(xaTest).run
 
+    fromDb should equal(article)
+  }
+
+  it should "retrieve article by id ambiguously" in {
+    val article = Article("heading", "content", Textile(), false, None, None, new DateTime(0), new URI("/tmp"))
+    val article2 = Article("heading", "content 2", Textile(), false, None, None, new DateTime(0), new URI("/tmp"))
+    val fromDb = (for {
+      _ <- DbConn.createArticleTable.run
+      _ <- DbConn.createArticle(article).run
+      articleId <- DbConn.lastVal
+      _ <- DbConn.createArticle(article2).run
+      articleVal <- DbConn.getArticleById(articleId).unique
+    } yield articleVal).transact(xaTest).run
+
+    fromDb should equal(article)
+  }
+
+  it should "delete an article" in {
+    val article = Article("heading", "content", Textile(), false, None, None, new DateTime(0), new URI("/tmp"))
+    val fromDb = (for {
+      _ <- DbConn.createArticleTable.run
+      _ <- DbConn.createArticle(article).run
+      articleId <- DbConn.lastVal
+      _ <- DbConn.deleteArticleById(articleId).run
+      articleVal <- DbConn.getArticleById(articleId).option
+    } yield articleVal).transact(xaTest).run
+
+    fromDb should equal(None)
+  }
 }

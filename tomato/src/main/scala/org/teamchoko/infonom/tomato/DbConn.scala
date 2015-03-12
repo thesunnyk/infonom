@@ -111,7 +111,7 @@ object DbConn {
       select heading, body, textfilter, draft, extract, pullquote, pubdate, uri
       from article
       where id = $aid
-    """.query[Article].list
+    """.query[Article]
 
   def createArticle(a: Article) = sql"""
       insert into article (heading, body, textfilter, draft, extract, pullquote, pubdate, uri)
@@ -119,8 +119,9 @@ object DbConn {
         ${a.pullquote}, ${a.pubDate}, ${a.uri})
     """.update
 
+  def deleteArticleById(aid: Long) = sql"delete from article where id = $aid".update
+
   // TODO body should be text, and we should have a way of reading / writing it
-  // TODO draft bool does not work.
   val createArticleTable: Update0 = sql"""
       create table article (
         id serial,
