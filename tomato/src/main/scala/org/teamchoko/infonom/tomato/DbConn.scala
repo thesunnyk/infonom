@@ -51,11 +51,11 @@ object DbConn {
       )
     """.update
 
-  val getCategory = sql"select name, uri from category".query[Category]
+  val getCategories = sql"select name, uri from category".query[Category]
 
   def getCategoryById(aid: Int) = sql"select name, uri from category where id = $aid".query[Category]
 
-  def addCategory(cat: Category) = sql"""
+  def createCategory(cat: Category) = sql"""
       insert into category (name, uri)
       values (${cat.name}, ${cat.uri})
     """.update
@@ -64,7 +64,7 @@ object DbConn {
       delete from category where id = ${aid}
     """.update
 
-  val createCategoryTable: Update0 = sql"""
+  val createCategoryTable = sql"""
       create table category (
         id serial primary key,
         name varchar not null,
@@ -73,6 +73,8 @@ object DbConn {
     """.update
 
   def getCommentById(aid: Int) = sql"select body, pubdate from comment where id = $aid".query[Comment]
+
+  def deleteCommentById(aid: Int) = sql"delete from comment where id = $aid".update
 
   def createComment(c: Comment) = sql"""
       insert into comment (body, pubdate)
