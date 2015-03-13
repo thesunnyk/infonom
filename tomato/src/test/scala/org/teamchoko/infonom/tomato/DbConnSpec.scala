@@ -172,10 +172,31 @@ class DbConnSpec extends FlatSpec with Matchers {
 
   "Complete Comment SQL" should behave like doBasicCrud(DbConn.CompleteCommentCrud, completeComment, completeComment2)
 
-  // TODO getCompleteCommentByArticleId
+  it should behave like typecheckQueryTable("get for articleid", DbConn.CompleteCommentCrud.createTable,
+    DbConn.CompleteCommentCrud.getForCompleteArticleId(0))
 
+  it should "get comments for article id" in {
+    val completeComment3 = CompleteCommentDb(4, 1, 1)
 
-  // TODO Fix up CompleteArticle
+    val crud = DbConn.CompleteCommentCrud
+
+    val fromDb = (for {
+      _ <- crud.createTable.run
+      _ <- crud.create(completeComment).run
+      _ <- crud.create(completeComment2).run
+      _ <- crud.create(completeComment3).run
+      retrievedItem <- crud.getForCompleteArticleId(6).list
+    } yield retrievedItem).transact(xaTest).run
+
+    fromDb should equal(List(completeComment, completeComment2))
+  }
+
+  val completeArticle = CompleteArticleDb(6, 6, 6)
+  val completeArticle2 = CompleteArticleDb(6, 6, 9)
+
+  "Complete Article SQL" should behave like doBasicCrud(DbConn.CompleteArticleCrud, completeArticle, completeArticle2)
+
+  it should behave like listAllItems(DbConn.CompleteArticleCrud, completeArticle, completeArticle2)
 
 
 }

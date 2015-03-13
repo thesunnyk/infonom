@@ -43,18 +43,18 @@ object DbConn {
   }
 
   object AuthorCrud extends DbBasicCrud[Author] with DbSearch[Author] {
-    def getById(aid: Int) = sql"select name, email, uri from author where id = $aid".query[Author]
+    override def getById(aid: Int) = sql"select name, email, uri from author where id = $aid".query[Author]
 
-    val getAllItems = sql"select name, email, uri from author".query[Author]
+    override val getAllItems = sql"select name, email, uri from author".query[Author]
 
-    def create(a: Author) = sql"""
+    override def create(a: Author) = sql"""
         insert into author (name, email, uri)
         values (${a.name}, ${a.email}, ${a.uri})
       """.update
 
-    def deleteById(aid: Int) = sql"delete from author where id = ${aid}".update
+    override def deleteById(aid: Int) = sql"delete from author where id = ${aid}".update
 
-    val createTable = sql"""
+    override val createTable = sql"""
         create table author (
           id serial primary key,
           name varchar not null,
@@ -65,20 +65,20 @@ object DbConn {
   }
 
   object CategoryCrud extends DbBasicCrud[Category] with DbSearch[Category] {
-    val getAllItems = sql"select name, uri from category".query[Category]
+    override val getAllItems = sql"select name, uri from category".query[Category]
 
-    def getById(aid: Int) = sql"select name, uri from category where id = $aid".query[Category]
+    override def getById(aid: Int) = sql"select name, uri from category where id = $aid".query[Category]
 
-    def create(cat: Category) = sql"""
+    override def create(cat: Category) = sql"""
         insert into category (name, uri)
         values (${cat.name}, ${cat.uri})
       """.update
 
-    def deleteById(aid: Int) = sql"""
+    override def deleteById(aid: Int) = sql"""
         delete from category where id = ${aid}
       """.update
 
-    val createTable = sql"""
+    override val createTable = sql"""
         create table category (
           id serial primary key,
           name varchar not null,
@@ -88,17 +88,17 @@ object DbConn {
   }
 
   object CommentCrud extends DbBasicCrud[Comment] {
-    def getById(aid: Int) = sql"select body, pubdate from comment where id = $aid".query[Comment]
+    override def getById(aid: Int) = sql"select body, pubdate from comment where id = $aid".query[Comment]
 
-    def deleteById(aid: Int) = sql"delete from comment where id = $aid".update
+    override def deleteById(aid: Int) = sql"delete from comment where id = $aid".update
 
-    def create(c: Comment) = sql"""
+    override def create(c: Comment) = sql"""
         insert into comment (body, pubdate)
         values (${c.text}, ${c.pubDate})
       """.update
 
     // TODO body should be text, and we should have a way of reading / writing it
-    val createTable: Update0 = sql"""
+    override val createTable: Update0 = sql"""
         create table comment (
           id serial primary key,
           body longvarchar not null,
@@ -107,32 +107,32 @@ object DbConn {
       """.update
   }
 
-  case class CompleteCommentDb(articleid: Int, commentid: Int, authorid: Int)
+  case class CompleteCommentDb(completearticleid: Int, commentid: Int, authorid: Int)
 
   object CompleteCommentCrud extends DbBasicCrud[CompleteCommentDb] {
-    def create(c: CompleteCommentDb) = sql"""
-        insert into completecomment (articleid, commentid, authorid)
-          values (${c.articleid}, ${c.commentid}, ${c.authorid})
+    override def create(c: CompleteCommentDb) = sql"""
+        insert into completecomment (completearticleid, commentid, authorid)
+          values (${c.completearticleid}, ${c.commentid}, ${c.authorid})
         """.update
 
-    def deleteById(aid: Int) = sql"delete from completecomment where id = $aid".update
+    override def deleteById(aid: Int) = sql"delete from completecomment where id = $aid".update
 
-    def getById(aid: Int) = sql"""
-        select articleid, commentid, authorid
+    override def getById(aid: Int) = sql"""
+        select completearticleid, commentid, authorid
         from completecomment
         where id = $aid
       """.query[CompleteCommentDb]
 
-    def getForArticleId(aid: Int) = sql"""
-        select articleid, commentid, authorid
+    def getForCompleteArticleId(aid: Int) = sql"""
+        select completearticleid, commentid, authorid
         from completecomment
-        where articleid = $aid
+        where completearticleid = $aid
       """.query[CompleteCommentDb]
 
-    val createTable: Update0 = sql"""
+    override val createTable: Update0 = sql"""
         create table completecomment (
           id serial,
-          articleid int not null,
+          completearticleid int not null,
           commentid int not null,
           authorid int not null
         )
@@ -140,22 +140,22 @@ object DbConn {
   }
 
   object ArticleCrud extends DbBasicCrud[Article] {
-    def getById(aid: Int) = sql"""
+    override def getById(aid: Int) = sql"""
         select heading, body, textfilter, draft, extract, pullquote, pubdate, uri
         from article
         where id = $aid
       """.query[Article]
 
-    def create(a: Article) = sql"""
+    override def create(a: Article) = sql"""
         insert into article (heading, body, textfilter, draft, extract, pullquote, pubdate, uri)
         values (${a.heading}, ${a.text}, ${a.textFilter}, ${a.draft}, ${a.extract},
           ${a.pullquote}, ${a.pubDate}, ${a.uri})
       """.update
 
-    def deleteById(aid: Int) = sql"delete from article where id = $aid".update
+    override def deleteById(aid: Int) = sql"delete from article where id = $aid".update
 
     // TODO body should be text, and we should have a way of reading / writing it
-    val createTable: Update0 = sql"""
+    override val createTable: Update0 = sql"""
         create table article (
           id serial,
           heading varchar not null,
@@ -170,21 +170,32 @@ object DbConn {
       """.update
   }
 
-  case class CompleteArticleDb(articleId: Long, completecommentid: Long, categoryid: Long, authorid: Long)
+  case class CompleteArticleDb(articleid: Int, categoryid: Int, authorid: Int)
 
   // TODO Sorting? Order by date but the date is in regular article.
-  val getCompleteArticle = sql"""
-      select articleid, completecommentid, categoryid, authorid
-      from completearticle
-    """.query[CompleteArticleDb].list
+  object CompleteArticleCrud extends DbBasicCrud[CompleteArticleDb] with DbSearch[CompleteArticleDb] {
+    override def getById(aid: Int) = sql"""
+        select articleid, categoryid, authorid
+        from completearticle
+        where id = $aid
+      """.query[CompleteArticleDb]
 
-  val createCompleteArticleTable: Update0 = sql"""
-      create table completearticle {
-        id serial,
-        articleid long,
-        completecommentid long,
-        categoryid long,
-        authorid long
-      }
-    """.update
+    override def create(a: CompleteArticleDb) = sql"""
+        insert into completearticle (articleid, categoryid, authorid)
+        values (${a.articleid}, ${a.categoryid}, ${a.authorid})
+      """.update
+
+    override def deleteById(id: Int) = sql"delete from completearticle where id = ${id}".update
+
+    override def getAllItems = sql"select articleid, categoryid, authorid from completearticle".query[CompleteArticleDb]
+
+    override val createTable: Update0 = sql"""
+        create table completearticle (
+          id serial,
+          articleid int not null,
+          categoryid int not null,
+          authorid int not null
+        )
+      """.update
+  }
 }
