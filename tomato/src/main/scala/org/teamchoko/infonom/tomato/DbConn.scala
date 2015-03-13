@@ -1,13 +1,30 @@
 package org.teamchoko.infonom.tomato
 
-import doobie.imports._
-import scalaz.concurrent.Task
-import java.util.Date
-import org.teamchoko.infonom.carrot.Articles.{Category, Author, Comment, Article}
-import org.teamchoko.infonom.carrot.Articles.{TextFilter, Html, Textile}
 import java.net.URI
-import org.joda.time.DateTime
 import java.sql.Timestamp
+
+import scala.reflect.runtime.universe
+
+import org.joda.time.DateTime
+import org.teamchoko.infonom.carrot.Articles.Article
+import org.teamchoko.infonom.carrot.Articles.Author
+import org.teamchoko.infonom.carrot.Articles.Category
+import org.teamchoko.infonom.carrot.Articles.Comment
+import org.teamchoko.infonom.carrot.Articles.CompleteArticle
+import org.teamchoko.infonom.carrot.Articles.CompleteComment
+import org.teamchoko.infonom.carrot.Articles.Html
+import org.teamchoko.infonom.carrot.Articles.TextFilter
+import org.teamchoko.infonom.carrot.Articles.Textile
+
+import doobie.imports.ConnectionIO
+import doobie.imports.DriverManagerTransactor
+import doobie.imports.Meta
+import doobie.imports.Query0
+import doobie.imports.Update0
+import doobie.imports.toMoreConnectionIOOps
+import doobie.imports.toSqlInterpolator
+import scalaz.Scalaz._
+import scalaz.concurrent.Task
 
 object DbConn {
   def xa = DriverManagerTransactor[Task]("org.h2.Driver", "jdbc:h2:file:test.db", "sa", "")
@@ -45,6 +62,8 @@ object DbConn {
   object AuthorCrud extends DbBasicCrud[Author] with DbSearch[Author] {
     override def getById(aid: Int) = sql"select name, email, uri from author where id = $aid".query[Author]
 
+    def getIdByName(name: String) = sql"select id from author where name = $name".query[Int]
+
     override val getAllItems = sql"select name, email, uri from author".query[Author]
 
     override def create(a: Author) = sql"""
@@ -64,10 +83,23 @@ object DbConn {
       """.update
   }
 
+  def createAuthorAndGetId(a: Author) = for {
+      _ <- AuthorCrud.create(a).run
+      authorId <- lastVal
+    } yield authorId
+
+  // TODO actually update the author instead of ignoring.
+  def saveOrUpdateAuthor(a: Author) = for {
+      maybeAuthorId <- AuthorCrud.getIdByName(a.name).option
+      authorId <- maybeAuthorId.fold(createAuthorAndGetId(a))(aid => aid.point[ConnectionIO])
+    } yield authorId
+
   object CategoryCrud extends DbBasicCrud[Category] with DbSearch[Category] {
     override val getAllItems = sql"select name, uri from category".query[Category]
 
     override def getById(aid: Int) = sql"select name, uri from category where id = $aid".query[Category]
+
+    def getIdByName(name: String) = sql"select id from category where name = $name".query[Int]
 
     override def create(cat: Category) = sql"""
         insert into category (name, uri)
@@ -86,6 +118,17 @@ object DbConn {
         )
       """.update
   }
+
+  def createCategoryAndGetId(c: Category) = for {
+      _ <- CategoryCrud.create(c).run
+      categoryId <- lastVal
+    } yield categoryId
+
+  // TODO Actually update the category instead of ignoring
+  def saveOrUpdateCategory(c: Category) = for {
+      maybeCategoryId <- CategoryCrud.getIdByName(c.name).option
+      categoryId <- maybeCategoryId.fold(createCategoryAndGetId(c))(cid => cid.point[ConnectionIO])
+    } yield categoryId
 
   object CommentCrud extends DbBasicCrud[Comment] {
     override def getById(aid: Int) = sql"select body, pubdate from comment where id = $aid".query[Comment]
@@ -106,6 +149,11 @@ object DbConn {
         )
       """.update
   }
+
+  def createCommentAndGetId(c: Comment) = for {
+      _ <- CommentCrud.create(c).run
+      commentId <- lastVal
+    } yield commentId
 
   case class CompleteCommentDb(completearticleid: Int, commentid: Int, authorid: Int)
 
@@ -139,6 +187,14 @@ object DbConn {
       """.update
   }
 
+  def createNewCompleteComment(c: CompleteComment, completeArticleId: Int) = for {
+      authorId <- saveOrUpdateAuthor(c.author)
+      commentId <- createCommentAndGetId(c.comment)
+      comment = CompleteCommentDb(completeArticleId, commentId, authorId)
+      _ <- CompleteCommentCrud.create(comment).run
+      commentId <- lastVal
+    } yield commentId
+
   object ArticleCrud extends DbBasicCrud[Article] {
     override def getById(aid: Int) = sql"""
         select heading, body, textfilter, draft, extract, pullquote, pubdate, uri
@@ -170,32 +226,64 @@ object DbConn {
       """.update
   }
 
-  case class CompleteArticleDb(articleid: Int, categoryid: Int, authorid: Int)
+  def createArticleAndGetId(c: Article) = for {
+      _ <- ArticleCrud.create(c).run
+      articleId <- lastVal
+    } yield articleId
+
+  case class CompleteArticleDb(articleid: Int, categoriesid: Int, authorid: Int)
 
   // TODO Sorting? Order by date but the date is in regular article.
   object CompleteArticleCrud extends DbBasicCrud[CompleteArticleDb] with DbSearch[CompleteArticleDb] {
     override def getById(aid: Int) = sql"""
-        select articleid, categoryid, authorid
+        select articleid, categoriesid, authorid
         from completearticle
         where id = $aid
       """.query[CompleteArticleDb]
 
     override def create(a: CompleteArticleDb) = sql"""
-        insert into completearticle (articleid, categoryid, authorid)
-        values (${a.articleid}, ${a.categoryid}, ${a.authorid})
+        insert into completearticle (articleid, categoriesid, authorid)
+        values (${a.articleid}, ${a.categoriesid}, ${a.authorid})
       """.update
 
     override def deleteById(id: Int) = sql"delete from completearticle where id = ${id}".update
 
-    override def getAllItems = sql"select articleid, categoryid, authorid from completearticle".query[CompleteArticleDb]
+    override def getAllItems = sql"""
+        select articleid, categoriesid, authorid from completearticle
+      """.query[CompleteArticleDb]
 
     override val createTable: Update0 = sql"""
         create table completearticle (
           id serial,
           articleid int not null,
-          categoryid int not null,
+          categoriesid int not null,
           authorid int not null
         )
       """.update
   }
+
+  def createNewCompleteArticleAndGetId(a: CompleteArticleDb) = for {
+      _ <- CompleteArticleCrud.create(a).run
+      completeArticleId <- lastVal
+    } yield completeArticleId
+
+  // TODO Need a middle table to link articles and categories
+  def persistCompleteArticle(a: CompleteArticle) = (for {
+      authorId <- saveOrUpdateAuthor(a.author)
+      articleId <- createArticleAndGetId(a.article)
+      completeArticleDb = CompleteArticleDb(articleId, 0, authorId)
+      completeArticleId <- createNewCompleteArticleAndGetId(completeArticleDb)
+      _ = a.comments.foreach(comment => createNewCompleteComment(comment, completeArticleId))
+    } yield (completeArticleId)).transact(xa)
+
+
+  def initialiseDb = (for {
+      _ <- AuthorCrud.createTable.run
+      _ <- CategoryCrud.createTable.run
+      _ <- CommentCrud.createTable.run
+      _ <- CompleteCommentCrud.createTable.run
+      _ <- ArticleCrud.createTable.run
+      _ <- CompleteArticleCrud.createTable.run
+    } yield ()).transact(xa).run
+
 }
