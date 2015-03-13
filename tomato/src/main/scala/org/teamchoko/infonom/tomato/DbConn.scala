@@ -29,112 +29,146 @@ object DbConn {
         case Textile() => "textile"
       })
 
-  def getAuthorById(aid: Int) = sql"select name, email, uri from author where id = $aid".query[Author]
-
-  val getAuthors = sql"select name, email, uri from author".query[Author]
-
-  def createAuthor(a: Author) = sql"""
-      insert into author (name, email, uri)
-      values (${a.name}, ${a.email}, ${a.uri})
-    """.update
-
   val lastVal = sql"select lastval()".query[Int].unique
-  
-  def deleteAuthorById(aid: Int) = sql"delete from author where id = ${aid}".update
 
-  val createAuthorTable = sql"""
-      create table author (
-        id serial primary key,
-        name varchar not null,
-        email varchar,
-        uri varchar
-      )
-    """.update
+  trait DbBasicCrud[T] {
+    def getById(id: Int): Query0[T]
+    def create(a: T): Update0
+    def deleteById(id: Int): Update0
+    def createTable: Update0
+  }
 
-  val getCategories = sql"select name, uri from category".query[Category]
+  trait DbSearch[T] extends DbBasicCrud[T] {
+    def getAllItems: Query0[T]
+  }
 
-  def getCategoryById(aid: Int) = sql"select name, uri from category where id = $aid".query[Category]
+  object AuthorCrud extends DbBasicCrud[Author] with DbSearch[Author] {
+    def getById(aid: Int) = sql"select name, email, uri from author where id = $aid".query[Author]
 
-  def createCategory(cat: Category) = sql"""
-      insert into category (name, uri)
-      values (${cat.name}, ${cat.uri})
-    """.update
+    val getAllItems = sql"select name, email, uri from author".query[Author]
 
-  def deleteCategoryById(aid: Int) = sql"""
-      delete from category where id = ${aid}
-    """.update
+    def create(a: Author) = sql"""
+        insert into author (name, email, uri)
+        values (${a.name}, ${a.email}, ${a.uri})
+      """.update
 
-  val createCategoryTable = sql"""
-      create table category (
-        id serial primary key,
-        name varchar not null,
-        uri varchar not null
-      )
-    """.update
+    def deleteById(aid: Int) = sql"delete from author where id = ${aid}".update
 
-  def getCommentById(aid: Int) = sql"select body, pubdate from comment where id = $aid".query[Comment]
+    val createTable = sql"""
+        create table author (
+          id serial primary key,
+          name varchar not null,
+          email varchar,
+          uri varchar
+        )
+      """.update
+  }
 
-  def deleteCommentById(aid: Int) = sql"delete from comment where id = $aid".update
+  object CategoryCrud extends DbBasicCrud[Category] with DbSearch[Category] {
+    val getAllItems = sql"select name, uri from category".query[Category]
 
-  def createComment(c: Comment) = sql"""
-      insert into comment (body, pubdate)
-      values (${c.text}, ${c.pubDate})
-    """.update
+    def getById(aid: Int) = sql"select name, uri from category where id = $aid".query[Category]
 
-  // TODO body should be text, and we should have a way of reading / writing it
-  val createCommentTable: Update0 = sql"""
-      create table comment (
-        id serial primary key,
-        body longvarchar not null,
-        pubdate timestamp not null
-      )
-    """.update
-  
-  case class CompleteCommentDb(articleid: Long, commentid: Long, authorid: Long)
+    def create(cat: Category) = sql"""
+        insert into category (name, uri)
+        values (${cat.name}, ${cat.uri})
+      """.update
 
-  def getCompleteCommentById(aid: Int) = sql"""
-      select articleid, commentid, authorid
-      from completecomment
-      where id = $aid
-    """.query[CompleteCommentDb].list
-    
-  val createCompleteCommentTable: Update0 = sql"""
-      create table completecomment (
-        id serial,
-        articleid long,
-        commentid long,
-        authorid long
-      )
-    """.update
+    def deleteById(aid: Int) = sql"""
+        delete from category where id = ${aid}
+      """.update
 
-  def getArticleById(aid: Long) = sql"""
-      select heading, body, textfilter, draft, extract, pullquote, pubdate, uri
-      from article
-      where id = $aid
-    """.query[Article]
+    val createTable = sql"""
+        create table category (
+          id serial primary key,
+          name varchar not null,
+          uri varchar not null
+        )
+      """.update
+  }
 
-  def createArticle(a: Article) = sql"""
-      insert into article (heading, body, textfilter, draft, extract, pullquote, pubdate, uri)
-      values (${a.heading}, ${a.text}, ${a.textFilter}, ${a.draft}, ${a.extract},
-        ${a.pullquote}, ${a.pubDate}, ${a.uri})
-    """.update
+  object CommentCrud extends DbBasicCrud[Comment] {
+    def getById(aid: Int) = sql"select body, pubdate from comment where id = $aid".query[Comment]
 
-  def deleteArticleById(aid: Long) = sql"delete from article where id = $aid".update
+    def deleteById(aid: Int) = sql"delete from comment where id = $aid".update
 
-  // TODO body should be text, and we should have a way of reading / writing it
-  val createArticleTable: Update0 = sql"""
-      create table article (
-        id serial,
-        heading varchar,
-        body longvarchar,
-        textFilter varchar,
-        draft bool not null,
-        extract longvarchar,
-        pullquote longvarchar,
-        pubdate timestamp,
-        uri varchar
-      )
-    """.update
+    def create(c: Comment) = sql"""
+        insert into comment (body, pubdate)
+        values (${c.text}, ${c.pubDate})
+      """.update
+
+    // TODO body should be text, and we should have a way of reading / writing it
+    val createTable: Update0 = sql"""
+        create table comment (
+          id serial primary key,
+          body longvarchar not null,
+          pubdate timestamp not null
+        )
+      """.update
+  }
+
+  case class CompleteCommentDb(articleid: Int, commentid: Int, authorid: Int)
+
+  object CompleteCommentCrud extends DbBasicCrud[CompleteCommentDb] {
+    def create(c: CompleteCommentDb) = sql"""
+        insert into completecomment (articleid, commentid, authorid)
+          values (${c.articleid}, ${c.commentid}, ${c.authorid})
+        """.update
+
+    def deleteById(aid: Int) = sql"delete from completecomment where id = $aid".update
+
+    def getById(aid: Int) = sql"""
+        select articleid, commentid, authorid
+        from completecomment
+        where id = $aid
+      """.query[CompleteCommentDb]
+
+    def getForArticleId(aid: Int) = sql"""
+        select articleid, commentid, authorid
+        from completecomment
+        where articleid = $aid
+      """.query[CompleteCommentDb]
+
+    val createTable: Update0 = sql"""
+        create table completecomment (
+          id serial,
+          articleid int not null,
+          commentid int not null,
+          authorid int not null
+        )
+      """.update
+  }
+
+  object ArticleCrud extends DbBasicCrud[Article] {
+    def getById(aid: Int) = sql"""
+        select heading, body, textfilter, draft, extract, pullquote, pubdate, uri
+        from article
+        where id = $aid
+      """.query[Article]
+
+    def create(a: Article) = sql"""
+        insert into article (heading, body, textfilter, draft, extract, pullquote, pubdate, uri)
+        values (${a.heading}, ${a.text}, ${a.textFilter}, ${a.draft}, ${a.extract},
+          ${a.pullquote}, ${a.pubDate}, ${a.uri})
+      """.update
+
+    def deleteById(aid: Int) = sql"delete from article where id = $aid".update
+
+    // TODO body should be text, and we should have a way of reading / writing it
+    val createTable: Update0 = sql"""
+        create table article (
+          id serial,
+          heading varchar not null,
+          body longvarchar not null,
+          textFilter varchar not null,
+          draft bool not null,
+          extract longvarchar,
+          pullquote longvarchar,
+          pubdate timestamp not null,
+          uri varchar not null
+        )
+      """.update
+  }
 
   case class CompleteArticleDb(articleId: Long, completecommentid: Long, categoryid: Long, authorid: Long)
 
