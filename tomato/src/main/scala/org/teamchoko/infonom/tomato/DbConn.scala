@@ -130,6 +130,51 @@ object DbConn {
       categoryId <- maybeCategoryId.fold(createCategoryAndGetId(c))(cid => cid.point[ConnectionIO])
     } yield categoryId
 
+  case class ArticleCategoryDb(completearticleid: Int, categoryid: Int)
+
+  object ArticleCategoryCrud extends DbBasicCrud[ArticleCategoryDb] {
+    override def getById(aid: Int) = sql"""
+        select completearticleid, categoryid from articlecategory where id = $aid
+      """.query[ArticleCategoryDb]
+
+    override def create(ac: ArticleCategoryDb) = sql"""
+        insert into articlecategory (completearticleid, categoryid)
+        values (${ac.completearticleid}, ${ac.categoryid})
+      """.update
+
+    override def deleteById(aid: Int) = sql"""
+        delete from articlecategory where id = ${aid}
+      """.update
+
+    override val createTable = sql"""
+        create table articlecategory (
+          id serial primary key,
+          completearticleid int not null,
+          categoryid int not null
+        )
+      """.update
+  }
+
+  def getCategoriesForCompleteArticleId(aid: Int) = sql"""
+        select c.name, c.uri
+        from articlecategory as a, category as c
+        where a.categoryid = c.id
+        and a.completearticleid = $aid
+    """.query[Category]
+
+  def getCompleteArticlesForCategoryId(cid: Int) = sql"""
+        select c.articleid, c.authorid
+        from articlecategory as a, completearticle as c
+        where a.completearticleid = c.id
+        and a.categoryid = $cid
+    """.query[CompleteArticleDb]
+
+  def linkCategory(c: Category, completeArticleId: Int) = for {
+      categoryId <- saveOrUpdateCategory(c)
+      acdb = ArticleCategoryDb(categoryId, completeArticleId)
+      _ <- ArticleCategoryCrud.create(acdb).run
+    } yield ()
+
   object CommentCrud extends DbBasicCrud[Comment] {
     override def getById(aid: Int) = sql"select body, pubdate from comment where id = $aid".query[Comment]
 
@@ -231,32 +276,31 @@ object DbConn {
       articleId <- lastVal
     } yield articleId
 
-  case class CompleteArticleDb(articleid: Int, categoriesid: Int, authorid: Int)
+  case class CompleteArticleDb(articleid: Int, authorid: Int)
 
   // TODO Sorting? Order by date but the date is in regular article.
   object CompleteArticleCrud extends DbBasicCrud[CompleteArticleDb] with DbSearch[CompleteArticleDb] {
     override def getById(aid: Int) = sql"""
-        select articleid, categoriesid, authorid
+        select articleid, authorid
         from completearticle
         where id = $aid
       """.query[CompleteArticleDb]
 
     override def create(a: CompleteArticleDb) = sql"""
-        insert into completearticle (articleid, categoriesid, authorid)
-        values (${a.articleid}, ${a.categoriesid}, ${a.authorid})
+        insert into completearticle (articleid, authorid)
+        values (${a.articleid}, ${a.authorid})
       """.update
 
     override def deleteById(id: Int) = sql"delete from completearticle where id = ${id}".update
 
     override def getAllItems = sql"""
-        select articleid, categoriesid, authorid from completearticle
+        select articleid, authorid from completearticle
       """.query[CompleteArticleDb]
 
     override val createTable: Update0 = sql"""
         create table completearticle (
           id serial,
           articleid int not null,
-          categoriesid int not null,
           authorid int not null
         )
       """.update
@@ -271,11 +315,11 @@ object DbConn {
   def persistCompleteArticle(a: CompleteArticle) = (for {
       authorId <- saveOrUpdateAuthor(a.author)
       articleId <- createArticleAndGetId(a.article)
-      completeArticleDb = CompleteArticleDb(articleId, 0, authorId)
+      completeArticleDb = CompleteArticleDb(articleId, authorId)
       completeArticleId <- createNewCompleteArticleAndGetId(completeArticleDb)
+      _ = a.categories.foreach(category => linkCategory(category, completeArticleId))
       _ = a.comments.foreach(comment => createNewCompleteComment(comment, completeArticleId))
     } yield (completeArticleId)).transact(xa)
-
 
   def initialiseDb = (for {
       _ <- AuthorCrud.createTable.run

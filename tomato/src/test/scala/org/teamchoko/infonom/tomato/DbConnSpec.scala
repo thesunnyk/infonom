@@ -14,6 +14,7 @@ import org.teamchoko.infonom.tomato.DbConn.DbBasicCrud
 import org.teamchoko.infonom.tomato.DbConn.DbSearch
 
 import DbConn.CompleteArticleDb
+import DbConn.ArticleCategoryDb
 import DbConn.CompleteCommentDb
 import DbConn.DbBasicCrud
 import DbConn.DbSearch
@@ -205,15 +206,21 @@ class DbConnSpec extends FlatSpec with Matchers {
     fromDb should equal(List(completeComment, completeComment2))
   }
 
-  val completeArticle = CompleteArticleDb(6, 6, 6)
-  val completeArticle2 = CompleteArticleDb(6, 6, 9)
+  val completeArticle = CompleteArticleDb(6, 6)
+  val completeArticle2 = CompleteArticleDb(6, 9)
 
   "Complete Article SQL" should behave like doBasicCrud(DbConn.CompleteArticleCrud, completeArticle, completeArticle2)
 
   it should behave like listAllItems(DbConn.CompleteArticleCrud, completeArticle, completeArticle2)
 
+  val articleCategory = ArticleCategoryDb(4, 5)
+  val articleCategory2 = ArticleCategoryDb(4, 8)
+
+  "Article Categories SQL" should behave like doBasicCrud(DbConn.ArticleCategoryCrud, articleCategory, articleCategory2)
   // TODO Test getIdByName for Author and category
   // TODO Test updating author and category
   // TODO test persist complete article
+  // TODO test complete article from category ID
+  // TODO test complete categories from article ID
 
 }
