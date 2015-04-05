@@ -35,15 +35,15 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <maven.compiler.source>1.8</maven.compiler.source>
     <maven.compiler.target>${maven.compiler.source}</maven.compiler.target>
-    <scala.version>2.11.4</scala.version>
+    <scala.version>2.11.6</scala.version>
     <scala.version.alias>2.11</scala.version.alias>
     <scalatest.version>2.2.4</scalatest.version>
     <http4s.version>0.5.4</http4s.version>
     <joda-time.version>2.5</joda-time.version>
     <joda-convert.version>1.7</joda-convert.version>
-    <scalaz.version>7.1.0</scalaz.version>
-    <scalaz-stream.version>0.6a</scalaz-stream.version>
-    <doobie.version>0.2.0</doobie.version>
+    <scalaz.version>7.1.1</scalaz.version>
+    <scalaz-stream.version>0.7a</scalaz-stream.version>
+    <doobie.version>0.2.1</doobie.version>
     <markwrap.version>1.0.2</markwrap.version>
     <scalatags.version>0.4.2</scalatags.version>
     <argonaut.version>6.1-M5</argonaut.version>

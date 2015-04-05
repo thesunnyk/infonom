@@ -34,56 +34,29 @@ class DbConnSpec extends FlatSpec with Matchers {
     }
   }
 
-  def typecheckQueryTable(query: String, createTable: Update0, queryTable: Query0[_],
-    ignoreTypechecking: Boolean = false) = {
+  def typecheckQueryTable(query: String, createTable: Update0, queryTable: Query0[_]) = {
+    it should "pass analysis for " + query in {
+      val analysis = (for {
+        _ <- createTable.run
+        analysisVal <- queryTable.analysis
+      } yield analysisVal).transact(xaTest).run
 
-    if (ignoreTypechecking) {
-      ignore should "pass analysis for " + query in {
-        val analysis = (for {
-          _ <- createTable.run
-          analysisVal <- queryTable.analysis
-        } yield analysisVal).transact(xaTest).run
-
-        analysis.alignmentErrors should equal(Nil)
-      }
-    } else {
-      it should "pass analysis for " + query in {
-        val analysis = (for {
-          _ <- createTable.run
-          analysisVal <- queryTable.analysis
-        } yield analysisVal).transact(xaTest).run
-
-        analysis.alignmentErrors should equal(Nil)
-      }
+      analysis.alignmentErrors should equal(Nil)
     }
   }
 
-  def typecheckUpdateTable(update: String, createTable: Update0, updateTable: Update0,
-    ignoreTypechecking: Boolean = false) = {
+  def typecheckUpdateTable(update: String, createTable: Update0, updateTable: Update0) = {
+    it should "pass analysis for " + update in {
+      val analysis = (for {
+        _ <- createTable.run
+        analysisVal <- updateTable.analysis
+      } yield analysisVal).transact(xaTest).run
 
-    if (ignoreTypechecking) {
-	    ignore should "pass analysis for " + update in {
-	      val analysis = (for {
-	        _ <- createTable.run
-	        analysisVal <- updateTable.analysis
-	      } yield analysisVal).transact(xaTest).run
-	
-	      analysis.alignmentErrors should equal(Nil)
-	    }
-    } else {
-	    it should "pass analysis for " + update in {
-	      val analysis = (for {
-	        _ <- createTable.run
-	        analysisVal <- updateTable.analysis
-	      } yield analysisVal).transact(xaTest).run
-	
-	      analysis.alignmentErrors should equal(Nil)
-	    }
+      analysis.alignmentErrors should equal(Nil)
     }
-
   }
 
-  def doBasicCrud[T](crud: DbBasicCrud[T], item: T, item2: T, ignoreTypechecking: Boolean = false) = {
+  def doBasicCrud[T](crud: DbBasicCrud[T], item: T, item2: T) = {
 
     it should "create and read an item" in {
 
@@ -139,8 +112,8 @@ class DbConnSpec extends FlatSpec with Matchers {
 
     it should behave like typecheckCreateTable(crud.createTable)
     it should behave like typecheckUpdateTable("delete", crud.createTable, crud.deleteById(123))
-    it should behave like typecheckUpdateTable("create", crud.createTable, crud.create(item), ignoreTypechecking)
-    it should behave like typecheckQueryTable("get", crud.createTable, crud.getById(123), ignoreTypechecking)
+    it should behave like typecheckUpdateTable("create", crud.createTable, crud.create(item))
+    it should behave like typecheckQueryTable("get", crud.createTable, crud.getById(123))
   }
 
   def listAllItems[T](crud: DbSearch[T], item: T, item2: T) = {
@@ -228,7 +201,7 @@ class DbConnSpec extends FlatSpec with Matchers {
   val article2 = Article("heading", "content 2", Textile(), false, None, None, new DateTime(0), new URI("/tmp"))
 
 
-  "Article SQL" should behave like doBasicCrud(DbConn.ArticleCrud, article, article2, true)
+  "Article SQL" should behave like doBasicCrud(DbConn.ArticleCrud, article, article2)
 
   val completeComment = CompleteCommentDb(6, 6, 6)
   val completeComment2 = CompleteCommentDb(6, 7, 8)
