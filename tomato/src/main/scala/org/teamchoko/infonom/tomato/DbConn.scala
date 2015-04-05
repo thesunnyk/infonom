@@ -71,6 +71,11 @@ object DbConn {
         values (${a.name}, ${a.email}, ${a.uri})
       """.update
 
+    def update(id: Int, a: Author) = sql"""
+        update author set name=${a.name}, email=${a.email}, uri=${a.uri}
+        where id=${id}
+      """.update
+
     override def deleteById(aid: Int) = sql"delete from author where id = ${aid}".update
 
     override val createTable = sql"""
@@ -100,6 +105,11 @@ object DbConn {
     override def getById(aid: Int) = sql"select name, uri from category where id = $aid".query[Category]
 
     def getIdByName(name: String) = sql"select id from category where name = $name".query[Int]
+
+    def update(id: Int, a: Category) = sql"""
+        update category set name=${a.name}, uri=${a.uri}
+        where id=${id}
+      """.update
 
     override def create(cat: Category) = sql"""
         insert into category (name, uri)

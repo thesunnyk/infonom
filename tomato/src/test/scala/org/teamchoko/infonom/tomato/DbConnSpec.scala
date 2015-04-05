@@ -159,17 +159,65 @@ class DbConnSpec extends FlatSpec with Matchers {
     it should behave like typecheckQueryTable("get all", crud.createTable, crud.getAllItems)
   }
 
+  def testGetIdByName[T](crud: DbSearch[T], getIdByName: (String) => Query0[Int], item: T, itemName: String) {
+    it should s"find an item by name" in {
+      val (dbActual, dbName) = (for {
+        _ <- crud.createTable.run
+        _ <- crud.create(item).run
+        actualId <- DbConn.lastVal
+        nameId <- getIdByName(itemName).unique
+      } yield (actualId, nameId)).transact(xaTest).run
+
+      dbActual should equal(dbName)
+    }
+
+    it should s"not find an item by invalid name" in {
+      val fromDb = (for {
+        _ <- crud.createTable.run
+        _ <- crud.create(item).run
+        nameId <- getIdByName("invalidname").option
+      } yield nameId).transact(xaTest).run
+
+      fromDb should equal(None)
+    }
+
+    it should behave like typecheckQueryTable("getIdByName", crud.createTable,
+      getIdByName("invalidname"))
+  }
+
+  def testUpdate[T](crud: DbSearch[T], update: (Int, T) => Update0, item: T, item2: T) {
+    it should "update the item" in {
+      val fromDb = (for {
+        _ <- crud.createTable.run
+        _ <- crud.create(item).run
+        dbid <- DbConn.lastVal
+        _ <- update(dbid, item2).run
+        item <- crud.getById(dbid).unique
+      } yield item).transact(xaTest).run
+
+      fromDb should equal(item2)
+    }
+
+    it should behave like typecheckUpdateTable("update", crud.createTable, update(0, item))
+  }
+
   val author = Author("things", None, Some(new URI("/author/things")))
   val author2 = Author("things", None, Some(new URI("/author/dthing")))
 
   "Author SQL" should behave like doBasicCrud(DbConn.AuthorCrud, author, author2)
   it should behave like listAllItems(DbConn.AuthorCrud, author, author2)
 
+  it should behave like testGetIdByName(DbConn.AuthorCrud, DbConn.AuthorCrud.getIdByName, author, "things")
+  it should behave like testUpdate(DbConn.AuthorCrud, DbConn.AuthorCrud.update, author, author2)
+
   val category = Category("name", new URI("/test"))
   val category2 = Category("name", new URI("/test/alt"))
 
   "Category SQL" should behave like doBasicCrud(DbConn.CategoryCrud, category, category2)
   it should behave like listAllItems(DbConn.CategoryCrud, category, category2)
+
+  it should behave like testGetIdByName(DbConn.CategoryCrud, DbConn.CategoryCrud.getIdByName, category, "name")
+  it should behave like testUpdate(DbConn.CategoryCrud, DbConn.CategoryCrud.update, category, category2)
 
   val comment = Comment("text", new DateTime(0))
   val comment2 = Comment("text", new DateTime(1232))
@@ -217,8 +265,7 @@ class DbConnSpec extends FlatSpec with Matchers {
   val articleCategory2 = ArticleCategoryDb(4, 8)
 
   "Article Categories SQL" should behave like doBasicCrud(DbConn.ArticleCategoryCrud, articleCategory, articleCategory2)
-  // TODO Test getIdByName for Author and category
-  // TODO Test updating author and category
+
   // TODO test persist complete article
   // TODO test complete article from category ID
   // TODO test complete categories from article ID
