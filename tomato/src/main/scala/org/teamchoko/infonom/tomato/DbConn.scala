@@ -11,7 +11,9 @@ import org.teamchoko.infonom.carrot.Articles.Author
 import org.teamchoko.infonom.carrot.Articles.Category
 import org.teamchoko.infonom.carrot.Articles.Comment
 import org.teamchoko.infonom.carrot.Articles.CompleteArticle
+import org.teamchoko.infonom.carrot.Articles.CompleteArticleCase
 import org.teamchoko.infonom.carrot.Articles.CompleteComment
+import org.teamchoko.infonom.carrot.Articles.CompleteCommentCase
 import org.teamchoko.infonom.carrot.Articles.Html
 import org.teamchoko.infonom.carrot.Articles.TextFilter
 import org.teamchoko.infonom.carrot.Articles.Textile
@@ -23,11 +25,13 @@ import doobie.imports.Query0
 import doobie.imports.Update0
 import doobie.imports.toMoreConnectionIOOps
 import doobie.imports.toSqlInterpolator
+
+import scalaz._
 import scalaz.Scalaz._
 import scalaz.concurrent.Task
 
 object DbConn {
-  def xa = DriverManagerTransactor[Task]("org.h2.Driver", "jdbc:h2:file:test.db", "sa", "")
+  def xa = DriverManagerTransactor[Task]("org.h2.Driver", "jdbc:h2:file:./test.db", "sa", "")
 
   implicit val UriMeta: Meta[URI] =
     Meta[String].nxmap(x => new URI(x), x => x.toASCIIString())
@@ -156,6 +160,12 @@ object DbConn {
         delete from articlecategory where id = ${aid}
       """.update
 
+    def getCategoriesByCompleteArticleId(a: Int) = sql"""
+      select c.name, c.uri
+      from category as c, articlecategory as ac
+      where ac.completearticleid = $a and c.id = ac.categoryid
+      """.query[Category]
+
     override val createTable = sql"""
         create table articlecategory (
           id serial primary key,
@@ -164,13 +174,6 @@ object DbConn {
         )
       """.update
   }
-
-  def getCategoriesForCompleteArticleId(aid: Int) = sql"""
-        select c.name, c.uri
-        from articlecategory as a, category as c
-        where a.categoryid = c.id
-        and a.completearticleid = $aid
-    """.query[Category]
 
   def getCompleteArticlesForCategoryId(cid: Int) = sql"""
         select c.articleid, c.authorid
@@ -225,6 +228,12 @@ object DbConn {
         from completecomment
         where id = $aid
       """.query[CompleteCommentDb]
+
+    def getCompleteComments(aid: Int) = sql"""
+        select c.body, c.pubdate, a.name, a.email, a.uri
+        from completecomment as cc, comment as c, author as a
+        where cc.completearticleid = $aid and cc.commentid = c.id and cc.authorid = a.id
+      """.query[CompleteCommentCase]
 
     def getForCompleteArticleId(aid: Int) = sql"""
         select completearticleid, commentid, authorid
@@ -320,16 +329,38 @@ object DbConn {
       _ <- CompleteArticleCrud.create(a).run
       completeArticleId <- lastVal
     } yield completeArticleId
+  
 
-  // TODO Need a middle table to link articles and categories
-  def persistCompleteArticle(a: CompleteArticle) = (for {
+  // TODO replace these folds with a sequence or something.
+  def linkCategories(cats: List[Category], artId: Int): ConnectionIO[Unit] =
+    cats.map(category => linkCategory(category, artId)).fold(().point[ConnectionIO])((x, y) => x >>= ((_) => y))
+    
+  def createCompleteComments(comments: List[CompleteComment], artId: Int): ConnectionIO[Int] =
+    comments.map(comment => createNewCompleteComment(comment, artId)).fold((0).point[ConnectionIO])((x, y) => x >>= ((_) => y))
+
+  def persistCompleteArticle(a: CompleteArticle) = for {
       authorId <- saveOrUpdateAuthor(a.author)
       articleId <- createArticleAndGetId(a.article)
       completeArticleDb = CompleteArticleDb(articleId, authorId)
       completeArticleId <- createNewCompleteArticleAndGetId(completeArticleDb)
-      _ = a.categories.foreach(category => linkCategory(category, completeArticleId))
-      _ = a.comments.foreach(comment => createNewCompleteComment(comment, completeArticleId))
-    } yield (completeArticleId)).transact(xa)
+      _ <- linkCategories(a.categories, completeArticleId)
+      _ <- createCompleteComments(a.comments, completeArticleId)
+    } yield (completeArticleId)
+
+  def getCompleteCommentByDb(comdb: CompleteCommentDb) = for {
+    comment <- CommentCrud.getById(comdb.commentid).unique
+    author <- AuthorCrud.getById(comdb.authorid).unique
+    item = CompleteCommentCase(comment, author)
+  } yield item
+  
+  def getCompleteArticleById(a: Int) = for {
+    cad <- CompleteArticleCrud.getById(a).unique
+    article <- ArticleCrud.getById(cad.articleid).unique
+    author <- AuthorCrud.getById(cad.authorid).unique
+    categories <- ArticleCategoryCrud.getCategoriesByCompleteArticleId(cad.articleid).list
+    comments <- CompleteCommentCrud.getCompleteComments(a).list
+    item = CompleteArticleCase(article, comments, categories, author)
+  } yield item
 
   def initialiseDb = (for {
       _ <- AuthorCrud.createTable.run
@@ -337,7 +368,8 @@ object DbConn {
       _ <- CommentCrud.createTable.run
       _ <- CompleteCommentCrud.createTable.run
       _ <- ArticleCrud.createTable.run
+      _ <- ArticleCategoryCrud.createTable.run
       _ <- CompleteArticleCrud.createTable.run
-    } yield ()).transact(xa).run
+    } yield ())
 
 }

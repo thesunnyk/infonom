@@ -10,6 +10,8 @@ import org.teamchoko.infonom.carrot.Articles.Author
 import org.teamchoko.infonom.carrot.Articles.Category
 import org.teamchoko.infonom.carrot.Articles.Comment
 import org.teamchoko.infonom.carrot.Articles.Textile
+import org.teamchoko.infonom.carrot.Articles.CompleteArticleCase
+import org.teamchoko.infonom.carrot.Articles.CompleteCommentCase
 import org.teamchoko.infonom.tomato.DbConn.DbBasicCrud
 import org.teamchoko.infonom.tomato.DbConn.DbSearch
 
@@ -18,6 +20,8 @@ import DbConn.ArticleCategoryDb
 import DbConn.CompleteCommentDb
 import DbConn.DbBasicCrud
 import DbConn.DbSearch
+
+import doobie.imports.ConnectionIO
 import doobie.imports.DriverManagerTransactor
 import doobie.imports.Query0
 import doobie.imports.Update0
@@ -34,10 +38,10 @@ class DbConnSpec extends FlatSpec with Matchers {
     }
   }
 
-  def typecheckQueryTable(query: String, createTable: Update0, queryTable: Query0[_]) = {
+  def typecheckQueryTable(query: String, createTable: ConnectionIO[Int], queryTable: Query0[_]) = {
     it should "pass analysis for " + query in {
       val analysis = (for {
-        _ <- createTable.run
+        _ <- createTable
         analysisVal <- queryTable.analysis
       } yield analysisVal).transact(xaTest).run
 
@@ -113,7 +117,7 @@ class DbConnSpec extends FlatSpec with Matchers {
     it should behave like typecheckCreateTable(crud.createTable)
     it should behave like typecheckUpdateTable("delete", crud.createTable, crud.deleteById(123))
     it should behave like typecheckUpdateTable("create", crud.createTable, crud.create(item))
-    it should behave like typecheckQueryTable("get", crud.createTable, crud.getById(123))
+    it should behave like typecheckQueryTable("get", crud.createTable.run, crud.getById(123))
   }
 
   def listAllItems[T](crud: DbSearch[T], item: T, item2: T) = {
@@ -129,7 +133,7 @@ class DbConnSpec extends FlatSpec with Matchers {
       fromDb should equal(List(item, item2))
     }
 
-    it should behave like typecheckQueryTable("get all", crud.createTable, crud.getAllItems)
+    it should behave like typecheckQueryTable("get all", crud.createTable.run, crud.getAllItems)
   }
 
   def testGetIdByName[T](crud: DbSearch[T], getIdByName: (String) => Query0[Int], item: T, itemName: String) {
@@ -154,7 +158,7 @@ class DbConnSpec extends FlatSpec with Matchers {
       fromDb should equal(None)
     }
 
-    it should behave like typecheckQueryTable("getIdByName", crud.createTable,
+    it should behave like typecheckQueryTable("getIdByName", crud.createTable.run,
       getIdByName("invalidname"))
   }
 
@@ -208,7 +212,7 @@ class DbConnSpec extends FlatSpec with Matchers {
 
   "Complete Comment SQL" should behave like doBasicCrud(DbConn.CompleteCommentCrud, completeComment, completeComment2)
 
-  it should behave like typecheckQueryTable("get for articleid", DbConn.CompleteCommentCrud.createTable,
+  it should behave like typecheckQueryTable("get for articleid", DbConn.CompleteCommentCrud.createTable.run,
     DbConn.CompleteCommentCrud.getForCompleteArticleId(0))
 
   it should "get comments for article id" in {
@@ -239,7 +243,65 @@ class DbConnSpec extends FlatSpec with Matchers {
 
   "Article Categories SQL" should behave like doBasicCrud(DbConn.ArticleCategoryCrud, articleCategory, articleCategory2)
 
-  // TODO test persist complete article
+  it should "map in categories" in {
+    val cat = DbConn.CategoryCrud
+    val ac = DbConn.ArticleCategoryCrud
+
+    val retVal = (for {
+      _ <- cat.createTable.run
+      _ <- ac.createTable.run
+      _ <- cat.create(category).run
+      cat1Id <- DbConn.lastVal
+      acat = ArticleCategoryDb(3, cat1Id)
+      _ <- ac.create(acat).run
+      _ <- cat.create(category2).run
+      cat2Id <- DbConn.lastVal
+      acat2 = ArticleCategoryDb(3, cat2Id)
+      _ <- ac.create(acat2).run
+      categories <- ac.getCategoriesByCompleteArticleId(3).list
+    } yield categories).transact(xaTest).run
+
+    retVal should equal(List(category, category2))
+  }
+
+  def createACAndCats = for {
+    _ <- DbConn.ArticleCategoryCrud.createTable.run
+    _ <- DbConn.CategoryCrud.createTable.run
+  } yield 0
+
+  it should behave like typecheckQueryTable("getCategoriesByCompleteArticleId", createACAndCats,
+      DbConn.ArticleCategoryCrud.getCategoriesByCompleteArticleId(123))
+
+  ////////////////// Test the persistence API
+
+  val extArticleSimp = CompleteArticleCase(article, Nil, Nil, author)
+
+  "Complete Article" should "persist correctly for simple value" in {
+    val retArt = (for {
+      _ <- DbConn.initialiseDb
+      articleid <- DbConn.persistCompleteArticle(extArticleSimp)
+      art <- DbConn.getCompleteArticleById(articleid)
+    } yield art).transact(xaTest).run
+
+    retArt should equal(extArticleSimp)
+  }
+
+  val author3 = Author("dthings", None, Some(new URI("/author/dthing")))
+  val extComment = CompleteCommentCase(comment, author3)
+  val extArticle = CompleteArticleCase(article, List(extComment), List(category), author)
+
+  it should "persist correctly for value with comments and categories" in {
+    val retArt = (for {
+      _ <- DbConn.initialiseDb
+      articleid <- DbConn.persistCompleteArticle(extArticle)
+      art <- DbConn.getCompleteArticleById(articleid)
+    } yield art).transact(xaTest).run
+
+    retArt should equal(extArticle)
+  }
+
+  // TODO test conflicting authors (update)
+  // TODO test conflicting categories (update)
   // TODO test complete article from category ID
   // TODO test complete categories from article ID
 
