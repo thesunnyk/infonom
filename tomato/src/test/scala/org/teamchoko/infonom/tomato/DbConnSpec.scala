@@ -300,8 +300,57 @@ class DbConnSpec extends FlatSpec with Matchers {
     retArt should equal(extArticle)
   }
 
-  // TODO test conflicting authors (update)
-  // TODO test conflicting categories (update)
+  val altArticle = CompleteArticleCase(article, List(extComment), List(category), author2)
+
+  ignore should "update author in a new article" in {
+    val retArt = (for {
+      _ <- DbConn.initialiseDb
+      _ <- DbConn.persistCompleteArticle(extArticle)
+      articleid <- DbConn.persistCompleteArticle(altArticle)
+      art <- DbConn.getCompleteArticleById(articleid)
+    } yield art).transact(xaTest).run
+
+    retArt.author should equal(author2)
+  }
+
+  ignore should "update author in an old article" in {
+    val retArt = (for {
+      _ <- DbConn.initialiseDb
+      articleid <- DbConn.persistCompleteArticle(extArticle)
+      _ <- DbConn.persistCompleteArticle(altArticle)
+      art <- DbConn.getCompleteArticleById(articleid)
+    } yield art).transact(xaTest).run
+
+    // Author should be updated now.
+    retArt.author should equal(author2)
+  }
+
+  val catArticle = CompleteArticleCase(article, List(extComment), List(category2), author2)
+
+  ignore should "update category in a new article" in {
+    val retArt = (for {
+      _ <- DbConn.initialiseDb
+      _ <- DbConn.persistCompleteArticle(extArticle)
+      articleid <- DbConn.persistCompleteArticle(catArticle)
+      art <- DbConn.getCompleteArticleById(articleid)
+    } yield art).transact(xaTest).run
+
+    // Author should be updated now.
+    retArt.categories.head should equal(category2)
+  }
+
+  ignore should "update category in an old article" in {
+    val retArt = (for {
+      _ <- DbConn.initialiseDb
+      articleid <- DbConn.persistCompleteArticle(extArticle)
+      _ <- DbConn.persistCompleteArticle(catArticle)
+      art <- DbConn.getCompleteArticleById(articleid)
+    } yield art).transact(xaTest).run
+
+    // Author should be updated now.
+    retArt.categories.head should equal(category2)
+  }
+
   // TODO test complete article from category ID
   // TODO test complete categories from article ID
 

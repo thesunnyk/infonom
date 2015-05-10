@@ -166,6 +166,11 @@ object DbConn {
       where ac.completearticleid = $a and c.id = ac.categoryid
       """.query[Category]
 
+    def getAllLinks = sql"""
+      select ac.completearticleid, ac.categoryid
+      from articlecategory as ac
+      """.query[ArticleCategoryDb]
+
     override val createTable = sql"""
         create table articlecategory (
           id serial primary key,
@@ -184,7 +189,7 @@ object DbConn {
 
   def linkCategory(c: Category, completeArticleId: Int) = for {
       categoryId <- saveOrUpdateCategory(c)
-      acdb = ArticleCategoryDb(categoryId, completeArticleId)
+      acdb = ArticleCategoryDb(completeArticleId, categoryId)
       _ <- ArticleCategoryCrud.create(acdb).run
     } yield ()
 
@@ -336,7 +341,8 @@ object DbConn {
     cats.map(category => linkCategory(category, artId)).fold(().point[ConnectionIO])((x, y) => x >>= ((_) => y))
     
   def createCompleteComments(comments: List[CompleteComment], artId: Int): ConnectionIO[Int] =
-    comments.map(comment => createNewCompleteComment(comment, artId)).fold((0).point[ConnectionIO])((x, y) => x >>= ((_) => y))
+    comments.map(comment => createNewCompleteComment(comment, artId))
+      .fold((0).point[ConnectionIO])((x, y) => x >>= ((_) => y))
 
   def persistCompleteArticle(a: CompleteArticle) = for {
       authorId <- saveOrUpdateAuthor(a.author)
