@@ -180,12 +180,11 @@ object DbConn {
       """.update
   }
 
-  def getCompleteArticlesForCategoryId(cid: Int) = sql"""
-        select c.articleid, c.authorid
-        from articlecategory as a, completearticle as c
-        where a.completearticleid = c.id
-        and a.categoryid = $cid
-    """.query[CompleteArticleDb]
+  def getCompleteArticleIdsForCategoryId(cid: Int): Query0[Int] = sql"""
+        select completearticleid
+        from articlecategory
+        where categoryid = $cid
+    """.query[Int]
 
   def linkCategory(c: Category, completeArticleId: Int) = for {
       categoryId <- saveOrUpdateCategory(c)
@@ -358,8 +357,12 @@ object DbConn {
     author <- AuthorCrud.getById(comdb.authorid).unique
     item = CompleteCommentCase(comment, author)
   } yield item
+
+  def getCompleteArticlesByIds(ids: List[Int]): ConnectionIO[List[CompleteArticleCase]] = (for {
+    id <- ids
+  } yield getCompleteArticleById(id)).sequence
   
-  def getCompleteArticleById(a: Int) = for {
+  def getCompleteArticleById(a: Int): ConnectionIO[CompleteArticleCase] = for {
     cad <- CompleteArticleCrud.getById(a).unique
     article <- ArticleCrud.getById(cad.articleid).unique
     author <- AuthorCrud.getById(cad.authorid).unique

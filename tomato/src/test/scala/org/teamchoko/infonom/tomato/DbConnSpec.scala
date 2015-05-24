@@ -272,6 +272,9 @@ class DbConnSpec extends FlatSpec with Matchers {
   it should behave like typecheckQueryTable("getCategoriesByCompleteArticleId", createACAndCats,
       DbConn.ArticleCategoryCrud.getCategoriesByCompleteArticleId(123))
 
+  it should behave like typecheckQueryTable("getCompleteArticleIdsForCategoryId", createACAndCats,
+    DbConn.getCompleteArticleIdsForCategoryId(0))
+
   ////////////////// Test the persistence API
 
   val extArticleSimp = CompleteArticleCase(article, Nil, Nil, author)
@@ -351,7 +354,25 @@ class DbConnSpec extends FlatSpec with Matchers {
     retArt.categories.head should equal(category2)
   }
 
-  // TODO test complete article from category ID
-  // TODO test complete categories from article ID
+  val altCategory = Category("altName", new URI("/test"))
+  val secArticle = CompleteArticleCase(article, List(extComment), List(category), author3)
+  val secArticle2 = CompleteArticleCase(article, List(extComment), List(altCategory), author3)
+
+  "Category search" should "give all articles by category id" in {
+
+    val retArt = (for {
+      _ <- DbConn.initialiseDb
+      _ <- DbConn.persistCompleteArticle(extArticle)
+      _ <- DbConn.persistCompleteArticle(secArticle)
+      _ <- DbConn.persistCompleteArticle(secArticle2)
+      cid <- DbConn.CategoryCrud.getIdByName(category.name).unique
+      articleIds <- DbConn.getCompleteArticleIdsForCategoryId(cid).list
+      articles <- DbConn.getCompleteArticlesByIds(articleIds)
+    } yield articles).transact(xaTest).run
+
+    retArt should contain(extArticle)
+    retArt should contain(secArticle)
+    retArt should not contain(secArticle2)
+  }
 
 }
