@@ -305,7 +305,7 @@ class DbConnSpec extends FlatSpec with Matchers {
 
   val altArticle = CompleteArticleCase(article, List(extComment), List(category), author2)
 
-  ignore should "update author in a new article" in {
+  it should "update author in a new article" in {
     val retArt = (for {
       _ <- DbConn.initialiseDb
       _ <- DbConn.persistCompleteArticle(extArticle)
@@ -316,7 +316,7 @@ class DbConnSpec extends FlatSpec with Matchers {
     retArt.author should equal(author2)
   }
 
-  ignore should "update author in an old article" in {
+  it should "update author in an old article" in {
     val retArt = (for {
       _ <- DbConn.initialiseDb
       articleid <- DbConn.persistCompleteArticle(extArticle)
@@ -330,7 +330,7 @@ class DbConnSpec extends FlatSpec with Matchers {
 
   val catArticle = CompleteArticleCase(article, List(extComment), List(category2), author2)
 
-  ignore should "update category in a new article" in {
+  it should "update category in a new article" in {
     val retArt = (for {
       _ <- DbConn.initialiseDb
       _ <- DbConn.persistCompleteArticle(extArticle)
@@ -342,7 +342,7 @@ class DbConnSpec extends FlatSpec with Matchers {
     retArt.categories.head should equal(category2)
   }
 
-  ignore should "update category in an old article" in {
+  it should "update category in an old article" in {
     val retArt = (for {
       _ <- DbConn.initialiseDb
       articleid <- DbConn.persistCompleteArticle(extArticle)

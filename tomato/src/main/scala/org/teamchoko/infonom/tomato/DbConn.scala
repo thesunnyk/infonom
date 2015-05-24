@@ -97,10 +97,11 @@ object DbConn {
       authorId <- lastVal
     } yield authorId
 
-  // TODO actually update the author instead of ignoring.
   def saveOrUpdateAuthor(a: Author) = for {
       maybeAuthorId <- AuthorCrud.getIdByName(a.name).option
-      authorId <- maybeAuthorId.fold(createAuthorAndGetId(a))(aid => aid.point[ConnectionIO])
+      authorId <- maybeAuthorId.fold(createAuthorAndGetId(a))(aid => for {
+        _ <- AuthorCrud.update(aid, a).run
+      } yield aid)
     } yield authorId
 
   object CategoryCrud extends DbBasicCrud[Category] with DbSearch[Category] {
@@ -138,10 +139,11 @@ object DbConn {
       categoryId <- lastVal
     } yield categoryId
 
-  // TODO Actually update the category instead of ignoring
   def saveOrUpdateCategory(c: Category) = for {
       maybeCategoryId <- CategoryCrud.getIdByName(c.name).option
-      categoryId <- maybeCategoryId.fold(createCategoryAndGetId(c))(cid => cid.point[ConnectionIO])
+      categoryId <- maybeCategoryId.fold(createCategoryAndGetId(c))(cid => for {
+        _ <- CategoryCrud.update(cid, c).run
+      } yield cid)
     } yield categoryId
 
   case class ArticleCategoryDb(completearticleid: Int, categoryid: Int)
