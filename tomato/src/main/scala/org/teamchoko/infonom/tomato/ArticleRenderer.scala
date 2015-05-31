@@ -5,6 +5,7 @@ import org.clapper.markwrap.MarkupType
 import org.joda.time.DateTime
 import org.joda.time.format.DateTimeFormat
 import org.teamchoko.infonom.carrot.Articles.Article
+import org.teamchoko.infonom.carrot.Articles.Category
 import org.teamchoko.infonom.carrot.Articles.CompleteArticle
 import org.teamchoko.infonom.carrot.Articles.Html
 import org.teamchoko.infonom.carrot.Articles.Textile
@@ -17,6 +18,9 @@ import scalatags.Text.all.charset
 import scalatags.Text.all.`class`
 import scalatags.Text.all.div
 import scalatags.Text.all.h1
+import scalatags.Text.all.h2
+import scalatags.Text.all.ul
+import scalatags.Text.all.li
 import scalatags.Text.all.head
 import scalatags.Text.all.href
 import scalatags.Text.all.html
@@ -34,6 +38,32 @@ import scalatags.Text.all.stringFrag
 import scalatags.Text.tags2.title
 
 object ArticleRenderer {
+  // TODO Categories
+  // TODO Categories RSS
+  // TODO Index
+  // TODO Index RSS
+  // TODO Author
+  // TODO Author RSS
+
+  val siteName: String = "The USS Quad Damage"
+  val categoriesString: String = "Categories"
+
+  def renderCategories(items: Map[Category, List[CompleteArticle]]): String =
+    docType + html(renderHead(categoriesString + ": " + siteName),
+        body(h1(categoriesString) :: items.toList.flatMap(item =>
+            List(renderCategoryHeading(item._1), renderArticleList(item._2))
+        ))
+      )
+
+  def renderCategory(cat: Category, articles: List[CompleteArticle]): String =
+    docType + html(renderHead(cat.name + " :: " + categoriesString + ": " + siteName), body(
+        h1(cat.name), renderArticleList(articles)
+      ))
+
+  def renderArticleList(articles: List[CompleteArticle]) =
+    ul(articles.map(art => li(`class` := "h-entry", renderArticleHeaderForList(art))))
+
+  def renderCategoryHeading(cat: Category): Modifier = h2(a(href := cat.uri.toString, cat.name))
   
   def renderArticleText(article: Article): String = article.textFilter match {
     case Textile() => MarkWrap.parserFor(MarkupType.Textile).parseToHTML(article.text);
@@ -41,7 +71,10 @@ object ArticleRenderer {
   }
 
   def renderDate(date: DateTime): String = DateTimeFormat.forPattern("dd MMM yyyy").print(date)
-  
+
+  def renderArticleHeaderForList(articleInfo: CompleteArticle): List[Modifier] =
+    p(`class` := "p-name", articleInfo.article.heading) :: renderHeader(articleInfo)
+
   def renderHeader(articleInfo: CompleteArticle): List[Modifier] = {
     val article = articleInfo.article
      List(
@@ -71,11 +104,13 @@ object ArticleRenderer {
   def renderStylesheets = List(link(rel := "stylesheet", href := "/css/normalize.css"),
       link(rel := "stylesheet", href := "/css/main.css"))
       
-  def renderHead(article: Article) = head(title(article.heading) :: renderMeta ::: renderStylesheets)
+  def renderHead(heading: String) = head(title(heading) :: renderMeta ::: renderStylesheets)
+
+  val docType: String = "<!DOCTYPE html>"
 
   def render(articleInfo: CompleteArticle): String = {
     val article = articleInfo.article
-    "<!DOCTYPE html>" + html(renderHead(article), body(
+    docType + html(renderHead(article.heading + ": " + siteName), body(
         div(`class` := "h-entry", renderEntry(articleInfo))
     ))
   }
