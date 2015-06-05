@@ -21,7 +21,7 @@ class ArticleRendererSpec extends FlatSpec with Matchers {
         "<meta charset=\"utf-8\" /><meta http-equiv=\"X-UA-Compatible\" content=\"IE=edge,chrome=1\" />" +
         "<meta name=\"description\" content=\"\" /><meta name=\"viewport\" content=\"width=device-width\" />" +
         "<link rel=\"stylesheet\" href=\"/css/normalize.css\" /><link rel=\"stylesheet\" href=\"/css/main.css\" />" +
-        "</head><body><div class=\"h-entry\"><h1 class=\"p-name\">heading</h1><p>by " +
+        "</head><body><h1>The USS Quad Damage</h1><div class=\"h-entry\"><h2 class=\"p-name\">heading</h2><p>by " +
         "<span class=\"p-author\">name</span> on <span class=\"dt-published\">10 May 2013</span></p>" +
         "<div class=\"e-content\"><p>some <em>things</em> are <strong>stuff</strong></p></div></div></body></html>")
 	}
@@ -45,9 +45,22 @@ class ArticleRendererSpec extends FlatSpec with Matchers {
         "<meta charset=\"utf-8\" /><meta http-equiv=\"X-UA-Compatible\" content=\"IE=edge,chrome=1\" />" +
         "<meta name=\"description\" content=\"\" /><meta name=\"viewport\" content=\"width=device-width\" />" +
         "<link rel=\"stylesheet\" href=\"/css/normalize.css\" /><link rel=\"stylesheet\" href=\"/css/main.css\" />" +
-        "</head><body><h1>Categories</h1><h2><a href=\"/test\">Test</a></h2>" +
+        "</head><body><h1>The USS Quad Damage</h1><h2>Categories</h2><h3><a href=\"/test\">Test</a></h3>" +
         "<ul><li class=\"h-entry\"><p class=\"p-name\">heading</p><p>by " +
         "<span class=\"p-author\">name</span> on <span class=\"dt-published\">10 May 2013</span></p>" +
         "</li></ul></body></html>")
+    }
+
+    // TODO Test render Authors
+    "ArticleRenderer" should "render index" in {
+      ArticleRenderer.renderIndex(List(complete)) should equal("<!DOCTYPE html><html><head><title>" +
+        "The USS Quad Damage</title>" +
+        "<meta charset=\"utf-8\" /><meta http-equiv=\"X-UA-Compatible\" content=\"IE=edge,chrome=1\" />" +
+        "<meta name=\"description\" content=\"\" /><meta name=\"viewport\" content=\"width=device-width\" />" +
+        "<link rel=\"stylesheet\" href=\"/css/normalize.css\" /><link rel=\"stylesheet\" href=\"/css/main.css\" />" +
+        "</head><body><h1>The USS Quad Damage</h1><div class=\"h-entry\"><a href=\"http://www.google.com\">" +
+        "<h2 class=\"p-name\">heading</h2></a><p>by " +
+        "<span class=\"p-author\">name</span> on <span class=\"dt-published\">10 May 2013</span></p>" +
+        "<div class=\"e-content\"><p>some <em>things</em> are <strong>stuff</strong></p></div></div></body></html>")
     }
 }

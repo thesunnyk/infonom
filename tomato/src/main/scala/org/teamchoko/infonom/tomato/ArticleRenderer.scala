@@ -5,6 +5,7 @@ import org.clapper.markwrap.MarkupType
 import org.joda.time.DateTime
 import org.joda.time.format.DateTimeFormat
 import org.teamchoko.infonom.carrot.Articles.Article
+import org.teamchoko.infonom.carrot.Articles.Author
 import org.teamchoko.infonom.carrot.Articles.Category
 import org.teamchoko.infonom.carrot.Articles.CompleteArticle
 import org.teamchoko.infonom.carrot.Articles.Html
@@ -19,6 +20,7 @@ import scalatags.Text.all.`class`
 import scalatags.Text.all.div
 import scalatags.Text.all.h1
 import scalatags.Text.all.h2
+import scalatags.Text.all.h3
 import scalatags.Text.all.ul
 import scalatags.Text.all.li
 import scalatags.Text.all.head
@@ -38,20 +40,30 @@ import scalatags.Text.all.stringFrag
 import scalatags.Text.tags2.title
 
 object ArticleRenderer {
-  // TODO Categories
-  // TODO Categories RSS
-  // TODO Index
-  // TODO Index RSS
-  // TODO Author
   // TODO Author RSS
+  // TODO Categories RSS
+  // TODO Index RSS
 
   val siteName: String = "The USS Quad Damage"
   val categoriesString: String = "Categories"
+  val authorsString: String = "Authors"
+
+  def renderIndex(items: List[CompleteArticle]): String =
+    docType + html(renderHead(siteName), body(h1(siteName) :: items.map(item =>
+        div(`class` := "h-entry", renderEntryWithPermalink(item))
+      )))
 
   def renderCategories(items: Map[Category, List[CompleteArticle]]): String =
     docType + html(renderHead(categoriesString + ": " + siteName),
-        body(h1(categoriesString) :: items.toList.flatMap(item =>
+        body(h1(siteName) :: h2(categoriesString) :: items.toList.flatMap(item =>
             List(renderCategoryHeading(item._1), renderArticleList(item._2))
+        ))
+      )
+
+  def renderAuthors(items: Map[Author, List[CompleteArticle]]): String =
+    docType + html(renderHead(authorsString + ": " + siteName),
+        body(h1(siteName) :: h2(authorsString) :: items.toList.flatMap(item =>
+            List(renderAuthorHeading(item._1), renderArticleList(item._2))
         ))
       )
 
@@ -60,10 +72,17 @@ object ArticleRenderer {
         h1(cat.name), renderArticleList(articles)
       ))
 
+  def renderAuthor(author: Author, articles: List[CompleteArticle]): String =
+    docType + html(renderHead(author.name + " :: " + authorsString + ": " + siteName), body(
+        h1(author.name), renderArticleList(articles)
+      ))
+
   def renderArticleList(articles: List[CompleteArticle]) =
     ul(articles.map(art => li(`class` := "h-entry", renderArticleHeaderForList(art))))
 
-  def renderCategoryHeading(cat: Category): Modifier = h2(a(href := cat.uri.toString, cat.name))
+  def renderAuthorHeading(author: Author): Modifier = h3(a(href := author.uri.toString, author.name))
+
+  def renderCategoryHeading(cat: Category): Modifier = h3(a(href := cat.uri.toString, cat.name))
   
   def renderArticleText(article: Article): String = article.textFilter match {
     case Textile() => MarkWrap.parserFor(MarkupType.Textile).parseToHTML(article.text);
@@ -73,9 +92,9 @@ object ArticleRenderer {
   def renderDate(date: DateTime): String = DateTimeFormat.forPattern("dd MMM yyyy").print(date)
 
   def renderArticleHeaderForList(articleInfo: CompleteArticle): List[Modifier] =
-    p(`class` := "p-name", articleInfo.article.heading) :: renderHeader(articleInfo)
+    p(`class` := "p-name", articleInfo.article.heading) :: renderEntryHeader(articleInfo)
 
-  def renderHeader(articleInfo: CompleteArticle): List[Modifier] = {
+  def renderEntryHeader(articleInfo: CompleteArticle): List[Modifier] = {
     val article = articleInfo.article
      List(
       article.extract.map(extract => p(`class` := "extract, p-summary")(extract)).getOrElse(""),
@@ -88,13 +107,17 @@ object ArticleRenderer {
   
   def renderPullquote(article: Article): Modifier =
     article.pullquote.map(x => span(`class` := "pullquote", x)).getOrElse("")
+
+  def renderEntryBody(article: Article): List[Modifier] =
+    List(div(`class` := "e-content", renderPullquote(article), raw(renderArticleText(article))))
   
-  def renderEntry(articleInfo: CompleteArticle): List[Modifier] = {
-    h1(`class` := "p-name", articleInfo.article.heading) ::
-    renderHeader(articleInfo) :::
-    List(div(`class` := "e-content", renderPullquote(articleInfo.article),
-        raw(renderArticleText(articleInfo.article))))
-  }
+  def renderEntryWithPermalink(articleInfo: CompleteArticle): List[Modifier] =
+    a(href := articleInfo.article.uri.toString, h2(`class` := "p-name", articleInfo.article.heading)) ::
+    renderEntryHeader(articleInfo) ::: renderEntryBody(articleInfo.article)
+
+  def renderEntry(articleInfo: CompleteArticle): List[Modifier] =
+    h2(`class` := "p-name", articleInfo.article.heading) ::
+    renderEntryHeader(articleInfo) ::: renderEntryBody(articleInfo.article)
   
   def renderMeta = List(meta(charset := "utf-8"),
       meta(httpEquiv := "X-UA-Compatible", content := "IE=edge,chrome=1"),
@@ -111,6 +134,7 @@ object ArticleRenderer {
   def render(articleInfo: CompleteArticle): String = {
     val article = articleInfo.article
     docType + html(renderHead(article.heading + ": " + siteName), body(
+      h1(siteName),
         div(`class` := "h-entry", renderEntry(articleInfo))
     ))
   }
