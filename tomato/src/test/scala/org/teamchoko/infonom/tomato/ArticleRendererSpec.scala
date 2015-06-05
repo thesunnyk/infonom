@@ -15,6 +15,8 @@ class ArticleRendererSpec extends FlatSpec with Matchers {
       val author: Author = Author("name", None, None)
     }
 
+    val author2: Author = Author("altname", None, Some(new URI("/alt")))
+
 	"ArticleRenderer" should "render" in {
       ArticleRenderer.render(complete) should equal("<!DOCTYPE html><html><head><title>heading" +
         ": The USS Quad Damage</title>" +
@@ -51,7 +53,31 @@ class ArticleRendererSpec extends FlatSpec with Matchers {
         "</li></ul></body></html>")
     }
 
-    // TODO Test render Authors
+    "ArticleRenderer" should "render authors" in {
+      ArticleRenderer.renderAuthors(Map(author2 -> List(complete))) should equal("<!DOCTYPE html><html><head><title>" +
+        "Authors: The USS Quad Damage</title>" +
+        "<meta charset=\"utf-8\" /><meta http-equiv=\"X-UA-Compatible\" content=\"IE=edge,chrome=1\" />" +
+        "<meta name=\"description\" content=\"\" /><meta name=\"viewport\" content=\"width=device-width\" />" +
+        "<link rel=\"stylesheet\" href=\"/css/normalize.css\" /><link rel=\"stylesheet\" href=\"/css/main.css\" />" +
+        "</head><body><h1>The USS Quad Damage</h1><h2>Authors</h2><h3><a href=\"/alt\">altname</a></h3>" +
+        "<ul><li class=\"h-entry\"><p class=\"p-name\">heading</p><p>by " +
+        "<span class=\"p-author\">name</span> on <span class=\"dt-published\">10 May 2013</span></p>" +
+        "</li></ul></body></html>")
+    }
+
+    "ArticleRenderer" should "render authors without url" in {
+      ArticleRenderer.renderAuthors(Map(complete.author -> List(complete))) should equal(
+        "<!DOCTYPE html><html><head><title>" +
+        "Authors: The USS Quad Damage</title>" +
+        "<meta charset=\"utf-8\" /><meta http-equiv=\"X-UA-Compatible\" content=\"IE=edge,chrome=1\" />" +
+        "<meta name=\"description\" content=\"\" /><meta name=\"viewport\" content=\"width=device-width\" />" +
+        "<link rel=\"stylesheet\" href=\"/css/normalize.css\" /><link rel=\"stylesheet\" href=\"/css/main.css\" />" +
+        "</head><body><h1>The USS Quad Damage</h1><h2>Authors</h2><h3>name</h3>" +
+        "<ul><li class=\"h-entry\"><p class=\"p-name\">heading</p><p>by " +
+        "<span class=\"p-author\">name</span> on <span class=\"dt-published\">10 May 2013</span></p>" +
+        "</li></ul></body></html>")
+    }
+
     "ArticleRenderer" should "render index" in {
       ArticleRenderer.renderIndex(List(complete)) should equal("<!DOCTYPE html><html><head><title>" +
         "The USS Quad Damage</title>" +

@@ -80,7 +80,10 @@ object ArticleRenderer {
   def renderArticleList(articles: List[CompleteArticle]) =
     ul(articles.map(art => li(`class` := "h-entry", renderArticleHeaderForList(art))))
 
-  def renderAuthorHeading(author: Author): Modifier = h3(a(href := author.uri.toString, author.name))
+  def renderAuthorHeading(author: Author): Modifier = h3(author.uri match {
+    case Some(x) => a(href := x.toString, author.name)
+    case None => author.name
+  })
 
   def renderCategoryHeading(cat: Category): Modifier = h3(a(href := cat.uri.toString, cat.name))
   
