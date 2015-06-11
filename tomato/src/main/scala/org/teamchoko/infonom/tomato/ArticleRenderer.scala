@@ -37,32 +37,72 @@ import scalatags.Text.all.raw
 import scalatags.Text.all.span
 import scalatags.Text.all.stringAttr
 import scalatags.Text.all.stringFrag
+import scalatags.Text.all.xmlns
 import scalatags.Text.tags2.title
 
-object ArticleRenderer {
-  // TODO Author RSS
-  // TODO Categories RSS
-  // TODO Index RSS
+import Atom.feed
+import Atom.author
+import Atom.entry
+import Atom.id
+import Atom.updated
+import Atom.category
+import Atom.scheme
+import Atom.summary
+import Atom.uri
+import Atom.term
 
+import java.net.URI
+
+object ArticleRenderer {
   val siteName: String = "The USS Quad Damage"
   val categoriesString: String = "Categories"
   val authorsString: String = "Authors"
 
+  val xmlhead = "<?xml version=\"1.0\" encoding=\"utf-8\"?>"
+
+  def getFirstArticlePubDate(items: List[CompleteArticle]): String =
+    items.headOption.map(x => x.article.pubDate.toString).getOrElse(new DateTime(0).toString)
+
+  def renderCategory(cat: Category, items: List[CompleteArticle], absUrl: URI): String =
+    renderAtomList(items, absUrl, cat.uri, cat.name + ": " + siteName)
+
+  def renderAuthor(author: Author, items: List[CompleteArticle], absUrl: URI): String =
+    renderAtomList(items, absUrl, author.uri.getOrElse(new URI("/")), author.name + ": " + siteName)
+
+  def renderIndex(items: List[CompleteArticle], absUrl: URI): String =
+    renderAtomList(items, absUrl, new URI("/"), siteName)
+
+  def renderAtomList(items: List[CompleteArticle], absurl: URI, typeurl: URI, name: String): String =
+    xmlhead + feed(xmlns := "http://www.w3.org/2005/Atom", title(name + ": " + siteName),
+      id(typeurl.toString), link(href := absurl.resolve(typeurl).toString),
+      updated(getFirstArticlePubDate(items)),
+      items.map(x => renderAtomEntry(x, absurl)))
+
+  // TODO Absolute hrefs
+  def renderAtomEntry(item: CompleteArticle, absUrl: URI): Modifier =
+    entry(title(item.article.heading), link(href := absUrl.resolve(item.article.uri).toString),
+      updated(item.article.pubDate.toString), author(Atom.name(item.author.name),
+        item.author.uri.toList.map(x => uri(absUrl.resolve(x).toString))),
+      id(absUrl.resolve(item.article.uri).toString), item.article.extract.toList.map(x => summary(x)),
+      Atom.content(renderArticleText(item.article)),
+      item.categories.map(x => category(term := x.name, scheme := absUrl.resolve(x.uri).toString)))
+
+
   def renderIndex(items: List[CompleteArticle]): String =
-    docType + html(renderHead(siteName), body(h1(siteName) :: items.map(item =>
+    docType + html(renderHead(siteName), body(h1(siteName), items.map(item =>
         div(`class` := "h-entry", renderEntryWithPermalink(item))
       )))
 
   def renderCategories(items: Map[Category, List[CompleteArticle]]): String =
     docType + html(renderHead(categoriesString + ": " + siteName),
-        body(h1(siteName) :: h2(categoriesString) :: items.toList.flatMap(item =>
+        body(h1(siteName), h2(categoriesString), items.toList.flatMap(item =>
             List(renderCategoryHeading(item._1), renderArticleList(item._2))
         ))
       )
 
   def renderAuthors(items: Map[Author, List[CompleteArticle]]): String =
     docType + html(renderHead(authorsString + ": " + siteName),
-        body(h1(siteName) :: h2(authorsString) :: items.toList.flatMap(item =>
+        body(h1(siteName), h2(authorsString), items.toList.flatMap(item =>
             List(renderAuthorHeading(item._1), renderArticleList(item._2))
         ))
       )
@@ -130,7 +170,7 @@ object ArticleRenderer {
   def renderStylesheets = List(link(rel := "stylesheet", href := "/css/normalize.css"),
       link(rel := "stylesheet", href := "/css/main.css"))
       
-  def renderHead(heading: String) = head(title(heading) :: renderMeta ::: renderStylesheets)
+  def renderHead(heading: String) = head(title(heading), renderMeta, renderStylesheets)
 
   val docType: String = "<!DOCTYPE html>"
 

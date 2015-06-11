@@ -49,7 +49,7 @@
       <version>${markwrap.version}</version>
     </dependency>
     <dependency>
-        <groupId>com.scalatags</groupId>
+        <groupId>com.lihaoyi</groupId>
         <artifactId>scalatags_${scala.version.alias}</artifactId>
         <version>${scalatags.version}</version>
     </dependency>
