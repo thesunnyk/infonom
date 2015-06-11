@@ -46,15 +46,15 @@ object JsonArticles {
 
   implicit val TextFilterCodecJson: CodecJson[TextFilter] = CodecJson(
       filter => jString(filter match {
-        case Html() => "html"
-        case Textile() => "textile"
+        case Html => "html"
+        case Textile => "textile"
       }),
       js => for {
         item <- js.as[String]
         lower = item.toLowerCase
         filter = lower match {
-          case x if x == "html" => Html()
-          case x if x == "textile" => Textile()
+          case x if x == "html" => Html
+          case x if x == "textile" => Textile
         }
       } yield filter
     )

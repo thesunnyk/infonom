@@ -5,8 +5,8 @@ import org.joda.time.DateTime
 
 object Articles {
   sealed abstract class TextFilter
-  case class Textile() extends TextFilter
-  case class Html() extends TextFilter
+  case object Textile extends TextFilter
+  case object Html extends TextFilter
 
   case class Author(name: String, email: Option[String], uri: Option[URI])
   case class Category(name: String, uri: URI)

@@ -63,27 +63,26 @@ object ArticleRenderer {
   def getFirstArticlePubDate(items: List[CompleteArticle]): String =
     items.headOption.map(x => x.article.pubDate.toString).getOrElse(new DateTime(0).toString)
 
-  def renderCategory(cat: Category, items: List[CompleteArticle], absUrl: URI): String =
+  def renderCategoryAtom(cat: Category, items: List[CompleteArticle], absUrl: URI): String =
     renderAtomList(items, absUrl, cat.uri, cat.name + ": " + siteName)
 
-  def renderAuthor(author: Author, items: List[CompleteArticle], absUrl: URI): String =
+  def renderAuthorAtom(author: Author, items: List[CompleteArticle], absUrl: URI): String =
     renderAtomList(items, absUrl, author.uri.getOrElse(new URI("/")), author.name + ": " + siteName)
 
-  def renderIndex(items: List[CompleteArticle], absUrl: URI): String =
+  def renderIndexAtom(items: List[CompleteArticle], absUrl: URI): String =
     renderAtomList(items, absUrl, new URI("/"), siteName)
 
   def renderAtomList(items: List[CompleteArticle], absurl: URI, typeurl: URI, name: String): String =
-    xmlhead + feed(xmlns := "http://www.w3.org/2005/Atom", title(name + ": " + siteName),
+    xmlhead + feed(xmlns := "http://www.w3.org/2005/Atom", title(name),
       id(typeurl.toString), link(href := absurl.resolve(typeurl).toString),
       updated(getFirstArticlePubDate(items)),
       items.map(x => renderAtomEntry(x, absurl)))
 
-  // TODO Absolute hrefs
   def renderAtomEntry(item: CompleteArticle, absUrl: URI): Modifier =
     entry(title(item.article.heading), link(href := absUrl.resolve(item.article.uri).toString),
       updated(item.article.pubDate.toString), author(Atom.name(item.author.name),
         item.author.uri.toList.map(x => uri(absUrl.resolve(x).toString))),
-      id(absUrl.resolve(item.article.uri).toString), item.article.extract.toList.map(x => summary(x)),
+      id(item.article.uri.toString), item.article.extract.toList.map(x => summary(x)),
       Atom.content(renderArticleText(item.article)),
       item.categories.map(x => category(term := x.name, scheme := absUrl.resolve(x.uri).toString)))
 
@@ -128,8 +127,8 @@ object ArticleRenderer {
   def renderCategoryHeading(cat: Category): Modifier = h3(a(href := cat.uri.toString, cat.name))
   
   def renderArticleText(article: Article): String = article.textFilter match {
-    case Textile() => MarkWrap.parserFor(MarkupType.Textile).parseToHTML(article.text);
-    case Html() => article.text
+    case Textile => MarkWrap.parserFor(MarkupType.Textile).parseToHTML(article.text);
+    case Html => article.text
   }
 
   def renderDate(date: DateTime): String = DateTimeFormat.forPattern("dd MMM yyyy").print(date)

@@ -42,12 +42,12 @@ object DbConn {
   implicit val TextFilterMeta: Meta[TextFilter] =
     Meta[String].nxmap(
       x => x.toLowerCase match {
-        case x if x == "html" => Html()
-        case x if x == "textile" => Textile()
+        case x if x == "html" => Html
+        case x if x == "textile" => Textile
       },
       x => x match {
-        case Html() => "html"
-        case Textile() => "textile"
+        case Html => "html"
+        case Textile => "textile"
       })
 
   val lastVal = sql"select lastval()".query[Int].unique

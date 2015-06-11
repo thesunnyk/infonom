@@ -55,8 +55,8 @@ object Boot extends App {
   } yield CompleteCommentCase(Comment(text, new DateTime(date)), author)
 
   def filterFromString(str: String): Option[TextFilter] = str match {
-    case x if x.toLowerCase == "textile" => Some(Textile())
-    case x if x.toLowerCase == "html" => Some(Html())
+    case x if x.toLowerCase == "textile" => Some(Textile)
+    case x if x.toLowerCase == "html" => Some(Html)
     case _ => {
       log.warn("Got unknown text filter: '{}'", str)
       None
