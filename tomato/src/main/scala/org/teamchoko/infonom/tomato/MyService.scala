@@ -10,9 +10,12 @@ import org.http4s.dsl.OkSyntax
 import org.http4s.Method.GET
 import org.http4s.Method.POST
 import org.teamchoko.infonom.carrot.Articles.CompleteArticleCase
+import org.teamchoko.infonom.carrot.Articles.Category
+import org.teamchoko.infonom.carrot.Articles.Author
 import org.teamchoko.infonom.carrot.JsonArticles.CompleteArticleCodecJson
 import org.teamchoko.infonom.tomato.Errors.StringError
 import argonaut.Argonaut.StringToParseWrap
+import scalaz._
 import scalaz.Scalaz._
 import scodec.bits.ByteVector
 import org.slf4j.Logger
@@ -25,8 +28,12 @@ import doobie.imports.Update0
 import doobie.imports.toMoreConnectionIOOps
 import scalaz.concurrent.Task
 
+import java.net.URI
+
 trait MyService {
   val log = LoggerFactory.getLogger(classOf[MyService]);
+
+  val quaddmg = new URI("http://blog.quaddmg.com")
   
   def saveArticle(body: ByteVector): StringError[Unit] = for {
     article <- new String(body.toArray).decodeEither[CompleteArticleCase]
@@ -45,9 +52,53 @@ trait MyService {
     save <- saveAllFiles(articles)
   } yield ()
 
+  def extractCategories(articles: List[CompleteArticleCase]): List[Category] =
+    articles.flatMap(article => article.categories).toSet.toList
+
+  def mapCategories(cats: List[Category],
+    articles: List[CompleteArticleCase]): Map[Category, List[CompleteArticleCase]] =
+      cats.map(cat => (cat, articles.filter(art => art.categories.contains(cat)))).toMap
+
+  def extractAuthors(articles: List[CompleteArticleCase]): Map[Author, List[CompleteArticleCase]] =
+    articles.groupBy(article => article.author)
+
+  // TODO sequence?
+  def saveEachCategory(mappedCategories: Map[Category, List[CompleteArticleCase]]): StringError[Unit] =
+    mappedCategories.map(x => SaveToFile.saveCategory(x._1, x._2)).fold(\/-())((x, y) => x match {
+      case -\/(_) => x
+      case _ => y
+    })
+
+  def saveEachCategoryAtom(mappedCategories: Map[Category, List[CompleteArticleCase]]): StringError[Unit] =
+    mappedCategories.map(x => SaveToFile.saveCategoryAtom(quaddmg, x._1, x._2)).fold(\/-())((x, y) => x match {
+      case -\/(_) => x
+      case _ => y
+    })
+
+  def saveEachAuthor(mappedAuthors: Map[Author, List[CompleteArticleCase]]): StringError[Unit] =
+    mappedAuthors.map(x => SaveToFile.saveAuthor(x._1, x._2)).fold(\/-())((x, y) => x match {
+      case -\/(_) => x
+      case _ => y
+    })
+
+  def saveEachAuthorAtom(mappedAuthors: Map[Author, List[CompleteArticleCase]]): StringError[Unit] =
+    mappedAuthors.map(x => SaveToFile.saveAuthorAtom(quaddmg, x._1, x._2)).fold(\/-())((x, y) => x match {
+      case -\/(_) => x
+      case _ => y
+    })
+
   def publishIndex(): StringError[Unit] = for {
     articles <- getAllArticles.attemptRun.leftMap(x => x.getMessage)
-    save <- saveAllFiles(articles)
+    _ <- saveAllFiles(articles)
+    categories = extractCategories(articles)
+    mappedCategories = mapCategories(categories, articles)
+    _ <- SaveToFile.saveCategories(mappedCategories)
+    _ <- saveEachCategory(mappedCategories)
+    _ <- saveEachCategoryAtom(mappedCategories)
+    mappedAuthors = extractAuthors(articles)
+    _ <- SaveToFile.saveAuthors(mappedAuthors)
+    _ <- saveEachAuthor(mappedAuthors)
+    _ <- saveEachAuthorAtom(mappedAuthors)
   } yield ()
   
   def toError(err: StringError[Unit]): String = err.fold(err => err, succ => "Success")

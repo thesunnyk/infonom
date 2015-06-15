@@ -57,7 +57,7 @@ object SaveToFile {
     _ <- extractErrors(writer.close())
   } yield ()
 
-  def saveCategories(items: Map[Category, List[CompleteArticle]]) = for {
+  def saveCategories(items: Map[Category, List[CompleteArticle]]): StringError[Unit] = for {
     file <- extractErrors(new File("categories.html"))
     writer <- extractErrors(new FileWriter(file))
     rendered = ArticleRenderer.renderCategories(items)
@@ -65,7 +65,7 @@ object SaveToFile {
     _ <- extractErrors(writer.close())
   } yield ()
 
-  def saveAuthors(items: Map[Author, List[CompleteArticle]]) = for {
+  def saveAuthors(items: Map[Author, List[CompleteArticle]]): StringError[Unit] = for {
     file <- extractErrors(new File("authors.html"))
     writer <- extractErrors(new FileWriter(file))
     rendered = ArticleRenderer.renderAuthors(items)
@@ -73,7 +73,7 @@ object SaveToFile {
     _ <- extractErrors(writer.close())
   } yield ()
 
-  def saveCategory(category: Category, articles: List[CompleteArticle]) = for {
+  def saveCategory(category: Category, articles: List[CompleteArticle]): StringError[Unit] = for {
     file <- extractErrors(new File("categories/", category.uri.toASCIIString() + ".html"))
     _ <- extractErrors(file.mkdirs())
     writer <- extractErrors(new FileWriter(file))
