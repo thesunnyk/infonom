@@ -1,12 +1,14 @@
 package org.teamchoko.infonom.tomato
 
 import scala.concurrent.ExecutionContext
-import org.http4s.Method
-import org.http4s.Request
-import org.http4s.ResponseBuilder
-import org.http4s.Status
-import org.http4s.Uri
 import org.http4s.server.HttpService
+import org.http4s.dsl.->
+import org.http4s.dsl./
+import org.http4s.dsl.Root
+import org.http4s.dsl.Ok
+import org.http4s.dsl.OkSyntax
+import org.http4s.Method.GET
+import org.http4s.Method.POST
 import org.teamchoko.infonom.carrot.Articles.CompleteArticleCase
 import org.teamchoko.infonom.carrot.JsonArticles.CompleteArticleCodecJson
 import org.teamchoko.infonom.tomato.Errors.StringError
@@ -32,10 +34,8 @@ trait MyService {
   def makeString(body: ByteVector): String = new String(body.toArray)
   
   def service(implicit executionContext: ExecutionContext): HttpService = HttpService {
-    case Request(Method.GET, Uri(_, _, "/", _, _), _, _, _, _) =>
-      ResponseBuilder(Status.Ok, "Server is up")
-    case Request(Method.POST, Uri(_, _, "/new/", _, _), _, _, doBody, _) =>
-      ResponseBuilder(Status.Ok, doBody.map(x => toError(render(x))))
+    case GET -> Root => Ok("Server is up")
+    case req@ POST -> Root / "new" => Ok(req.body.map(x => toError(render(x))))
   }
 
 }
