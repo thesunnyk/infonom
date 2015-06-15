@@ -49,6 +49,7 @@ trait MyService {
 
   def publishAllArticles(): StringError[Unit] = for {
     articles <- getAllArticles.attemptRun.leftMap(x => x.getMessage)
+    _ = log.info("Publishing {} articles", articles.length)
     save <- saveAllFiles(articles)
   } yield ()
 
@@ -89,8 +90,9 @@ trait MyService {
 
   def publishIndex(): StringError[Unit] = for {
     articles <- getAllArticles.attemptRun.leftMap(x => x.getMessage)
-    _ <- saveAllFiles(articles)
+    _ <- SaveToFile.saveIndex(articles.take(10))
     categories = extractCategories(articles)
+    _ = log.info("Got categories: {}", categories)
     mappedCategories = mapCategories(categories, articles)
     _ <- SaveToFile.saveCategories(mappedCategories)
     _ <- saveEachCategory(mappedCategories)

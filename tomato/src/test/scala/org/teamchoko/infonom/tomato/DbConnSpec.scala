@@ -275,7 +275,7 @@ class DbConnSpec extends FlatSpec with Matchers {
   it should behave like typecheckQueryTable("getCompleteArticleIdsForCategoryId", createACAndCats,
     DbConn.getCompleteArticleIdsForCategoryId(0))
 
-  it should behave like typecheckQueryTable("getCompleteArticleIds", createACAndCats,
+  it should behave like typecheckQueryTable("getCompleteArticleIds", DbConn.CompleteArticleCrud.createTable.run,
     DbConn.getAllCompleteArticleIds)
 
   ////////////////// Test the persistence API

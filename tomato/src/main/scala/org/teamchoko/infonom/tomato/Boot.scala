@@ -9,7 +9,7 @@ import scalaz.concurrent.Task
 
 object Boot extends App with MyService {
 
-  DbConn.initialiseDb.transact(DbConn.xa).run
+  log.info(toError(DbConn.initialiseDb.transact(DbConn.xa).attemptRun.leftMap(x => x.getMessage)))
 
   BlazeBuilder.mountService(service, "/").run
 }

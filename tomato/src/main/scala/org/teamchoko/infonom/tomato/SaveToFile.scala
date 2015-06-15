@@ -46,6 +46,7 @@ object SaveToFile {
     folder <- getDirectory(article.article.pubDate)
     _ <- createDirectory(folder)
     file <- createFile(folder, article.article)
+    _ = log.info("Saving to file " + file)
     _ <- saveToSpecificFile(file, article)
   } yield () 
 
@@ -74,8 +75,9 @@ object SaveToFile {
   } yield ()
 
   def saveCategory(category: Category, articles: List[CompleteArticle]): StringError[Unit] = for {
-    file <- extractErrors(new File("categories/", category.uri.toASCIIString() + ".html"))
-    _ <- extractErrors(file.mkdirs())
+    dir <- extractErrors(new File("categories"))
+    file <- extractErrors(new File(dir, category.uri.toASCIIString() + ".html"))
+    _ <- extractErrors(dir.mkdirs())
     writer <- extractErrors(new FileWriter(file))
     rendered = ArticleRenderer.renderCategory(category, articles)
     _ <- extractErrors(writer.write(rendered))
@@ -83,8 +85,9 @@ object SaveToFile {
   } yield ()
 
   def saveCategoryAtom(absUrl: URI, category: Category, articles: List[CompleteArticle]) = for {
-    file <- extractErrors(new File("categories/", category.uri.toASCIIString() + ".atom"))
-    _ <- extractErrors(file.mkdirs())
+    dir <- extractErrors(new File("categories"))
+    file <- extractErrors(new File(dir, category.uri.toASCIIString() + ".atom"))
+    _ <- extractErrors(dir.mkdirs())
     writer <- extractErrors(new FileWriter(file))
     rendered = ArticleRenderer.renderCategoryAtom(category, articles, absUrl)
     _ <- extractErrors(writer.write(rendered))
@@ -92,8 +95,9 @@ object SaveToFile {
   } yield ()
 
   def saveAuthor(author: Author, articles: List[CompleteArticle]) = for {
-    file <- extractErrors(new File("authors/", author.uri.map(_.toASCIIString).getOrElse(author.name) + ".html"))
-    _ <- extractErrors(file.mkdirs())
+    dir <- extractErrors(new File("authors"))
+    file <- extractErrors(new File(dir, author.uri.map(_.toASCIIString).getOrElse(author.name) + ".html"))
+    _ <- extractErrors(dir.mkdirs())
     writer <- extractErrors(new FileWriter(file))
     rendered = ArticleRenderer.renderAuthor(author, articles)
     _ <- extractErrors(writer.write(rendered))
@@ -101,8 +105,9 @@ object SaveToFile {
   } yield ()
   
   def saveAuthorAtom(absUrl: URI, author: Author, articles: List[CompleteArticle]) = for {
-    file <- extractErrors(new File("authors/", author.uri.map(_.toASCIIString).getOrElse(author.name) + ".atom"))
-    _ <- extractErrors(file.mkdirs())
+    dir <- extractErrors(new File("authors"))
+    file <- extractErrors(new File(dir, author.uri.map(_.toASCIIString).getOrElse(author.name) + ".atom"))
+    _ <- extractErrors(dir.mkdirs())
     writer <- extractErrors(new FileWriter(file))
     rendered = ArticleRenderer.renderAuthorAtom(author, articles, absUrl)
     _ <- extractErrors(writer.write(rendered))

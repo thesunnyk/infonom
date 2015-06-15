@@ -188,11 +188,6 @@ object DbConn {
         where categoryid = $cid
     """.query[Int]
 
-  def getAllCompleteArticleIds: Query0[Int] = sql"""
-        select completearticleid
-        from articlecategory
-  """.query[Int]
-
   def linkCategory(c: Category, completeArticleId: Int) = for {
       categoryId <- saveOrUpdateCategory(c)
       acdb = ArticleCategoryDb(completeArticleId, categoryId)
@@ -335,6 +330,12 @@ object DbConn {
         )
       """.update
   }
+
+  def getAllCompleteArticleIds: Query0[Int] = sql"""
+        select id
+        from completearticle
+  """.query[Int]
+
 
   def createNewCompleteArticleAndGetId(a: CompleteArticleDb) = for {
       _ <- CompleteArticleCrud.create(a).run
