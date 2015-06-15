@@ -188,6 +188,11 @@ object DbConn {
         where categoryid = $cid
     """.query[Int]
 
+  def getAllCompleteArticleIds: Query0[Int] = sql"""
+        select completearticleid
+        from articlecategory
+  """.query[Int]
+
   def linkCategory(c: Category, completeArticleId: Int) = for {
       categoryId <- saveOrUpdateCategory(c)
       acdb = ArticleCategoryDb(completeArticleId, categoryId)
@@ -359,6 +364,11 @@ object DbConn {
     author <- AuthorCrud.getById(comdb.authorid).unique
     item = CompleteCommentCase(comment, author)
   } yield item
+
+  def getAllCompleteArticles(): ConnectionIO[List[CompleteArticleCase]] = for {
+    items <- getAllCompleteArticleIds.list
+    articles <- getCompleteArticlesByIds(items)
+  } yield articles
 
   def getCompleteArticlesByIds(ids: List[Int]): ConnectionIO[List[CompleteArticleCase]] = (for {
     id <- ids

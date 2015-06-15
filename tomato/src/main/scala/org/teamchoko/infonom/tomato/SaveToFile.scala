@@ -2,10 +2,13 @@ package org.teamchoko.infonom.tomato
 
 import java.io.File
 import java.io.FileWriter
+import java.net.URI
 import org.joda.time.DateTime
 import org.joda.time.format.DateTimeFormatterBuilder
 import org.teamchoko.infonom.carrot.Articles.Article
 import org.teamchoko.infonom.carrot.Articles.CompleteArticle
+import org.teamchoko.infonom.carrot.Articles.Category
+import org.teamchoko.infonom.carrot.Articles.Author
 import org.teamchoko.infonom.tomato.Errors.StringError
 import org.teamchoko.infonom.tomato.Errors.checkTrue
 import org.teamchoko.infonom.tomato.Errors.extractErrors
@@ -31,7 +34,7 @@ object SaveToFile {
     file <- extractErrors(new File(parent, article.uri.toASCIIString() + ".html"))
   } yield (file)
   
-  def saveToFile(file: File, article: CompleteArticle): StringError[Unit] =
+  def saveToSpecificFile(file: File, article: CompleteArticle): StringError[Unit] =
     for {
       writer <- extractErrors(new FileWriter(file))
       articleString = ArticleRenderer.render(article)
@@ -43,7 +46,66 @@ object SaveToFile {
     folder <- getDirectory(article.article.pubDate)
     _ <- createDirectory(folder)
     file <- createFile(folder, article.article)
-    _ <- saveToFile(file, article)
+    _ <- saveToSpecificFile(file, article)
   } yield () 
 
+  def saveIndex(articles: List[CompleteArticle]): StringError[Unit] = for {
+    file <- extractErrors(new File("index.html"))
+    writer <- extractErrors(new FileWriter(file))
+    rendered = ArticleRenderer.renderIndex(articles)
+    _ <- extractErrors(writer.write(rendered))
+    _ <- extractErrors(writer.close())
+  } yield ()
+
+  def saveCategories(items: Map[Category, List[CompleteArticle]]) = for {
+    file <- extractErrors(new File("categories.html"))
+    writer <- extractErrors(new FileWriter(file))
+    rendered = ArticleRenderer.renderCategories(items)
+    _ <- extractErrors(writer.write(rendered))
+    _ <- extractErrors(writer.close())
+  } yield ()
+
+  def saveAuthors(items: Map[Author, List[CompleteArticle]]) = for {
+    file <- extractErrors(new File("authors.html"))
+    writer <- extractErrors(new FileWriter(file))
+    rendered = ArticleRenderer.renderAuthors(items)
+    _ <- extractErrors(writer.write(rendered))
+    _ <- extractErrors(writer.close())
+  } yield ()
+
+  def saveCategory(category: Category, articles: List[CompleteArticle]) = for {
+    file <- extractErrors(new File("categories/", category.uri.toASCIIString() + ".html"))
+    _ <- extractErrors(file.mkdirs())
+    writer <- extractErrors(new FileWriter(file))
+    rendered = ArticleRenderer.renderCategory(category, articles)
+    _ <- extractErrors(writer.write(rendered))
+    _ <- extractErrors(writer.close())
+  } yield ()
+
+  def saveCategoryAtom(absUrl: URI, category: Category, articles: List[CompleteArticle]) = for {
+    file <- extractErrors(new File("categories/", category.uri.toASCIIString() + ".atom"))
+    _ <- extractErrors(file.mkdirs())
+    writer <- extractErrors(new FileWriter(file))
+    rendered = ArticleRenderer.renderCategoryAtom(category, articles, absUrl)
+    _ <- extractErrors(writer.write(rendered))
+    _ <- extractErrors(writer.close())
+  } yield ()
+
+  def saveAuthor(author: Author, articles: List[CompleteArticle]) = for {
+    file <- extractErrors(new File("authors/", author.uri.map(_.toASCIIString).getOrElse(author.name) + ".html"))
+    _ <- extractErrors(file.mkdirs())
+    writer <- extractErrors(new FileWriter(file))
+    rendered = ArticleRenderer.renderAuthor(author, articles)
+    _ <- extractErrors(writer.write(rendered))
+    _ <- extractErrors(writer.close())
+  } yield ()
+  
+  def saveAuthorAtom(absUrl: URI, author: Author, articles: List[CompleteArticle]) = for {
+    file <- extractErrors(new File("authors/", author.uri.map(_.toASCIIString).getOrElse(author.name) + ".atom"))
+    _ <- extractErrors(file.mkdirs())
+    writer <- extractErrors(new FileWriter(file))
+    rendered = ArticleRenderer.renderAuthorAtom(author, articles, absUrl)
+    _ <- extractErrors(writer.write(rendered))
+    _ <- extractErrors(writer.close())
+  } yield ()
 }

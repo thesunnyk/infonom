@@ -275,6 +275,9 @@ class DbConnSpec extends FlatSpec with Matchers {
   it should behave like typecheckQueryTable("getCompleteArticleIdsForCategoryId", createACAndCats,
     DbConn.getCompleteArticleIdsForCategoryId(0))
 
+  it should behave like typecheckQueryTable("getCompleteArticleIds", createACAndCats,
+    DbConn.getAllCompleteArticleIds)
+
   ////////////////// Test the persistence API
 
   val extArticleSimp = CompleteArticleCase(article, Nil, Nil, author)
