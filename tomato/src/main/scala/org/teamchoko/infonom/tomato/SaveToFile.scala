@@ -58,6 +58,15 @@ object SaveToFile {
     _ <- extractErrors(writer.close())
   } yield ()
 
+  def saveIndexAtom(absUrl: URI, articles: List[CompleteArticle]): StringError[Unit] = for {
+    file <- extractErrors(new File("index.atom"))
+    writer <- extractErrors(new FileWriter(file))
+    rendered = ArticleRenderer.renderIndexAtom(articles, absUrl)
+    _ <- extractErrors(writer.write(rendered))
+    _ <- extractErrors(writer.close())
+  } yield ()
+
+
   def saveCategories(items: Map[Category, List[CompleteArticle]]): StringError[Unit] = for {
     file <- extractErrors(new File("categories.html"))
     writer <- extractErrors(new FileWriter(file))

@@ -85,7 +85,7 @@ object Boot extends App {
     authorId <- (x \ "author").headOption
     authorIdStr <- getId(authorId)
     author: Author <- authorFromId(authorIdStr)
-    categories: List[Category] = categoriesFromIds((x \ "categories").toList.map(getId).flatten)
+    categories: List[Category] = categoriesFromIds((x \ "categories" \ "category").toList.map(getId).flatten)
     pullquote: Option[String] = getItem(x, "pullquote")
     extract: Option[String] = getItem(x, "extract")
     article: Article = Article(heading, text, textFilter, false, extract, pullquote, pubDate, new URI(uri))

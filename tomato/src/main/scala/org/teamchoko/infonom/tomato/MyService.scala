@@ -36,9 +36,9 @@ trait MyService {
   val quaddmg = new URI("http://blog.quaddmg.com")
   
   def saveArticle(body: ByteVector): StringError[Unit] = for {
-    article <- new String(body.toArray).decodeEither[CompleteArticleCase]
+    article: CompleteArticleCase <- new String(body.toArray).decodeEither[CompleteArticleCase]
     _ = log.info("Got an article: {}", article.article.heading)
-    _ = DbConn.persistCompleteArticle(article).transact(DbConn.xa).attemptRun.leftMap(x => x.getMessage)
+    _ <- DbConn.persistCompleteArticle(article).transact(DbConn.xa).attemptRun.leftMap(x => x.getMessage)
     _ = log.info("Saved")
   } yield ()
 
@@ -91,6 +91,7 @@ trait MyService {
   def publishIndex(): StringError[Unit] = for {
     articles <- getAllArticles.attemptRun.leftMap(x => x.getMessage)
     _ <- SaveToFile.saveIndex(articles.take(10))
+    _ <- SaveToFile.saveIndexAtom(quaddmg, articles.take(10))
     categories = extractCategories(articles)
     _ = log.info("Got categories: {}", categories)
     mappedCategories = mapCategories(categories, articles)
@@ -109,7 +110,10 @@ trait MyService {
   
   def service(implicit executionContext: ExecutionContext): HttpService = HttpService {
     case GET -> Root => Ok("Server is up")
-    case req@ POST -> Root / "new" => Ok(req.body.map(x => toError(saveArticle(x))))
+    case req@ POST -> Root / "new" => Ok(req.body.chunkAll.map(x => {
+      val vec = x.fold(ByteVector.empty)((x, y) => x ++ y)
+      toError(saveArticle(vec))
+    }))
     case GET -> Root / "publishAll" => Ok(toError(publishAllArticles))
     case GET -> Root / "index" => Ok(toError(publishIndex))
   }
