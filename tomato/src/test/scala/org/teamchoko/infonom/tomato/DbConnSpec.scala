@@ -275,7 +275,12 @@ class DbConnSpec extends FlatSpec with Matchers {
   it should behave like typecheckQueryTable("getCompleteArticleIdsForCategoryId", createACAndCats,
     DbConn.getCompleteArticleIdsForCategoryId(0))
 
-  it should behave like typecheckQueryTable("getCompleteArticleIds", DbConn.CompleteArticleCrud.createTable.run,
+  def createArticlesAndCompleteArticles = for {
+    _ <- DbConn.ArticleCrud.createTable.run
+    _ <- DbConn.CompleteArticleCrud.createTable.run
+  } yield 0
+
+  it should behave like typecheckQueryTable("getCompleteArticleIds", createArticlesAndCompleteArticles,
     DbConn.getAllCompleteArticleIds)
 
   ////////////////// Test the persistence API

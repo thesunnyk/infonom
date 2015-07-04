@@ -332,8 +332,10 @@ object DbConn {
   }
 
   def getAllCompleteArticleIds: Query0[Int] = sql"""
-        select id
-        from completearticle
+        select c.id
+        from completearticle as c, article as a
+        where c.articleid = a.id
+        order by a.pubdate desc
   """.query[Int]
 
 
