@@ -13,13 +13,115 @@
   font-style: normal;
 }
 
+@font-face {
+  font-family: 'Lato';
+  font-style: normal;
+  font-weight: 400;
+  src: local('Lato Regular'), local('Lato-Regular'), url('../fonts/lato-regular.woff') format('woff');
+}
+
+@font-face {
+  font-family: 'Lato';
+  font-style: normal;
+  font-weight: 700;
+  src: local('Lato Bold'), local('Lato-Bold'), url('../fonts/lato-bold.woff') format('woff');
+}
+@font-face {
+  font-family: 'Lato';
+  font-style: italic;
+  font-weight: 400;
+  src: local('Lato Italic'), local('Lato-Italic'), url('../fonts/lato-italic.woff') format('woff');
+}
+@font-face {
+  font-family: 'Lato';
+  font-style: italic;
+  font-weight: 700;
+  src: local('Lato Bold Italic'), local('Lato-BoldItalic'), url('../fonts/lato-bolditalic.woff') format('woff');
+}
+
 .icon {
     font-family: 'FontAwesome';
 }
 
+h1 h2 h3 h4 h5 {
+    color: @headingColor;
+}
+
+body > h1 {
+    padding-left: 0.5em;
+    max-width: 20em;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+a {
+    color: @linkColor;
+}
+
+a:hover {
+    color: @linkHover;
+}
+
+a:visited {
+    color: @linkColorVisited;
+}
 
 body {
-    padding-left: 1em;
+    font-family: 'Lato';
+    color: @textColor;
+    background-color: @background;
+    background-image: @background-image;
+}
+
+p.p-summary {
+    font-style: italic;
+    text-align: right;
+    color: @codeColor;
+    margin: 0 0 0 0;
+}
+
+p.byline {
+    font-size: smaller;
+    text-align: right;
+    margin-top: 0;
+}
+
+pre {
+    color: @codeColor;
+    font-size: 0.9em;
+}
+
+div.h-entry {
+    padding: 0.5em 1em;
+    background-color: @articleBackground;
+    margin-right: 1em;
+    margin-bottom: 1em;
+    max-width: 30em;
+    margin-left: auto;
+    margin-right: auto;
+    border-radius: 1em;
+
+    h2 {
+        margin-bottom: 0;
+    }
+}
+
+@media (max-width: 30em) {
+    div.h-entry {
+        margin: 0;
+    }
+}
+
+div.e-content {
+    text-align: justify;
+}
+
+blockquote {
+    border-left: @highlight 1em solid;
+    margin-left: 0;
+    padding-left: 2em;
+    font-style: italic;
+    color: @codeColor;
 }
 
 @import "main_post.less";

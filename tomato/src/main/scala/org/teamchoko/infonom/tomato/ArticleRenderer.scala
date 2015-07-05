@@ -96,6 +96,7 @@ object ArticleRenderer {
       Atom.content(renderArticleText(item.article)),
       item.categories.map(x => category(term := x.name, scheme := absUrl.resolve(x.uri).toString)))
 
+  // TODO render footer with palette attribution, categories, authors, etc.
 
   def renderIndex(items: List[CompleteArticle]): String =
     docType + html(renderHead(siteName), body(h1(siteName), items.map(item =>
@@ -151,7 +152,7 @@ object ArticleRenderer {
     val article = articleInfo.article
      List(
       article.extract.map(extract => p(`class` := "extract, p-summary")(extract)).getOrElse(""),
-	  p("by ", articleInfo.author.uri.map {
+	  p(`class` := "byline", "by ", articleInfo.author.uri.map {
         uri => a(`class`:= "p-author", href := appendHtml(authorUri.resolve(uri)).toString,
           (articleInfo.author.name))
 	  }.getOrElse(span(`class`:= "p-author")(articleInfo.author.name)),

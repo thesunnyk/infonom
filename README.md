@@ -72,7 +72,3 @@ work successfully.
 * *Jalapeno* - (Optional) ScalaJS
 * *Bread* - XML to tomato + onion and vice-versa.
 
-TODOs:
-------
-
-* Rewrite it in Scala
