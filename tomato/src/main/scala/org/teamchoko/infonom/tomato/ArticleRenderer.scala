@@ -17,13 +17,16 @@ import scalatags.Text.all.a
 import scalatags.Text.all.body
 import scalatags.Text.all.charset
 import scalatags.Text.all.`class`
+import scalatags.Text.all.`type`
 import scalatags.Text.all.div
+import scalatags.Text.all.footer
 import scalatags.Text.all.h1
 import scalatags.Text.all.h2
 import scalatags.Text.all.h3
 import scalatags.Text.all.ul
 import scalatags.Text.all.li
 import scalatags.Text.all.head
+import scalatags.Text.all.header
 import scalatags.Text.all.href
 import scalatags.Text.all.html
 import scalatags.Text.all.link
@@ -39,6 +42,7 @@ import scalatags.Text.all.stringAttr
 import scalatags.Text.all.stringFrag
 import scalatags.Text.all.xmlns
 import scalatags.Text.tags2.title
+import scalatags.Text.tags2.section
 
 import Atom.feed
 import Atom.author
@@ -96,35 +100,36 @@ object ArticleRenderer {
       Atom.content(renderArticleText(item.article)),
       item.categories.map(x => category(term := x.name, scheme := absUrl.resolve(x.uri).toString)))
 
-  // TODO render footer with palette attribution, categories, authors, etc.
-
   def renderIndex(items: List[CompleteArticle]): String =
-    docType + html(renderHead(siteName), body(h1(siteName), items.map(item =>
+    docType + html(renderHeadWithAtom(siteName, new URI("/index.atom")), body(header(h1(siteName)),
+      section(items.map(item =>
         div(`class` := "h-entry", renderEntryWithPermalink(item))
-      )))
+      )), renderFooter))
 
   def renderCategories(items: Map[Category, List[CompleteArticle]]): String =
     docType + html(renderHead(categoriesString + ": " + siteName),
-        body(h1(siteName), h2(categoriesString), items.toList.flatMap(item =>
+        body(header(h1(siteName)), section(h2(categoriesString), items.toList.flatMap(item =>
             List(renderCategoryHeading(item._1), renderArticleList(item._2))
-        ))
+        )), renderFooter)
       )
 
   def renderAuthors(items: Map[Author, List[CompleteArticle]]): String =
     docType + html(renderHead(authorsString + ": " + siteName),
-        body(h1(siteName), h2(authorsString), items.toList.flatMap(item =>
+        body(header(h1(siteName)), section(h2(authorsString), items.toList.flatMap(item =>
             List(renderAuthorHeading(item._1), renderArticleList(item._2))
-        ))
+        )), renderFooter)
       )
 
   def renderCategory(cat: Category, articles: List[CompleteArticle]): String =
-    docType + html(renderHead(cat.name + " :: " + categoriesString + ": " + siteName), body(
-        h1(cat.name), renderArticleList(articles)
+    docType + html(renderHeadWithAtom(cat.name + " :: " + categoriesString + ": " + siteName,
+      new URI("/categories/").resolve(cat.uri.toString + ".atom")), body(
+        header(h1(cat.name)), section(renderArticleList(articles)), renderFooter
       ))
 
   def renderAuthor(author: Author, articles: List[CompleteArticle]): String =
-    docType + html(renderHead(author.name + " :: " + authorsString + ": " + siteName), body(
-        h1(author.name), renderArticleList(articles)
+    docType + html(renderHeadWithAtom(author.name + " :: " + authorsString + ": " + siteName,
+      new URI("/authors/").resolve(author.uri.get.toString + ".atom")), body(
+        header(h1(author.name)), section(renderArticleList(articles)), renderFooter
       ))
 
   def renderArticleList(articles: List[CompleteArticle]) =
@@ -183,16 +188,26 @@ object ArticleRenderer {
   def renderStylesheets = List(link(rel := "stylesheet", href := "/css/normalize.css"),
       link(rel := "stylesheet", href := "/css/main.css"))
       
-  def renderHead(heading: String) = head(title(heading), renderMeta, renderStylesheets)
+  def renderHead(heading: String) = head(renderHeadList(heading))
+  
+  def renderHeadWithAtom(heading: String, atomUri: URI) = head(renderHeadList(heading), renderAtomLink(atomUri))
+
+  def renderHeadList(heading: String): List[Modifier] = List(title(heading), renderMeta, renderStylesheets)
+
+  def renderAtomLink(ref: URI): Modifier = link(rel := "alternate", `type` := "application/atom+xml",
+    href := ref.toString)
 
   val docType: String = "<!DOCTYPE html>"
 
   def render(articleInfo: CompleteArticle): String = {
     val article = articleInfo.article
     docType + html(renderHead(article.heading + ": " + siteName), body(
-      h1(siteName),
-        div(`class` := "h-entry", renderEntry(articleInfo))
-    ))
+      header(h1(siteName)), section(div(`class` := "h-entry", renderEntry(articleInfo))),
+      renderFooter))
   }
+
+  def renderFooter = footer(a(href := "/", "Home"), " | ", a(href := "/categories/", "Categories"),
+    " | ", a(href := "/authors/", "Authors"), " | ",
+    a(href := "http://www.colourlovers.com/palette/1369317/Waiheke_Island", "Colour Scheme"))
 
 }
