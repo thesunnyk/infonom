@@ -166,7 +166,7 @@ object ArticleRenderer {
   }
   
   def renderPullquote(article: Article): Modifier =
-    article.pullquote.map(x => span(`class` := "pullquote", x)).getOrElse("")
+    article.pullquote.filter(!_.trim.isEmpty).map(x => span(`class` := "pullquote", x)).getOrElse("")
 
   def renderEntryBody(article: Article): List[Modifier] =
     List(div(`class` := "e-content", renderPullquote(article), raw(renderArticleText(article))))

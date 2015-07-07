@@ -95,6 +95,17 @@ p.p-summary {
     margin: 0 0 0 0;
 }
 
+span.pullquote {
+    float: right;
+    width: 60%;
+    background-color: @footerBackground;
+    border-radius: 1em;
+    font-style: italic;
+    font-weight: bold;
+    padding: 1em;
+    margin: 0 0 1em 1em;
+}
+
 p.byline {
     font-size: smaller;
     text-align: right;
@@ -124,6 +135,10 @@ div.h-entry {
 
 div.e-content {
     text-align: justify;
+
+    > p:first-of-type::first-letter {
+        font-size: 300%;
+    }
 }
 
 blockquote {
