@@ -29,6 +29,7 @@ import scalatags.Text.all.head
 import scalatags.Text.all.header
 import scalatags.Text.all.href
 import scalatags.Text.all.html
+import scalatags.Text.all.lang
 import scalatags.Text.all.link
 import scalatags.Text.all.meta
 import scalatags.Text.all.name
@@ -101,33 +102,33 @@ object ArticleRenderer {
       item.categories.map(x => category(term := x.name, scheme := absUrl.resolve(x.uri).toString)))
 
   def renderIndex(items: List[CompleteArticle]): String =
-    docType + html(renderHeadWithAtom(siteName, new URI("/index.atom")), body(header(h1(siteName)),
+    docType + html(lang := "en-AU", renderHeadWithAtom(siteName, new URI("/index.atom")), body(header(h1(siteName)),
       section(items.map(item =>
         div(`class` := "h-entry", renderEntryWithPermalink(item))
       )), renderFooter))
 
   def renderCategories(items: Map[Category, List[CompleteArticle]]): String =
-    docType + html(renderHead(categoriesString + ": " + siteName),
+    docType + html(lang := "en-AU", renderHead(categoriesString + ": " + siteName),
         body(header(h1(siteName)), section(h2(categoriesString), items.toList.flatMap(item =>
             List(renderCategoryHeading(item._1), renderArticleList(item._2))
         )), renderFooter)
       )
 
   def renderAuthors(items: Map[Author, List[CompleteArticle]]): String =
-    docType + html(renderHead(authorsString + ": " + siteName),
+    docType + html(lang := "en-AU", renderHead(authorsString + ": " + siteName),
         body(header(h1(siteName)), section(h2(authorsString), items.toList.flatMap(item =>
             List(renderAuthorHeading(item._1), renderArticleList(item._2))
         )), renderFooter)
       )
 
   def renderCategory(cat: Category, articles: List[CompleteArticle]): String =
-    docType + html(renderHeadWithAtom(cat.name + " :: " + categoriesString + ": " + siteName,
+    docType + html(lang := "en-AU", renderHeadWithAtom(cat.name + " :: " + categoriesString + ": " + siteName,
       new URI("/categories/").resolve(cat.uri.toString + ".atom")), body(
         header(h1(cat.name)), section(renderArticleList(articles)), renderFooter
       ))
 
   def renderAuthor(author: Author, articles: List[CompleteArticle]): String =
-    docType + html(renderHeadWithAtom(author.name + " :: " + authorsString + ": " + siteName,
+    docType + html(lang := "en-AU", renderHeadWithAtom(author.name + " :: " + authorsString + ": " + siteName,
       new URI("/authors/").resolve(author.uri.get.toString + ".atom")), body(
         header(h1(author.name)), section(renderArticleList(articles)), renderFooter
       ))
@@ -201,7 +202,7 @@ object ArticleRenderer {
 
   def render(articleInfo: CompleteArticle): String = {
     val article = articleInfo.article
-    docType + html(renderHead(article.heading + ": " + siteName), body(
+    docType + html(lang := "en-AU", renderHead(article.heading + ": " + siteName), body(
       header(h1(siteName)), section(div(`class` := "h-entry", renderEntry(articleInfo))),
       renderFooter))
   }

@@ -18,7 +18,7 @@ class ArticleRendererSpec extends FlatSpec with Matchers {
     val author2: Author = Author("altname", None, Some(new URI("alt")))
 
 	"ArticleRenderer" should "render" in {
-      ArticleRenderer.render(complete) should equal("<!DOCTYPE html><html><head><title>heading" +
+      ArticleRenderer.render(complete) should equal("<!DOCTYPE html><html lang=\"en-AU\"><head><title>heading" +
         ": The USS Quad Damage</title>" +
         "<meta charset=\"utf-8\" /><meta http-equiv=\"X-UA-Compatible\" content=\"IE=edge,chrome=1\" />" +
         "<meta name=\"description\" content=\"\" /><meta name=\"viewport\" content=\"width=device-width\" />" +
@@ -36,7 +36,7 @@ class ArticleRendererSpec extends FlatSpec with Matchers {
     val cat = Category("Test", new URI("test"))
 
     it should "render category" in {
-      ArticleRenderer.renderCategory(cat, List(complete)) should equal("<!DOCTYPE html><html><head><title>Test" +
+      ArticleRenderer.renderCategory(cat, List(complete)) should equal("<!DOCTYPE html><html lang=\"en-AU\"><head><title>Test" +
         " :: Categories: The USS Quad Damage</title>" +
         "<meta charset=\"utf-8\" /><meta http-equiv=\"X-UA-Compatible\" content=\"IE=edge,chrome=1\" />" +
         "<meta name=\"description\" content=\"\" /><meta name=\"viewport\" content=\"width=device-width\" />" +
@@ -53,7 +53,7 @@ class ArticleRendererSpec extends FlatSpec with Matchers {
     }
 
     it should "render categories" in {
-      ArticleRenderer.renderCategories(Map(cat -> List(complete))) should equal("<!DOCTYPE html><html><head><title>" +
+      ArticleRenderer.renderCategories(Map(cat -> List(complete))) should equal("<!DOCTYPE html><html lang=\"en-AU\"><head><title>" +
         "Categories: The USS Quad Damage</title>" +
         "<meta charset=\"utf-8\" /><meta http-equiv=\"X-UA-Compatible\" content=\"IE=edge,chrome=1\" />" +
         "<meta name=\"description\" content=\"\" /><meta name=\"viewport\" content=\"width=device-width\" />" +
@@ -71,7 +71,7 @@ class ArticleRendererSpec extends FlatSpec with Matchers {
     }
 
     it should "render authors" in {
-      ArticleRenderer.renderAuthors(Map(author2 -> List(complete))) should equal("<!DOCTYPE html><html><head><title>" +
+      ArticleRenderer.renderAuthors(Map(author2 -> List(complete))) should equal("<!DOCTYPE html><html lang=\"en-AU\"><head><title>" +
         "Authors: The USS Quad Damage</title>" +
         "<meta charset=\"utf-8\" /><meta http-equiv=\"X-UA-Compatible\" content=\"IE=edge,chrome=1\" />" +
         "<meta name=\"description\" content=\"\" /><meta name=\"viewport\" content=\"width=device-width\" />" +
@@ -90,7 +90,7 @@ class ArticleRendererSpec extends FlatSpec with Matchers {
 
     it should "render authors without url" in {
       ArticleRenderer.renderAuthors(Map(complete.author -> List(complete))) should equal(
-        "<!DOCTYPE html><html><head><title>" +
+        "<!DOCTYPE html><html lang=\"en-AU\"><head><title>" +
         "Authors: The USS Quad Damage</title>" +
         "<meta charset=\"utf-8\" /><meta http-equiv=\"X-UA-Compatible\" content=\"IE=edge,chrome=1\" />" +
         "<meta name=\"description\" content=\"\" /><meta name=\"viewport\" content=\"width=device-width\" />" +
@@ -107,7 +107,7 @@ class ArticleRendererSpec extends FlatSpec with Matchers {
     }
 
     it should "render index" in {
-      ArticleRenderer.renderIndex(List(complete)) should equal("<!DOCTYPE html><html><head><title>" +
+      ArticleRenderer.renderIndex(List(complete)) should equal("<!DOCTYPE html><html lang=\"en-AU\"><head><title>" +
         "The USS Quad Damage</title>" +
         "<meta charset=\"utf-8\" /><meta http-equiv=\"X-UA-Compatible\" content=\"IE=edge,chrome=1\" />" +
         "<meta name=\"description\" content=\"\" /><meta name=\"viewport\" content=\"width=device-width\" />" +
