@@ -33,7 +33,7 @@ import java.net.URI
 trait MyService {
   val log = LoggerFactory.getLogger(classOf[MyService]);
 
-  val quaddmg = new URI("http://blog.quaddmg.com")
+  val quaddmg = new URI("https://blog.quaddmg.com")
   
   def saveArticle(body: ByteVector): StringError[Unit] = for {
     article: CompleteArticleCase <- new String(body.toArray).decodeEither[CompleteArticleCase]

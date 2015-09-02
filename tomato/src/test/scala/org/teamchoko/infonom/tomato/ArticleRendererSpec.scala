@@ -22,6 +22,9 @@ class ArticleRendererSpec extends FlatSpec with Matchers {
         ": The USS Quad Damage</title>" +
         "<meta charset=\"utf-8\" /><meta http-equiv=\"X-UA-Compatible\" content=\"IE=edge,chrome=1\" />" +
         "<meta name=\"description\" content=\"\" /><meta name=\"viewport\" content=\"width=device-width\" />" +
+        "<meta name=\"twitter:card\" content=\"summary\" /><meta name=\"twitter:site\" content=\"@thesunnyk\" />" +
+        "<meta name=\"twitter:title\" content=\"heading\" />" +
+        "<meta name=\"twitter:description\" content=\"Amazing stories of the 21st century\" />" +
         "<link rel=\"stylesheet\" href=\"/css/normalize.css\" /><link rel=\"stylesheet\" href=\"/css/main.css\" />" +
         "</head><body><header><h1>The USS Quad Damage</h1></header><section><div class=\"h-entry\">" +
         "<h2 class=\"p-name\">heading</h2><p class=\"byline\">by " +

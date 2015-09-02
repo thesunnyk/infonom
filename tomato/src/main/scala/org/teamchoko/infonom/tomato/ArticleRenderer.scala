@@ -189,20 +189,31 @@ object ArticleRenderer {
   def renderStylesheets = List(link(rel := "stylesheet", href := "/css/normalize.css"),
       link(rel := "stylesheet", href := "/css/main.css"))
       
-  def renderHead(heading: String) = head(renderHeadList(heading))
+  def renderHead(heading: String, article: Option[CompleteArticle] = None) =
+    head(renderHeadList(heading, article))
   
   def renderHeadWithAtom(heading: String, atomUri: URI) = head(renderHeadList(heading), renderAtomLink(atomUri))
 
-  def renderHeadList(heading: String): List[Modifier] = List(title(heading), renderMeta, renderStylesheets)
+  def renderHeadList(heading: String, article: Option[CompleteArticle] = None): List[Modifier] =
+    title(heading) :: renderMeta ::: article.map(x => twitterSummary(x)).getOrElse(List[Modifier]()) :::
+      renderStylesheets
 
   def renderAtomLink(ref: URI): Modifier = link(rel := "alternate", `type` := "application/atom+xml",
     href := ref.toString)
 
   val docType: String = "<!DOCTYPE html>"
 
+  def twitterSummary(articleInfo: CompleteArticle): List[Modifier] = List(
+    meta(name := "twitter:card", content := "summary"),
+    meta(name := "twitter:site", content := "@thesunnyk"),
+    meta(name := "twitter:title", content := articleInfo.article.heading),
+    meta(name := "twitter:description", content := articleInfo.article.extract.
+      getOrElse("Amazing stories of the 21st century"))
+  )
+
   def render(articleInfo: CompleteArticle): String = {
     val article = articleInfo.article
-    docType + html(lang := "en-AU", renderHead(article.heading + ": " + siteName), body(
+    docType + html(lang := "en-AU", renderHead(article.heading + ": " + siteName, Some(articleInfo)), body(
       header(h1(siteName)), section(div(`class` := "h-entry", renderEntry(articleInfo))),
       renderFooter))
   }
