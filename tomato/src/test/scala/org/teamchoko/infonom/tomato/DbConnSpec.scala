@@ -234,9 +234,7 @@ class DbConnSpec extends FlatSpec with Matchers {
   val completeArticle = CompleteArticleDb(6, 6)
   val completeArticle2 = CompleteArticleDb(6, 9)
 
-  "Complete Article SQL" should behave like doBasicCrud(DbConn.CompleteArticleCrud, completeArticle, completeArticle2)
-
-  it should behave like listAllItems(DbConn.CompleteArticleCrud, completeArticle, completeArticle2)
+  "Complete Article SQL" should behave like listAllItems(DbConn.CompleteArticleCrud, completeArticle, completeArticle2)
 
   val articleCategory = ArticleCategoryDb(4, 5)
   val articleCategory2 = ArticleCategoryDb(4, 8)
@@ -281,7 +279,7 @@ class DbConnSpec extends FlatSpec with Matchers {
   } yield 0
 
   it should behave like typecheckQueryTable("getCompleteArticleIds", createArticlesAndCompleteArticles,
-    DbConn.getAllCompleteArticleIds)
+    DbConn.ArticleCrud.getAllArticleIds)
 
   ////////////////// Test the persistence API
 
