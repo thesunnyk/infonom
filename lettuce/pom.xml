@@ -39,6 +39,16 @@
       <artifactId>scala-xml_${scala.version.alias}</artifactId>
       <version>${scala-xml.version}</version>
     </dependency>
+    <dependency><!-- For markdown. -->
+      <groupId>org.clapper</groupId>
+      <artifactId>markwrap_${scala.version.alias}</artifactId>
+      <version>${markwrap.version}</version>
+    </dependency>
+    <dependency>
+        <groupId>com.lihaoyi</groupId>
+        <artifactId>scalatags_${scala.version.alias}</artifactId>
+        <version>${scalatags.version}</version>
+    </dependency>
     <dependency>
         <groupId>org.teamchoko.infonom</groupId>
         <artifactId>carrot</artifactId>

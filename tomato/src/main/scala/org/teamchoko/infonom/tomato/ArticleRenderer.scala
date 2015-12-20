@@ -1,7 +1,5 @@
 package org.teamchoko.infonom.tomato
 
-import org.clapper.markwrap.MarkWrap
-import org.clapper.markwrap.MarkupType
 import org.joda.time.DateTime
 import org.joda.time.format.DateTimeFormat
 import org.teamchoko.infonom.carrot.Articles.Article
@@ -11,50 +9,50 @@ import org.teamchoko.infonom.carrot.Articles.CompleteArticle
 import org.teamchoko.infonom.carrot.Articles.Html
 import org.teamchoko.infonom.carrot.Articles.Textile
 
-import scalatags.Text.all.Modifier
-import scalatags.Text.all.SeqNode
+import scalatags.Text.all.`class`
+import scalatags.Text.all.`type`
 import scalatags.Text.all.a
 import scalatags.Text.all.body
 import scalatags.Text.all.charset
-import scalatags.Text.all.`class`
-import scalatags.Text.all.`type`
+import scalatags.Text.all.content
 import scalatags.Text.all.div
 import scalatags.Text.all.footer
 import scalatags.Text.all.h1
 import scalatags.Text.all.h2
 import scalatags.Text.all.h3
-import scalatags.Text.all.ul
-import scalatags.Text.all.li
 import scalatags.Text.all.head
 import scalatags.Text.all.header
 import scalatags.Text.all.href
 import scalatags.Text.all.html
+import scalatags.Text.all.httpEquiv
 import scalatags.Text.all.lang
+import scalatags.Text.all.li
 import scalatags.Text.all.link
 import scalatags.Text.all.meta
+import scalatags.Text.all.Modifier
 import scalatags.Text.all.name
-import scalatags.Text.all.content
-import scalatags.Text.all.httpEquiv
-import scalatags.Text.all.rel
 import scalatags.Text.all.p
 import scalatags.Text.all.raw
+import scalatags.Text.all.rel
+import scalatags.Text.all.SeqNode
 import scalatags.Text.all.span
 import scalatags.Text.all.stringAttr
 import scalatags.Text.all.stringFrag
+import scalatags.Text.all.ul
 import scalatags.Text.all.xmlns
-import scalatags.Text.tags2.title
 import scalatags.Text.tags2.section
+import scalatags.Text.tags2.title
 
-import Atom.feed
 import Atom.author
-import Atom.entry
-import Atom.id
-import Atom.updated
 import Atom.category
+import Atom.entry
+import Atom.feed
+import Atom.id
 import Atom.scheme
 import Atom.summary
-import Atom.uri
 import Atom.term
+import Atom.updated
+import Atom.uri
 
 import java.net.URI
 
@@ -98,7 +96,7 @@ object ArticleRenderer {
         item.author.uri.toList.map(x => uri(appendHtml(absUrl.resolve(x)).toString))),
       id(appendHtml(dateUri(item.article.pubDate).resolve(item.article.uri)).toString),
       item.article.extract.toList.map(x => summary(x)),
-      Atom.content(renderArticleText(item.article)),
+      Atom.content(item.article.text),
       item.categories.map(x => category(term := x.name, scheme := absUrl.resolve(x.uri).toString)))
 
   def renderIndex(items: List[CompleteArticle]): String =
@@ -142,11 +140,6 @@ object ArticleRenderer {
   def renderCategoryHeading(cat: Category): Modifier = h3(a(href := appendHtml(catUri.resolve(cat.uri)).toString,
     cat.name))
   
-  def renderArticleText(article: Article): String = article.textFilter match {
-    case Textile => MarkWrap.parserFor(MarkupType.Textile).parseToHTML(article.text);
-    case Html => article.text
-  }
-
   def renderDate(date: DateTime): String = DateTimeFormat.forPattern("dd MMM yyyy").print(date)
 
   def renderArticleHeaderForList(articleInfo: CompleteArticle): List[Modifier] =
@@ -166,11 +159,8 @@ object ArticleRenderer {
 	)
   }
   
-  def renderPullquote(article: Article): Modifier =
-    article.pullquote.filter(!_.trim.isEmpty).map(x => span(`class` := "pullquote", x)).getOrElse("")
-
   def renderEntryBody(article: Article): List[Modifier] =
-    List(div(`class` := "e-content", renderPullquote(article), raw(renderArticleText(article))))
+    List(div(`class` := "e-content", raw(article.text)))
   
   def renderEntryWithPermalink(articleInfo: CompleteArticle): List[Modifier] =
     a(href := appendHtml(dateUri(articleInfo.article.pubDate).resolve(articleInfo.article.uri)).toString,

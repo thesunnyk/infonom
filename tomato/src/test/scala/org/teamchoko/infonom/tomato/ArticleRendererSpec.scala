@@ -8,7 +8,7 @@ import org.teamchoko.infonom.carrot.Articles._
 
 class ArticleRendererSpec extends FlatSpec with Matchers {
     val complete = new CompleteArticle {
-      val article: Article = Article("heading", "some _things_ are *stuff*", Textile, false, None, None,
+      val article: Article = Article("heading", "some things are stuff", None,
         new DateTime(2013, 5, 10, 10, 10, 10), new URI("articles/article"))
       val comments: List[CompleteComment] = Nil
       val categories: List[Category] = Nil
@@ -29,7 +29,7 @@ class ArticleRendererSpec extends FlatSpec with Matchers {
         "</head><body><header><h1>The USS Quad Damage</h1></header><section><div class=\"h-entry\">" +
         "<h2 class=\"p-name\">heading</h2><p class=\"byline\">by " +
         "<span class=\"p-author\">name</span> on <span class=\"dt-published\">10 May 2013</span></p>" +
-        "<div class=\"e-content\"><p>some <em>things</em> are <strong>stuff</strong></p></div></div></section>" +
+        "<div class=\"e-content\">some things are stuff</div></div></section>" +
         "<footer><a href=\"/\">Home</a> | <a href=\"/categories/\">Categories</a>" +
         " | <a href=\"/authors/\">Authors</a> | " +
         "<a href=\"http://www.colourlovers.com/palette/1369317/Waiheke_Island\">Colour Scheme</a></footer>" + 
@@ -120,7 +120,7 @@ class ArticleRendererSpec extends FlatSpec with Matchers {
         "<a href=\"/2013/05/10/articles/article.html\">" +
         "<h2 class=\"p-name\">heading</h2></a><p class=\"byline\">by " +
         "<span class=\"p-author\">name</span> on <span class=\"dt-published\">10 May 2013</span></p>" +
-        "<div class=\"e-content\"><p>some <em>things</em> are <strong>stuff</strong></p></div></div></section>" +
+        "<div class=\"e-content\">some things are stuff</div></div></section>" +
         "<footer><a href=\"/\">Home</a> | <a href=\"/categories/\">Categories</a>" +
         " | <a href=\"/authors/\">Authors</a> | " +
         "<a href=\"http://www.colourlovers.com/palette/1369317/Waiheke_Island\">Colour Scheme</a></footer>" + 
@@ -134,8 +134,8 @@ class ArticleRendererSpec extends FlatSpec with Matchers {
         "<id>/</id><link href=\"http://www.example.com/\" /><updated>2013-05-10T10:10:10.000+10:00</updated>" +
         "<entry><title>heading</title><link href=\"http://www.example.com/2013/05/10/articles/article.html\" />" +
         "<updated>2013-05-10T10:10:10.000+10:00</updated><author><name>name</name></author>" +
-        "<id>/2013/05/10/articles/article.html</id><content>&lt;p&gt;some &lt;em&gt;things&lt;/em&gt; are " +
-        "&lt;strong&gt;stuff&lt;/strong&gt;&lt;/p&gt;</content>" +
+        "<id>/2013/05/10/articles/article.html</id><content>some things are " +
+        "stuff</content>" +
         "</entry></feed>")
     }
 }

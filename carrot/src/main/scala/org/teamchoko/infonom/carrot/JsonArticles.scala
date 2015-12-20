@@ -16,16 +16,16 @@ import org.teamchoko.infonom.carrot.Articles.Textile
 import argonaut.Argonaut.BooleanDecodeJson
 import argonaut.Argonaut.BooleanEncodeJson
 import argonaut.Argonaut.CanBuildFromDecodeJson
+import argonaut.Argonaut.casecodec2
+import argonaut.Argonaut.casecodec3
+import argonaut.Argonaut.casecodec4
+import argonaut.Argonaut.casecodec5
+import argonaut.Argonaut.jString
 import argonaut.Argonaut.OptionDecodeJson
 import argonaut.Argonaut.OptionEncodeJson
 import argonaut.Argonaut.StringDecodeJson
 import argonaut.Argonaut.StringEncodeJson
 import argonaut.Argonaut.TraversableOnceEncodeJson
-import argonaut.Argonaut.casecodec2
-import argonaut.Argonaut.casecodec3
-import argonaut.Argonaut.casecodec4
-import argonaut.Argonaut.casecodec8
-import argonaut.Argonaut.jString
 import argonaut.CodecJson
 
 object JsonArticles {
@@ -65,8 +65,8 @@ object JsonArticles {
 
   implicit def CommentCodecJson = casecodec2(Comment.apply, Comment.unapply)("text", "pubdate")
 
-  implicit def ArticleCodecJson = casecodec8(Article.apply, Article.unapply)("heading",
-      "text", "textFilter", "draft", "extract", "pullquote", "pubDate", "uri")
+  implicit def ArticleCodecJson = casecodec5(Article.apply, Article.unapply)("heading",
+      "text", "extract", "pubDate", "uri")
 
   implicit def CompleteCommentCodecJson =
     casecodec2(CompleteCommentCase.apply, CompleteCommentCase.unapply)("comment", "author")

@@ -1,10 +1,14 @@
 package org.teamchoko.infonom.tomato
 
+import doobie.imports.ConnectionIO
+import doobie.imports.DriverManagerTransactor
+import doobie.imports.Meta
+import doobie.imports.Query0
+import doobie.imports.toMoreConnectionIOOps
+import doobie.imports.toSqlInterpolator
+import doobie.imports.Update0
 import java.net.URI
 import java.sql.Timestamp
-
-import scala.reflect.runtime.universe
-
 import org.joda.time.DateTime
 import org.teamchoko.infonom.carrot.Articles.Article
 import org.teamchoko.infonom.carrot.Articles.Author
@@ -17,18 +21,11 @@ import org.teamchoko.infonom.carrot.Articles.CompleteCommentCase
 import org.teamchoko.infonom.carrot.Articles.Html
 import org.teamchoko.infonom.carrot.Articles.TextFilter
 import org.teamchoko.infonom.carrot.Articles.Textile
-
-import doobie.imports.ConnectionIO
-import doobie.imports.DriverManagerTransactor
-import doobie.imports.Meta
-import doobie.imports.Query0
-import doobie.imports.Update0
-import doobie.imports.toMoreConnectionIOOps
-import doobie.imports.toSqlInterpolator
-
+import scala.reflect.runtime.universe
 import scalaz._
-import scalaz.Scalaz._
 import scalaz.concurrent.Task
+import scalaz.Scalaz._
+
 
 object DbConn {
   def xa = DriverManagerTransactor[Task]("org.h2.Driver", "jdbc:h2:file:./test.db", "sa", "")
@@ -52,6 +49,7 @@ object DbConn {
 
   val lastVal = sql"select lastval()".query[Int].unique
 
+  // TODO Update article
   trait DbBasicCrud[T] {
     def getById(id: Int): Query0[T]
     def create(a: T): Update0
@@ -267,15 +265,14 @@ object DbConn {
 
   object ArticleCrud extends DbBasicCrud[Article] {
     override def getById(aid: Int) = sql"""
-        select heading, body, textfilter, draft, extract, pullquote, pubdate, uri
+        select heading, body, extract, pubdate, uri
         from article
         where id = $aid
       """.query[Article]
 
     override def create(a: Article) = sql"""
-        insert into article (heading, body, textfilter, draft, extract, pullquote, pubdate, uri)
-        values (${a.heading}, ${a.text}, ${a.textFilter}, ${a.draft}, ${a.extract},
-          ${a.pullquote}, ${a.pubDate}, ${a.uri})
+        insert into article (heading, body, extract, pubdate, uri)
+        values (${a.heading}, ${a.text}, ${a.extract}, ${a.pubDate}, ${a.uri})
       """.update
 
     override def deleteById(aid: Int) = sql"delete from article where id = $aid".update
@@ -286,10 +283,7 @@ object DbConn {
           id serial,
           heading varchar not null,
           body longvarchar not null,
-          textFilter varchar not null,
-          draft bool not null,
           extract longvarchar,
-          pullquote longvarchar,
           pubdate timestamp not null,
           uri varchar not null
         )

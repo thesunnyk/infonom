@@ -1,27 +1,33 @@
 package org.teamchoko.infonom.lettuce
 
+import argonaut._
+import argonaut.Argonaut._
+import java.io.File
+import java.net.URI
+import org.clapper.markwrap.MarkupType
+import org.clapper.markwrap.MarkWrap
 import org.joda.time.DateTime
+import org.slf4j.LoggerFactory
+import org.teamchoko.infonom.carrot.Articles.Article
 import org.teamchoko.infonom.carrot.Articles.Author
 import org.teamchoko.infonom.carrot.Articles.Category
+import org.teamchoko.infonom.carrot.Articles.Comment
 import org.teamchoko.infonom.carrot.Articles.CompleteArticle
+import org.teamchoko.infonom.carrot.Articles.CompleteArticleCase
 import org.teamchoko.infonom.carrot.Articles.CompleteComment
+import org.teamchoko.infonom.carrot.Articles.CompleteCommentCase
 import org.teamchoko.infonom.carrot.Articles.Html
 import org.teamchoko.infonom.carrot.Articles.TextFilter
 import org.teamchoko.infonom.carrot.Articles.Textile
-import org.teamchoko.infonom.carrot.Articles.CompleteCommentCase
-import org.teamchoko.infonom.carrot.Articles.Comment
-import org.teamchoko.infonom.carrot.Articles.CompleteArticleCase
-import org.teamchoko.infonom.carrot.Articles.Article
 import org.teamchoko.infonom.carrot.JsonArticles._
-import argonaut._
-import argonaut.Argonaut._
 import scala.xml.Elem
-import java.net.URI
 import scala.xml.Node
-import java.io.File
 import scala.xml.XML
 import scalaj.http.Http
-import org.slf4j.LoggerFactory
+import scalatags.Text.all.`class`
+import scalatags.Text.all.span
+import scalatags.Text.all.stringAttr
+import scalatags.Text.all.stringFrag
 
 object Boot extends App {
   val log = LoggerFactory.getLogger(classOf[App])
@@ -88,9 +94,18 @@ object Boot extends App {
     categories: List[Category] = categoriesFromIds((x \ "categories" \ "category").toList.map(getId).flatten)
     pullquote: Option[String] = getItem(x, "pullquote")
     extract: Option[String] = getItem(x, "extract")
-    article: Article = Article(heading, text, textFilter, false, extract, pullquote, pubDate, new URI(uri))
+    article: Article = Article(heading, renderPullquote(pullquote) + renderArticleText(text, textFilter),
+      extract, pubDate, new URI(uri))
   } yield CompleteArticleCase(article, comments, categories, author)
   
+  def renderArticleText(article: String, textFilter: TextFilter): String = textFilter match {
+    case Textile => MarkWrap.parserFor(MarkupType.Textile).parseToHTML(article);
+    case Html => article
+  }
+
+  def renderPullquote(pullQuote: Option[String]): String =
+    pullQuote.filter(!_.trim.isEmpty).map(x => span(`class` := "pullquote", x).toString).getOrElse("")
+
   def setAllAuthors(authors: List[(String, Author)]): Unit =
     authors.foreach(data => allAuthors = allAuthors ++ Map(data._1 -> data._2))
 

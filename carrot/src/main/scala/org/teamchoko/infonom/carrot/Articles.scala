@@ -13,10 +13,7 @@ object Articles {
   case class Comment(text: String, pubDate: DateTime)
   case class Article(heading: String,
                      text: String,
-                     textFilter: TextFilter,
-                     draft: Boolean,
                      extract: Option[String],
-                     pullquote: Option[String],
                      pubDate: DateTime,
                      uri: URI)
 
