@@ -47,39 +47,68 @@ object DbConn {
         case Textile => "textile"
       })
 
-  val lastVal = sql"select lastval()".query[Int].unique
+  val lastVal: ConnectionIO[Int] = sql"select lastval()".query[Int].unique
 
   trait DbBasicCrud[T] {
-    def getById(id: Int): Query0[T]
-    def create(a: T): Update0
-    def deleteById(id: Int): Update0
-    def createTable: Update0
+    def analyse: ConnectionIO[Unit]
+    def getById(id: Int): ConnectionIO[Option[T]]
+    def create(a: T): ConnectionIO[Int]
+    def deleteById(id: Int): ConnectionIO[Int]
+    def createTable: ConnectionIO[Int]
   }
 
   trait DbSearch[T] extends DbBasicCrud[T] {
-    def getAllItems: Query0[T]
+    def getAllItems: ConnectionIO[List[T]]
   }
 
   object AuthorCrud extends DbBasicCrud[Author] with DbSearch[Author] {
-    override def getById(aid: Int) = sql"select name, email, uri from author where id = $aid".query[Author]
+    val testAuthor = Author("", None, None)
+    override def analyse: ConnectionIO[Unit] = for {
+      _ <- getByIdSql(0).analysis
+      _ <- getIdByNameSql("").analysis
+      _ <- getAllItemsSql.analysis
+      _ <- createSql(testAuthor).analysis
+      _ <- updateSql(0, testAuthor).analysis
+      _ <- deleteByIdSql(0).analysis
+      _ <- createTableSql.analysis
+    } yield ()
 
-    def getIdByName(name: String): Query0[Int] = sql"select id from author where name = $name".query[Int]
+    override def getById(aid: Int) = getByIdSql(aid).option
 
-    override val getAllItems = sql"select name, email, uri from author".query[Author]
+    private def getByIdSql(aid: Int) =
+      sql"select name, email, uri from author where id = $aid".query[Author]
 
-    override def create(a: Author) = sql"""
+    def getIdByName(name: String): ConnectionIO[Option[Int]] = getIdByNameSql(name).option
+
+    private def getIdByNameSql(name: String) =
+      sql"select id from author where name = $name".query[Int]
+
+    override def getAllItems: ConnectionIO[List[Author]] = getAllItemsSql.list
+
+    private val getAllItemsSql = sql"select name, email, uri from author".query[Author]
+
+    override def create(a: Author) = createSql(a).run *> lastVal
+
+    private def createSql(a: Author) = sql"""
         insert into author (name, email, uri)
         values (${a.name}, ${a.email}, ${a.uri})
       """.update
 
-    def update(id: Int, a: Author): Update0 = sql"""
+    def update(id: Int, a: Author): ConnectionIO[Int] =
+      updateSql(id, a).run *> id.point[ConnectionIO]
+
+    private def updateSql(id: Int, a: Author): Update0 = sql"""
         update author set name=${a.name}, email=${a.email}, uri=${a.uri}
         where id=${id}
       """.update
 
-    override def deleteById(aid: Int) = sql"delete from author where id = ${aid}".update
+    override def deleteById(aid: Int) = deleteByIdSql(aid).run
 
-    override val createTable = sql"""
+    private def deleteByIdSql(aid: Int) = sql"delete from author where id = ${aid}".update
+
+    override def createTable = createTableSql.run
+
+    private val createTableSql = sql"""
         create table author (
           id serial primary key,
           name varchar not null,
@@ -89,40 +118,63 @@ object DbConn {
       """.update
   }
 
-  def createAuthorAndGetId(a: Author): ConnectionIO[Int] = for {
-      _ <- AuthorCrud.create(a).run
-      authorId <- lastVal
-    } yield authorId
-
   def saveOrUpdateAuthor(a: Author): ConnectionIO[Int] = for {
-      maybeAuthorId <- AuthorCrud.getIdByName(a.name).option
-      authorId <- maybeAuthorId.fold(createAuthorAndGetId(a))(aid =>
-          AuthorCrud.update(aid, a).run *> aid.point[ConnectionIO]
+      maybeAuthorId <- AuthorCrud.getIdByName(a.name)
+      authorId <- maybeAuthorId.fold(AuthorCrud.create(a))(aid =>
+          AuthorCrud.update(aid, a)
         )
     } yield authorId
 
   object CategoryCrud extends DbBasicCrud[Category] with DbSearch[Category] {
-    override val getAllItems = sql"select name, uri from category".query[Category]
+    val testCategory = Category("", new URI(""))
 
-    override def getById(aid: Int) = sql"select name, uri from category where id = $aid".query[Category]
+    override def analyse: ConnectionIO[Unit] = for {
+      _ <- getByIdSql(0).analysis
+      _ <- getIdByNameSql("").analysis
+      _ <- getAllItemsSql.analysis
+      _ <- createSql(testCategory).analysis
+      _ <- updateSql(0, testCategory).analysis
+      _ <- deleteByIdSql(0).analysis
+      _ <- createTableSql.analysis
+    } yield ()
 
-    def getIdByName(name: String): Query0[Int] = sql"select id from category where name = $name".query[Int]
+    override def getAllItems = getAllItemsSql.list
 
-    def update(id: Int, a: Category): Update0 = sql"""
+    def getAllItemsSql: Query0[Category] = sql"select name, uri from category".query[Category]
+
+    override def getById(aid: Int) = getByIdSql(aid).option
+
+    def getByIdSql(aid: Int): Query0[Category] =
+      sql"select name, uri from category where id = $aid".query[Category]
+
+    def getIdByName(name: String): ConnectionIO[Option[Int]] = getIdByNameSql(name).option
+
+    def getIdByNameSql(name: String): Query0[Int] =
+      sql"select id from category where name = $name".query[Int]
+
+    def update(id: Int, a: Category) = updateSql(id, a).run
+
+    def updateSql(id: Int, a: Category): Update0 = sql"""
         update category set name=${a.name}, uri=${a.uri}
         where id=${id}
       """.update
 
-    override def create(cat: Category) = sql"""
+    override def create(cat: Category) = createSql(cat).run *> lastVal
+
+    def createSql(cat: Category) = sql"""
         insert into category (name, uri)
         values (${cat.name}, ${cat.uri})
       """.update
 
-    override def deleteById(aid: Int) = sql"""
+    override def deleteById(aid: Int) = deleteByIdSql(aid).run
+
+    def deleteByIdSql(aid: Int) = sql"""
         delete from category where id = ${aid}
       """.update
 
-    override val createTable = sql"""
+    override def createTable = createTableSql.run
+
+    def createTableSql = sql"""
         create table category (
           id serial primary key,
           name varchar not null,
@@ -131,46 +183,65 @@ object DbConn {
       """.update
   }
 
-  def createCategoryAndGetId(c: Category): ConnectionIO[Int] = for {
-      _ <- CategoryCrud.create(c).run
-      categoryId <- lastVal
-    } yield categoryId
-
   def saveOrUpdateCategory(c: Category): ConnectionIO[Int] = for {
-      maybeCategoryId <- CategoryCrud.getIdByName(c.name).option
-      categoryId <- maybeCategoryId.fold(createCategoryAndGetId(c))(cid =>
-          CategoryCrud.update(cid, c).run *> cid.point[ConnectionIO]
-        )
+      maybeCategoryId <- CategoryCrud.getIdByName(c.name)
+      categoryId <- maybeCategoryId.fold(CategoryCrud.create(c)) { cid =>
+          CategoryCrud.update(cid, c).map(_ => cid)
+      }
     } yield categoryId
 
   case class ArticleCategoryDb(completearticleid: Int, categoryid: Int)
 
   object ArticleCategoryCrud extends DbBasicCrud[ArticleCategoryDb] {
-    override def getById(aid: Int) = sql"""
+    val testAC = ArticleCategoryDb(0, 0)
+    override def analyse: ConnectionIO[Unit] = for {
+      _ <- getByIdSql(0).analysis
+      _ <- createSql(testAC).analysis
+      _ <- deleteByIdSql(0).analysis
+      _ <- getCategoriesByCompleteArticleIdSql(0).analysis
+      _ <- getAllLinksSql.analysis
+      _ <- createTableSql.analysis
+    } yield ()
+
+    override def getById(aid: Int) =
+      getByIdSql(aid).option
+
+    def getByIdSql(aid: Int) = sql"""
         select completearticleid, categoryid from articlecategory where id = $aid
       """.query[ArticleCategoryDb]
 
-    override def create(ac: ArticleCategoryDb) = sql"""
+    override def create(ac: ArticleCategoryDb) = createSql(ac).run
+
+    def createSql(ac: ArticleCategoryDb): Update0 = sql"""
         insert into articlecategory (completearticleid, categoryid)
         values (${ac.completearticleid}, ${ac.categoryid})
       """.update
 
-    override def deleteById(aid: Int) = sql"""
+    override def deleteById(aid: Int) = deleteByIdSql(aid).run
+
+    def deleteByIdSql(aid: Int): Update0 = sql"""
         delete from articlecategory where id = ${aid}
       """.update
 
-    def getCategoriesByCompleteArticleId(a: Int): Query0[Category] = sql"""
+    def getCategoriesByCompleteArticleId(a: Int): ConnectionIO[List[Category]] =
+      getCategoriesByCompleteArticleIdSql(a).list
+
+    def getCategoriesByCompleteArticleIdSql(a: Int): Query0[Category] = sql"""
       select c.name, c.uri
       from category as c, articlecategory as ac
       where ac.completearticleid = $a and c.id = ac.categoryid
       """.query[Category]
 
-    def getAllLinks: Query0[ArticleCategoryDb] = sql"""
+    def getAllLinks: ConnectionIO[List[ArticleCategoryDb]] = getAllLinksSql.list
+
+    def getAllLinksSql: Query0[ArticleCategoryDb] = sql"""
       select ac.completearticleid, ac.categoryid
       from articlecategory as ac
       """.query[ArticleCategoryDb]
 
-    override val createTable = sql"""
+    override def createTable = createTableSql.run
+
+    def createTableSql: Update0 = sql"""
         create table articlecategory (
           id serial primary key,
           completearticleid int not null,
@@ -179,7 +250,10 @@ object DbConn {
       """.update
   }
 
-  def getCompleteArticleIdsForCategoryId(cid: Int): Query0[Int] = sql"""
+  def getCompleteArticleIdsForCategoryId(cid: Int): ConnectionIO[List[Int]] =
+    getCompleteArticleIdsForCategoryIdSql(cid).list
+
+  def getCompleteArticleIdsForCategoryIdSql(cid: Int): Query0[Int] = sql"""
         select completearticleid
         from articlecategory
         where categoryid = $cid
@@ -188,21 +262,37 @@ object DbConn {
   def linkCategory(c: Category, completeArticleId: Int): ConnectionIO[Unit] = for {
       categoryId <- saveOrUpdateCategory(c)
       acdb = ArticleCategoryDb(completeArticleId, categoryId)
-      _ <- ArticleCategoryCrud.create(acdb).run
+      _ <- ArticleCategoryCrud.create(acdb)
     } yield ()
 
   object CommentCrud extends DbBasicCrud[Comment] {
-    override def getById(aid: Int) = sql"select body, pubdate from comment where id = $aid".query[Comment]
+    val testComment = Comment("", new DateTime())
+    override def analyse: ConnectionIO[Unit] = for {
+      _ <- getByIdSql(0).analysis
+      _ <- createSql(testComment).analysis
+      _ <- deleteByIdSql(0).analysis
+      _ <- createTableSql.analysis
+    } yield ()
 
-    override def deleteById(aid: Int) = sql"delete from comment where id = $aid".update
+    override def getById(aid: Int) = getByIdSql(aid).option
 
-    override def create(c: Comment) = sql"""
+    def getByIdSql(aid: Int): Query0[Comment] = sql"select body, pubdate from comment where id = $aid".query[Comment]
+
+    override def deleteById(aid: Int) = deleteByIdSql(aid).run
+
+    def deleteByIdSql(aid: Int): Update0 = sql"delete from comment where id = $aid".update
+
+    override def create(c: Comment) = createSql(c).run
+
+    def createSql(c: Comment) = sql"""
         insert into comment (body, pubdate)
         values (${c.text}, ${c.pubDate})
       """.update
 
+    override def createTable = createTableSql.run
+
     // TODO body should be text, and we should have a way of reading / writing it
-    override val createTable: Update0 = sql"""
+    def createTableSql: Update0 = sql"""
         create table comment (
           id serial primary key,
           body longvarchar not null,
@@ -211,40 +301,59 @@ object DbConn {
       """.update
   }
 
-  def createCommentAndGetId(c: Comment): ConnectionIO[Int] = for {
-      _ <- CommentCrud.create(c).run
-      commentId <- lastVal
-    } yield commentId
-
   case class CompleteCommentDb(completearticleid: Int, commentid: Int, authorid: Int)
 
   object CompleteCommentCrud extends DbBasicCrud[CompleteCommentDb] {
-    override def create(c: CompleteCommentDb) = sql"""
+    val testCompleteComment = CompleteCommentDb(0, 0, 0)
+    override def analyse: ConnectionIO[Unit] = for {
+      _ <- getByIdSql(0).analysis
+      _ <- createSql(testCompleteComment).analysis
+      _ <- deleteByIdSql(0).analysis
+      _ <- getCompleteCommentsSql(0).analysis
+      _ <- getForCompleteArticleIdSql(0).analysis
+      _ <- createTableSql.analysis
+    } yield ()
+
+    override def create(c: CompleteCommentDb) = createSql(c).run
+    
+    def createSql(c: CompleteCommentDb): Update0 = sql"""
         insert into completecomment (completearticleid, commentid, authorid)
           values (${c.completearticleid}, ${c.commentid}, ${c.authorid})
         """.update
 
-    override def deleteById(aid: Int) = sql"delete from completecomment where id = $aid".update
+    override def deleteById(aid: Int) = deleteByIdSql(aid).run
 
-    override def getById(aid: Int) = sql"""
+    def deleteByIdSql(aid: Int): Update0 = sql"delete from completecomment where id = $aid".update
+
+    override def getById(aid: Int) = getByIdSql(aid).option
+
+    def getByIdSql(aid: Int) = sql"""
         select completearticleid, commentid, authorid
         from completecomment
         where id = $aid
       """.query[CompleteCommentDb]
 
-    def getCompleteComments(aid: Int): Query0[CompleteCommentCase] = sql"""
+    def getCompleteComments(aid: Int): ConnectionIO[List[CompleteCommentCase]] =
+      getCompleteCommentsSql(aid).list
+
+    def getCompleteCommentsSql(aid: Int): Query0[CompleteCommentCase] = sql"""
         select c.body, c.pubdate, a.name, a.email, a.uri
         from completecomment as cc, comment as c, author as a
         where cc.completearticleid = $aid and cc.commentid = c.id and cc.authorid = a.id
       """.query[CompleteCommentCase]
 
-    def getForCompleteArticleId(aid: Int): Query0[CompleteCommentDb] = sql"""
+    def getForCompleteArticleId(aid: Int): ConnectionIO[List[CompleteCommentDb]] =
+      getForCompleteArticleIdSql(aid).list
+
+    def getForCompleteArticleIdSql(aid: Int): Query0[CompleteCommentDb] = sql"""
         select completearticleid, commentid, authorid
         from completecomment
         where completearticleid = $aid
       """.query[CompleteCommentDb]
 
-    override val createTable: Update0 = sql"""
+    override def createTable = createTableSql.run
+
+    def createTableSql: Update0 = sql"""
         create table completecomment (
           id serial,
           completearticleid int not null,
@@ -256,40 +365,62 @@ object DbConn {
 
   def createNewCompleteComment(c: CompleteComment, completeArticleId: Int): ConnectionIO[Int] = for {
       authorId <- saveOrUpdateAuthor(c.author)
-      commentId <- createCommentAndGetId(c.comment)
+      commentId <- CommentCrud.create(c.comment)
       comment = CompleteCommentDb(completeArticleId, commentId, authorId)
-      _ <- CompleteCommentCrud.create(comment).run
+      _ <- CompleteCommentCrud.create(comment)
       commentId <- lastVal
     } yield commentId
 
   object ArticleCrud extends DbBasicCrud[Article] {
-    override def getById(aid: Int) = sql"""
+    val testArticle = Article("", "", None, new DateTime(), new URI(""))
+    override def analyse: ConnectionIO[Unit] = for {
+      _ <- getByIdSql(0).analysis
+      _ <- getIdByUriSql(new URI("/")).analysis
+      _ <- getAllArticleIdsSql.analysis
+      _ <- createSql(testArticle).analysis
+      _ <- deleteByIdSql(0).analysis
+      _ <- createTableSql.analysis
+    } yield ()
+
+    override def getById(aid: Int) = getByIdSql(aid).option
+
+    def getByIdSql(aid: Int): Query0[Article] = sql"""
         select heading, body, extract, pubdate, uri
         from article
         where id = $aid
       """.query[Article]
 
-    def getIdByUri(uri: URI): Query0[Int] = sql"""
+    def getIdByUri(uri: URI): ConnectionIO[Option[Int]] = getIdByUriSql(uri).option
+
+    def getIdByUriSql(uri: URI): Query0[Int] = sql"""
         select id
         from article
         where uri = ${uri}
       """.query[Int]
 
-  def getAllArticleIds: Query0[Int] = sql"""
+    def getAllArticleIds: ConnectionIO[List[Int]] = getAllArticleIdsSql.list
+
+    def getAllArticleIdsSql: Query0[Int] = sql"""
         select id
         from article
         order by pubdate desc
     """.query[Int]
 
-    override def create(a: Article) = sql"""
+    override def create(a: Article) = createSql(a).run
+
+    def createSql(a: Article): Update0 = sql"""
         insert into article (heading, body, extract, pubdate, uri)
         values (${a.heading}, ${a.text}, ${a.extract}, ${a.pubDate}, ${a.uri})
       """.update
 
-    override def deleteById(aid: Int) = sql"delete from article where id = $aid".update
+    override def deleteById(aid: Int) = deleteByIdSql(aid).run
+
+    def deleteByIdSql(aid: Int): Update0 = sql"delete from article where id = $aid".update
+
+    override def createTable = createTableSql.run
 
     // TODO body should be text, and we should have a way of reading / writing it
-    override val createTable: Update0 = sql"""
+    def createTableSql: Update0 = sql"""
         create table article (
           id serial,
           heading varchar not null,
@@ -301,33 +432,49 @@ object DbConn {
       """.update
   }
 
-  def createArticleAndGetId(c: Article): ConnectionIO[Int] = for {
-      _ <- ArticleCrud.create(c).run
-      articleId <- lastVal
-    } yield articleId
-
   case class CompleteArticleDb(articleid: Int, authorid: Int)
 
   // TODO Sorting? Order by date but the date is in regular article.
   object CompleteArticleCrud extends DbSearch[CompleteArticleDb] {
-    def getById(aid: Int): Query0[CompleteArticleDb] = sql"""
+    val testCompleteArticle = CompleteArticleDb(0, 0)
+    override def analyse: ConnectionIO[Unit] = for {
+      _ <- getByIdSql(0).analysis
+      _ <- createSql(testCompleteArticle).analysis
+      _ <- deleteByIdSql(0).analysis
+      _ <- getAllItemsSql.analysis
+      _ <- createTableSql.analysis
+    } yield ()
+
+    def getById(aid: Int): ConnectionIO[Option[CompleteArticleDb]] = getByIdSql(aid).option
+
+    def getByIdSql(aid: Int): Query0[CompleteArticleDb] = sql"""
         select articleid, authorid
         from completearticle
         where articleid = $aid
       """.query[CompleteArticleDb]
 
-    def create(a: CompleteArticleDb): Update0 = sql"""
+    def create(a: CompleteArticleDb): ConnectionIO[Int] =
+      createSql(a).run
+
+    def createSql(a: CompleteArticleDb): Update0 = sql"""
         insert into completearticle (articleid, authorid)
         values (${a.articleid}, ${a.authorid})
       """.update
 
-    def deleteById(id: Int): Update0 = sql"delete from completearticle where articleid = ${id}".update
+    def deleteById(id: Int): ConnectionIO[Int] =
+      deleteByIdSql(id).run
 
-    def getAllItems: Query0[CompleteArticleDb] = sql"""
+    def deleteByIdSql(id: Int): Update0 = sql"delete from completearticle where articleid = ${id}".update
+
+    def getAllItems: ConnectionIO[List[CompleteArticleDb]] = getAllItemsSql.list
+
+    def getAllItemsSql: Query0[CompleteArticleDb] = sql"""
         select articleid, authorid from completearticle
       """.query[CompleteArticleDb]
 
-    val createTable: Update0 = sql"""
+    def createTable: ConnectionIO[Int] = createTableSql.run
+
+    def createTableSql: Update0 = sql"""
         create table completearticle (
           articleid int not null,
           authorid int not null
@@ -335,59 +482,46 @@ object DbConn {
       """.update
   }
 
-  def createNewCompleteArticleAndGetId(a: CompleteArticleDb): ConnectionIO[Int] = for {
-      _ <- CompleteArticleCrud.create(a).run
-      completeArticleId <- lastVal
-    } yield completeArticleId
-  
-
   def linkCategories(cats: List[Category], artId: Int): ConnectionIO[Unit] =
-    cats.map(category => linkCategory(category, artId)).sequence.map(_ => ())
+    cats.traverse(category => linkCategory(category, artId)).map(_ => ())
     
   def createCompleteComments(comments: List[CompleteComment], artId: Int): ConnectionIO[Unit] =
-    comments.map(comment => createNewCompleteComment(comment, artId)).sequence.map(_ => ())
+    comments.traverse(comment => createNewCompleteComment(comment, artId)).map(_ => ())
 
   def persistCompleteArticle(a: CompleteArticle): ConnectionIO[Int] = for {
       authorId <- saveOrUpdateAuthor(a.author)
-      articleId <- createArticleAndGetId(a.article)
+      articleId <- ArticleCrud.create(a.article)
       completeArticleDb = CompleteArticleDb(articleId, authorId)
-      completeArticleId <- createNewCompleteArticleAndGetId(completeArticleDb)
+      completeArticleId <- CompleteArticleCrud.create(completeArticleDb)
       _ <- linkCategories(a.categories, completeArticleId)
       _ <- createCompleteComments(a.comments, completeArticleId)
     } yield (completeArticleId)
 
-  def getCompleteCommentByDb(comdb: CompleteCommentDb): ConnectionIO[CompleteCommentCase] = for {
-    comment <- CommentCrud.getById(comdb.commentid).unique
-    author <- AuthorCrud.getById(comdb.authorid).unique
+  def getCompleteCommentByDb(comdb: CompleteCommentDb): ConnectionIO[Option[CompleteCommentCase]] = (for {
+    comment <- OptionT(CommentCrud.getById(comdb.commentid))
+    author <- OptionT(AuthorCrud.getById(comdb.authorid))
     item = CompleteCommentCase(comment, author)
-  } yield item
+  } yield item).run
 
   def getAllCompleteArticles(): ConnectionIO[List[CompleteArticleCase]] = for {
-    items <- ArticleCrud.getAllArticleIds.list
+    items <- ArticleCrud.getAllArticleIds
     articles <- getCompleteArticlesByIds(items)
   } yield articles
 
-  def getCompleteArticlesByIds(ids: List[Int]): ConnectionIO[List[CompleteArticleCase]] = (for {
-    id <- ids
-  } yield getCompleteArticleById(id)).sequence
+  def getCompleteArticlesByIds(ids: List[Int]): ConnectionIO[List[CompleteArticleCase]] =
+    ids.traverse(getCompleteArticleById).map(_.flatten)
   
-  def getCompleteArticleById(a: Int): ConnectionIO[CompleteArticleCase] = for {
-    cad <- CompleteArticleCrud.getById(a).unique
-    article <- ArticleCrud.getById(cad.articleid).unique
-    author <- AuthorCrud.getById(cad.authorid).unique
-    categories <- ArticleCategoryCrud.getCategoriesByCompleteArticleId(cad.articleid).list
-    comments <- CompleteCommentCrud.getCompleteComments(a).list
+  def getCompleteArticleById(a: Int): ConnectionIO[Option[CompleteArticleCase]] = (for {
+    cad <- OptionT(CompleteArticleCrud.getById(a))
+    article <- OptionT(ArticleCrud.getById(cad.articleid))
+    author <- OptionT(AuthorCrud.getById(cad.authorid))
+    categories <- ArticleCategoryCrud.getCategoriesByCompleteArticleId(cad.articleid).liftM[OptionT]
+    comments <- CompleteCommentCrud.getCompleteComments(a).liftM[OptionT]
     item = CompleteArticleCase(article, comments, categories, author)
-  } yield item
+  } yield item).run
 
-  def initialiseDb = (for {
-      _ <- AuthorCrud.createTable.run
-      _ <- CategoryCrud.createTable.run
-      _ <- CommentCrud.createTable.run
-      _ <- CompleteCommentCrud.createTable.run
-      _ <- ArticleCrud.createTable.run
-      _ <- ArticleCategoryCrud.createTable.run
-      _ <- CompleteArticleCrud.createTable.run
-    } yield ())
+  val cruds: List[DbBasicCrud[_]] = List(AuthorCrud, CategoryCrud, CommentCrud, CompleteCommentCrud,
+    ArticleCrud, ArticleCategoryCrud, CompleteArticleCrud)
 
+  def initialiseDb: ConnectionIO[Unit] = cruds.traverse(_.createTable).map(_ => ())
 }

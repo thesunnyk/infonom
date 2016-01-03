@@ -27,60 +27,30 @@ import doobie.imports.Query0
 import doobie.imports.Update0
 import doobie.imports.toMoreConnectionIOOps
 import scalaz.concurrent.Task
+import scalaz.\/-
 
 class DbConnSpec extends FlatSpec with Matchers {
   def xaTest = DriverManagerTransactor[Task]("org.h2.Driver", "jdbc:h2:mem:test", "sa", "")
-
-  def typecheckCreateTable(table: Update0) = {
-    it should "pass analysis for table creation" in {
-      val analysis = table.analysis.transact(xaTest).run
-      analysis.alignmentErrors should equal(Nil)
-    }
-  }
-
-  def typecheckQueryTable(query: String, createTable: ConnectionIO[Int], queryTable: Query0[_]) = {
-    it should "pass analysis for " + query in {
-      val analysis = (for {
-        _ <- createTable
-        analysisVal <- queryTable.analysis
-      } yield analysisVal).transact(xaTest).run
-
-      analysis.alignmentErrors should equal(Nil)
-    }
-  }
-
-  def typecheckUpdateTable(update: String, createTable: Update0, updateTable: Update0) = {
-    it should "pass analysis for " + update in {
-      val analysis = (for {
-        _ <- createTable.run
-        analysisVal <- updateTable.analysis
-      } yield analysisVal).transact(xaTest).run
-
-      analysis.alignmentErrors should equal(Nil)
-    }
-  }
 
   def doBasicCrud[T](crud: DbBasicCrud[T], item: T, item2: T) = {
 
     it should "create and read an item" in {
 
       val fromDb = (for {
-        _ <- crud.createTable.run
-        _ <- crud.create(item).run
-        itemId <- DbConn.lastVal
-        retrievedItem <- crud.getById(itemId).unique
+        _ <- crud.createTable
+        itemId <- crud.create(item)
+        retrievedItem <- crud.getById(itemId)
       } yield retrievedItem).transact(xaTest).run
 
-      fromDb should equal(item)
+      fromDb should contain (item)
     }
 
     it should "delete an item" in {
       val fromDb = (for {
-        _ <- crud.createTable.run
-        _ <- crud.create(item).run
-        itemId <- DbConn.lastVal
-        _ <- crud.deleteById(itemId).run
-        maybeItem <- crud.getById(itemId).option
+        _ <- crud.createTable
+        itemId <- crud.create(item)
+        _ <- crud.deleteById(itemId)
+        maybeItem <- crud.getById(itemId)
       } yield maybeItem).transact(xaTest).run
 
       fromDb should equal(None)
@@ -89,60 +59,59 @@ class DbConnSpec extends FlatSpec with Matchers {
     it should "discern between different items" in {
 
       val fromDb = (for {
-        _ <- crud.createTable.run
-        _ <- crud.create(item).run
-        itemId <- DbConn.lastVal
-        _ <- crud.create(item2).run
-        retrievedItem <- crud.getById(itemId).unique
+        _ <- crud.createTable
+        itemId <- crud.create(item)
+        _ <- crud.create(item2)
+        retrievedItem <- crud.getById(itemId)
       } yield retrievedItem).transact(xaTest).run
 
-      fromDb should equal(item)
+      fromDb should contain (item)
     }
 
     it should "delete the correct item" in {
       val fromDb = (for {
-        _ <- crud.createTable.run
-        _ <- crud.create(item).run
-        itemId <- DbConn.lastVal
-        _ <- crud.create(item2).run
-        item2Id <- DbConn.lastVal
-        _ <- crud.deleteById(itemId).run
-        maybeItem <- crud.getById(itemId).option
-        item2 <- crud.getById(item2Id).unique
+        _ <- crud.createTable
+        itemId <- crud.create(item)
+        item2Id <- crud.create(item2)
+        _ <- crud.deleteById(itemId)
+        maybeItem <- crud.getById(itemId)
+        item2 <- crud.getById(item2Id)
       } yield (maybeItem, item2)).transact(xaTest).run
 
-      fromDb should equal((None, item2))
+      fromDb should equal((None, Some(item2)))
     }
 
-    it should behave like typecheckCreateTable(crud.createTable)
-    it should behave like typecheckUpdateTable("delete", crud.createTable, crud.deleteById(123))
-    it should behave like typecheckUpdateTable("create", crud.createTable, crud.create(item))
-    it should behave like typecheckQueryTable("get", crud.createTable.run, crud.getById(123))
+    it should "pass analysis" in {
+      val fromDb = (for {
+        _ <- crud.createTable
+        _ <- crud.analyse
+      } yield ()).transact(xaTest).attemptRun
+      fromDb should equal(\/-(()))
+    }
   }
 
   def listAllItems[T](crud: DbSearch[T], item: T, item2: T) = {
 
     it should "list all items" in {
       val fromDb = (for {
-        _ <- crud.createTable.run
-        _ <- crud.create(item).run
-        _ <- crud.create(item2).run
-        retrievedItem <- crud.getAllItems.list
+        _ <- crud.createTable
+        _ <- crud.create(item)
+        _ <- crud.create(item2)
+        retrievedItem <- crud.getAllItems
       } yield retrievedItem).transact(xaTest).run
 
       fromDb should equal(List(item, item2))
     }
-
-    it should behave like typecheckQueryTable("get all", crud.createTable.run, crud.getAllItems)
   }
 
-  def testGetIdByName[T](crud: DbSearch[T], getIdByName: (String) => Query0[Int], item: T, itemName: String) {
+  def testGetIdByName[T](crud: DbSearch[T], getIdByName: (String) => ConnectionIO[Option[Int]], item: T,
+    itemName: String) {
+
     it should s"find an item by name" in {
       val (dbActual, dbName) = (for {
-        _ <- crud.createTable.run
-        _ <- crud.create(item).run
-        actualId <- DbConn.lastVal
-        nameId <- getIdByName(itemName).unique
+        _ <- crud.createTable
+        actualId <- crud.create(item)
+        nameId <- getIdByName(itemName)
       } yield (actualId, nameId)).transact(xaTest).run
 
       dbActual should equal(dbName)
@@ -150,32 +119,26 @@ class DbConnSpec extends FlatSpec with Matchers {
 
     it should s"not find an item by invalid name" in {
       val fromDb = (for {
-        _ <- crud.createTable.run
-        _ <- crud.create(item).run
-        nameId <- getIdByName("invalidname").option
+        _ <- crud.createTable
+        _ <- crud.create(item)
+        nameId <- getIdByName("invalidname")
       } yield nameId).transact(xaTest).run
 
       fromDb should equal(None)
     }
-
-    it should behave like typecheckQueryTable("getIdByName", crud.createTable.run,
-      getIdByName("invalidname"))
   }
 
-  def testUpdate[T](crud: DbSearch[T], update: (Int, T) => Update0, item: T, item2: T) {
+  def testUpdate[T](crud: DbSearch[T], update: (Int, T) => ConnectionIO[Int], item: T, item2: T) {
     it should "update the item" in {
       val fromDb = (for {
-        _ <- crud.createTable.run
-        _ <- crud.create(item).run
-        dbid <- DbConn.lastVal
-        _ <- update(dbid, item2).run
-        item <- crud.getById(dbid).unique
+        _ <- crud.createTable
+        dbid <- crud.create(item)
+        _ <- update(dbid, item2)
+        item <- crud.getById(dbid)
       } yield item).transact(xaTest).run
 
-      fromDb should equal(item2)
+      fromDb should equal(Some(item2))
     }
-
-    it should behave like typecheckUpdateTable("update", crud.createTable, update(0, item))
   }
 
   val author = Author("things", None, Some(new URI("/author/things")))
@@ -212,20 +175,17 @@ class DbConnSpec extends FlatSpec with Matchers {
 
   "Complete Comment SQL" should behave like doBasicCrud(DbConn.CompleteCommentCrud, completeComment, completeComment2)
 
-  it should behave like typecheckQueryTable("get for articleid", DbConn.CompleteCommentCrud.createTable.run,
-    DbConn.CompleteCommentCrud.getForCompleteArticleId(0))
-
   it should "get comments for article id" in {
     val completeComment3 = CompleteCommentDb(4, 1, 1)
 
     val crud = DbConn.CompleteCommentCrud
 
     val fromDb = (for {
-      _ <- crud.createTable.run
-      _ <- crud.create(completeComment).run
-      _ <- crud.create(completeComment2).run
-      _ <- crud.create(completeComment3).run
-      retrievedItem <- crud.getForCompleteArticleId(6).list
+      _ <- crud.createTable
+      _ <- crud.create(completeComment)
+      _ <- crud.create(completeComment2)
+      _ <- crud.create(completeComment3)
+      retrievedItem <- crud.getForCompleteArticleId(6)
     } yield retrievedItem).transact(xaTest).run
 
     fromDb should equal(List(completeComment, completeComment2))
@@ -246,40 +206,29 @@ class DbConnSpec extends FlatSpec with Matchers {
     val ac = DbConn.ArticleCategoryCrud
 
     val retVal = (for {
-      _ <- cat.createTable.run
-      _ <- ac.createTable.run
-      _ <- cat.create(category).run
-      cat1Id <- DbConn.lastVal
+      _ <- cat.createTable
+      _ <- ac.createTable
+      cat1Id <- cat.create(category)
       acat = ArticleCategoryDb(3, cat1Id)
-      _ <- ac.create(acat).run
-      _ <- cat.create(category2).run
-      cat2Id <- DbConn.lastVal
+      _ <- ac.create(acat)
+      cat2Id <- cat.create(category2)
       acat2 = ArticleCategoryDb(3, cat2Id)
-      _ <- ac.create(acat2).run
-      categories <- ac.getCategoriesByCompleteArticleId(3).list
+      _ <- ac.create(acat2)
+      categories <- ac.getCategoriesByCompleteArticleId(3)
     } yield categories).transact(xaTest).run
 
     retVal should equal(List(category, category2))
   }
 
   def createACAndCats = for {
-    _ <- DbConn.ArticleCategoryCrud.createTable.run
-    _ <- DbConn.CategoryCrud.createTable.run
+    _ <- DbConn.ArticleCategoryCrud.createTable
+    _ <- DbConn.CategoryCrud.createTable
   } yield 0
-
-  it should behave like typecheckQueryTable("getCategoriesByCompleteArticleId", createACAndCats,
-      DbConn.ArticleCategoryCrud.getCategoriesByCompleteArticleId(123))
-
-  it should behave like typecheckQueryTable("getCompleteArticleIdsForCategoryId", createACAndCats,
-    DbConn.getCompleteArticleIdsForCategoryId(0))
 
   def createArticlesAndCompleteArticles = for {
-    _ <- DbConn.ArticleCrud.createTable.run
-    _ <- DbConn.CompleteArticleCrud.createTable.run
+    _ <- DbConn.ArticleCrud.createTable
+    _ <- DbConn.CompleteArticleCrud.createTable
   } yield 0
-
-  it should behave like typecheckQueryTable("getCompleteArticleIds", createArticlesAndCompleteArticles,
-    DbConn.ArticleCrud.getAllArticleIds)
 
   ////////////////// Test the persistence API
 
@@ -319,7 +268,7 @@ class DbConnSpec extends FlatSpec with Matchers {
       art <- DbConn.getCompleteArticleById(articleid)
     } yield art).transact(xaTest).run
 
-    retArt.author should equal(author2)
+    retArt.get.author should equal(author2)
   }
 
   it should "update author in an old article" in {
@@ -331,7 +280,7 @@ class DbConnSpec extends FlatSpec with Matchers {
     } yield art).transact(xaTest).run
 
     // Author should be updated now.
-    retArt.author should equal(author2)
+    retArt.get.author should equal(author2)
   }
 
   val catArticle = CompleteArticleCase(article, List(extComment), List(category2), author2)
@@ -345,7 +294,7 @@ class DbConnSpec extends FlatSpec with Matchers {
     } yield art).transact(xaTest).run
 
     // Author should be updated now.
-    retArt.categories.head should equal(category2)
+    retArt.get.categories.head should equal(category2)
   }
 
   it should "update category in an old article" in {
@@ -357,7 +306,7 @@ class DbConnSpec extends FlatSpec with Matchers {
     } yield art).transact(xaTest).run
 
     // Author should be updated now.
-    retArt.categories.head should equal(category2)
+    retArt.get.categories.head should equal(category2)
   }
 
   val altCategory = Category("altName", new URI("/test"))
@@ -371,8 +320,8 @@ class DbConnSpec extends FlatSpec with Matchers {
       _ <- DbConn.persistCompleteArticle(extArticle)
       _ <- DbConn.persistCompleteArticle(secArticle)
       _ <- DbConn.persistCompleteArticle(secArticle2)
-      cid <- DbConn.CategoryCrud.getIdByName(category.name).unique
-      articleIds <- DbConn.getCompleteArticleIdsForCategoryId(cid).list
+      cid <- DbConn.CategoryCrud.getIdByName(category.name)
+      articleIds <- DbConn.getCompleteArticleIdsForCategoryId(cid.get)
       articles <- DbConn.getCompleteArticlesByIds(articleIds)
     } yield articles).transact(xaTest).run
 
