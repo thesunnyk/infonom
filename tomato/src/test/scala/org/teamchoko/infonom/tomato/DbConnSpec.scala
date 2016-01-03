@@ -114,7 +114,7 @@ class DbConnSpec extends FlatSpec with Matchers {
         nameId <- getIdByName(itemName)
       } yield (actualId, nameId)).transact(xaTest).run
 
-      dbActual should equal(dbName)
+      Some(dbActual) should equal(dbName)
     }
 
     it should s"not find an item by invalid name" in {
@@ -241,7 +241,7 @@ class DbConnSpec extends FlatSpec with Matchers {
       art <- DbConn.getCompleteArticleById(articleid)
     } yield art).transact(xaTest).run
 
-    retArt should equal(extArticleSimp)
+    retArt should equal(Some(extArticleSimp))
   }
 
   val author3 = Author("dthings", None, Some(new URI("/author/dthing")))
@@ -255,7 +255,7 @@ class DbConnSpec extends FlatSpec with Matchers {
       art <- DbConn.getCompleteArticleById(articleid)
     } yield art).transact(xaTest).run
 
-    retArt should equal(extArticle)
+    retArt should equal(Some(extArticle))
   }
 
   val altArticle = CompleteArticleCase(article, List(extComment), List(category), author2)
@@ -313,6 +313,7 @@ class DbConnSpec extends FlatSpec with Matchers {
   val secArticle = CompleteArticleCase(article, List(extComment), List(category), author3)
   val secArticle2 = CompleteArticleCase(article, List(extComment), List(altCategory), author3)
 
+  // TODO This won't work since CompleteArticle uses Article ID now
   "Category search" should "give all articles by category id" in {
 
     val retArt = (for {

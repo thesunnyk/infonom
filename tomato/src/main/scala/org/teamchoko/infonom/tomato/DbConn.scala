@@ -109,7 +109,7 @@ object DbConn {
     override def createTable = createTableSql.run
 
     private val createTableSql = sql"""
-        create table author (
+        create table if not exists author (
           id serial primary key,
           name varchar not null,
           email varchar,
@@ -175,7 +175,7 @@ object DbConn {
     override def createTable = createTableSql.run
 
     def createTableSql = sql"""
-        create table category (
+        create table if not exists category (
           id serial primary key,
           name varchar not null,
           uri varchar not null
@@ -210,7 +210,7 @@ object DbConn {
         select completearticleid, categoryid from articlecategory where id = $aid
       """.query[ArticleCategoryDb]
 
-    override def create(ac: ArticleCategoryDb) = createSql(ac).run
+    override def create(ac: ArticleCategoryDb) = createSql(ac).run *> lastVal
 
     def createSql(ac: ArticleCategoryDb): Update0 = sql"""
         insert into articlecategory (completearticleid, categoryid)
@@ -239,10 +239,10 @@ object DbConn {
       from articlecategory as ac
       """.query[ArticleCategoryDb]
 
-    override def createTable = createTableSql.run
+    override def createTable = createTableSql.run *> CategoryCrud.createTable
 
     def createTableSql: Update0 = sql"""
-        create table articlecategory (
+        create table if not exists articlecategory (
           id serial primary key,
           completearticleid int not null,
           categoryid int not null
@@ -282,7 +282,7 @@ object DbConn {
 
     def deleteByIdSql(aid: Int): Update0 = sql"delete from comment where id = $aid".update
 
-    override def create(c: Comment) = createSql(c).run
+    override def create(c: Comment) = createSql(c).run *> lastVal
 
     def createSql(c: Comment) = sql"""
         insert into comment (body, pubdate)
@@ -293,7 +293,7 @@ object DbConn {
 
     // TODO body should be text, and we should have a way of reading / writing it
     def createTableSql: Update0 = sql"""
-        create table comment (
+        create table if not exists comment (
           id serial primary key,
           body longvarchar not null,
           pubdate timestamp not null
@@ -314,7 +314,7 @@ object DbConn {
       _ <- createTableSql.analysis
     } yield ()
 
-    override def create(c: CompleteCommentDb) = createSql(c).run
+    override def create(c: CompleteCommentDb) = createSql(c).run *> lastVal
     
     def createSql(c: CompleteCommentDb): Update0 = sql"""
         insert into completecomment (completearticleid, commentid, authorid)
@@ -351,10 +351,10 @@ object DbConn {
         where completearticleid = $aid
       """.query[CompleteCommentDb]
 
-    override def createTable = createTableSql.run
+    override def createTable = createTableSql.run *> CommentCrud.createTable *> AuthorCrud.createTable
 
     def createTableSql: Update0 = sql"""
-        create table completecomment (
+        create table if not exists completecomment (
           id serial,
           completearticleid int not null,
           commentid int not null,
@@ -406,7 +406,7 @@ object DbConn {
         order by pubdate desc
     """.query[Int]
 
-    override def create(a: Article) = createSql(a).run
+    override def create(a: Article) = createSql(a).run *> lastVal
 
     def createSql(a: Article): Update0 = sql"""
         insert into article (heading, body, extract, pubdate, uri)
@@ -421,7 +421,7 @@ object DbConn {
 
     // TODO body should be text, and we should have a way of reading / writing it
     def createTableSql: Update0 = sql"""
-        create table article (
+        create table if not exists article (
           id serial,
           heading varchar not null,
           body longvarchar not null,
@@ -475,7 +475,7 @@ object DbConn {
     def createTable: ConnectionIO[Int] = createTableSql.run
 
     def createTableSql: Update0 = sql"""
-        create table completearticle (
+        create table if not exists completearticle (
           articleid int not null,
           authorid int not null
         )
