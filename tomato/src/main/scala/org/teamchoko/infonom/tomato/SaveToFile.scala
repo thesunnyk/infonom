@@ -3,8 +3,6 @@ package org.teamchoko.infonom.tomato
 import java.io.File
 import java.io.FileWriter
 import java.net.URI
-import org.joda.time.DateTime
-import org.joda.time.format.DateTimeFormatterBuilder
 import org.teamchoko.infonom.carrot.Articles.Article
 import org.teamchoko.infonom.carrot.Articles.CompleteArticle
 import org.teamchoko.infonom.carrot.Articles.Category
@@ -19,19 +17,13 @@ object SaveToFile {
   
   val log = LoggerFactory.getLogger("SaveToFile")
 
-  val formatter = new DateTimeFormatterBuilder().appendYear(4, 4).appendLiteral('/').appendMonthOfYear(2)
-    .appendLiteral('/').appendDayOfMonth(2).toFormatter()
-
-  def formatDate(pubDate: DateTime): String = formatter.print(pubDate)
-
-  def getDirectory(pubDate: DateTime): StringError[File] = extractErrors(new File(formatDate(pubDate)))
+  def getDirectory(uri: URI): StringError[File] = extractErrors(new File(uri).getParentFile())
   
   def createDirectory(file: File): StringError[Unit] =
     extractErrors(if (!file.exists()) file.mkdirs() else true).flatMap(x => checkTrue(x, "Could not create directory"))
 
-  def createFile(parent: File, article: Article): StringError[File] = for {
-    _ <- checkTrue(parent.exists() && parent.isDirectory(), "Invalid parent")
-    file <- extractErrors(new File(parent, article.uri.toASCIIString() + ".html"))
+  def createFile(uri: URI): StringError[File] = for {
+    file <- extractErrors(new File(uri))
   } yield (file)
   
   def saveToSpecificFile(file: File, article: CompleteArticle): StringError[Unit] =
@@ -43,9 +35,9 @@ object SaveToFile {
     } yield ()
 	
   def saveToFile(article: CompleteArticle): StringError[Unit] = for {
-    folder <- getDirectory(article.article.pubDate)
+    folder <- getDirectory(article.article.uri)
     _ <- createDirectory(folder)
-    file <- createFile(folder, article.article)
+    file <- createFile(article.article.uri)
     _ = log.info("Saving to file " + file)
     _ <- saveToSpecificFile(file, article)
   } yield () 
@@ -109,7 +101,7 @@ object SaveToFile {
 
   def saveAuthor(author: Author, articles: List[CompleteArticle]) = for {
     dir <- extractErrors(new File("authors"))
-    file <- extractErrors(new File(dir, author.uri.map(_.toASCIIString).getOrElse(author.name) + ".html"))
+    file <- extractErrors(new File(dir, author.uri.toASCIIString + ".html"))
     _ <- extractErrors(dir.mkdirs())
     writer <- extractErrors(new FileWriter(file))
     rendered = ArticleRenderer.renderAuthor(author, articles)
@@ -119,7 +111,7 @@ object SaveToFile {
   
   def saveAuthorAtom(absUrl: URI, author: Author, articles: List[CompleteArticle]) = for {
     dir <- extractErrors(new File("authors"))
-    file <- extractErrors(new File(dir, author.uri.map(_.toASCIIString).getOrElse(author.name) + ".atom"))
+    file <- extractErrors(new File(dir, author.uri.toASCIIString + ".atom"))
     _ <- extractErrors(dir.mkdirs())
     writer <- extractErrors(new FileWriter(file))
     rendered = ArticleRenderer.renderAuthorAtom(author, articles, absUrl)

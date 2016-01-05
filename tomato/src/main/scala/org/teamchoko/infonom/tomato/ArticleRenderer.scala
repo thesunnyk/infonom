@@ -68,8 +68,6 @@ object ArticleRenderer {
 
   def appendHtml(uri: URI): URI = uri.resolve(uri.getPath + ".html")
 
-  def dateUri(pubDate: DateTime): URI = new URI("/" + SaveToFile.formatDate(pubDate) + "/")
-
   def getFirstArticlePubDate(items: List[CompleteArticle]): String =
     items.headOption.map(x => x.article.pubDate.toString).getOrElse(new DateTime(0).toString)
 
@@ -77,8 +75,7 @@ object ArticleRenderer {
     renderAtomList(items, absUrl, appendHtml(cat.uri), cat.name + ": " + siteName)
 
   def renderAuthorAtom(author: Author, items: List[CompleteArticle], absUrl: URI): String =
-    renderAtomList(items, absUrl, author.uri.map(appendHtml).getOrElse(new URI("/")),
-      author.name + ": " + siteName)
+    renderAtomList(items, absUrl, appendHtml(author.uri), author.name + ": " + siteName)
 
   def renderIndexAtom(items: List[CompleteArticle], absUrl: URI): String =
     renderAtomList(items, absUrl, new URI("/"), siteName)
@@ -90,14 +87,14 @@ object ArticleRenderer {
       items.map(x => renderAtomEntry(x, absurl)))
 
   def renderAtomEntry(item: CompleteArticle, absUrl: URI): Modifier =
-    entry(title(item.article.heading), link(href := appendHtml(
-      absUrl.resolve(dateUri(item.article.pubDate)).resolve(item.article.uri)).toString),
+    entry(title(item.article.heading), link(href :=
+      absUrl.resolve("/").resolve(item.article.uri).toString),
       updated(item.article.pubDate.toString), author(Atom.name(item.author.name),
-        item.author.uri.toList.map(x => uri(appendHtml(absUrl.resolve(x)).toString))),
-      id(appendHtml(dateUri(item.article.pubDate).resolve(item.article.uri)).toString),
+        Atom.uri(appendHtml(absUrl.resolve("/").resolve(item.author.uri)).toString)),
+      id(new URI("/").resolve(item.article.uri).toString),
       item.article.extract.toList.map(x => summary(x)),
       Atom.content(item.article.text),
-      item.categories.map(x => category(term := x.name, scheme := absUrl.resolve(x.uri).toString)))
+      item.categories.map(x => category(term := x.name, scheme := absUrl.resolve("/").resolve(x.uri).toString)))
 
   def renderIndex(items: List[CompleteArticle]): String =
     docType + html(lang := "en-AU", renderHeadWithAtom(siteName, new URI("/index.atom")), body(header(h1(siteName)),
@@ -127,7 +124,7 @@ object ArticleRenderer {
 
   def renderAuthor(author: Author, articles: List[CompleteArticle]): String =
     docType + html(lang := "en-AU", renderHeadWithAtom(author.name + " :: " + authorsString + ": " + siteName,
-      new URI("/authors/").resolve(author.uri.get.toString + ".atom")), body(
+      new URI("/authors/").resolve(author.uri.toString + ".atom")), body(
         header(h1(author.name)), section(renderArticleList(articles)), renderFooter
       ))
 
@@ -135,7 +132,7 @@ object ArticleRenderer {
     ul(articles.map(art => li(`class` := "h-entry", renderArticleHeaderForList(art))))
 
   def renderAuthorHeading(author: Author): Modifier =
-    h3(author.uri.map(x => a(href := appendHtml(authorUri.resolve(x)).toString, author.name)).getOrElse(author.name))
+    h3(a(href := appendHtml(authorUri.resolve(author.uri)).toString, author.name))
 
   def renderCategoryHeading(cat: Category): Modifier = h3(a(href := appendHtml(catUri.resolve(cat.uri)).toString,
     cat.name))
@@ -143,19 +140,16 @@ object ArticleRenderer {
   def renderDate(date: DateTime): String = DateTimeFormat.forPattern("dd MMM yyyy").print(date)
 
   def renderArticleHeaderForList(articleInfo: CompleteArticle): List[Modifier] =
-    p(`class` := "p-name", a(href := appendHtml(
-      dateUri(articleInfo.article.pubDate).resolve(articleInfo.article.uri)).toString,
+    p(`class` := "p-name", a(href := new URI("/").resolve(articleInfo.article.uri).toString,
       articleInfo.article.heading)) :: renderEntryHeader(articleInfo)
 
   def renderEntryHeader(articleInfo: CompleteArticle): List[Modifier] = {
     val article = articleInfo.article
      List(
       article.extract.map(extract => p(`class` := "extract, p-summary")(extract)).getOrElse(""),
-	  p(`class` := "byline", "by ", articleInfo.author.uri.map {
-        uri => a(`class`:= "p-author", href := appendHtml(authorUri.resolve(uri)).toString,
-          (articleInfo.author.name))
-	  }.getOrElse(span(`class`:= "p-author")(articleInfo.author.name)),
-	  " on ", span(`class` := "dt-published", renderDate(article.pubDate)))
+	  p(`class` := "byline", "by ", a(`class`:= "p-author",
+        href := appendHtml(authorUri.resolve(articleInfo.author.uri)).toString, (articleInfo.author.name)),
+        " on ", span(`class` := "dt-published", renderDate(article.pubDate)))
 	)
   }
   
@@ -163,7 +157,7 @@ object ArticleRenderer {
     List(div(`class` := "e-content", raw(article.text)))
   
   def renderEntryWithPermalink(articleInfo: CompleteArticle): List[Modifier] =
-    a(href := appendHtml(dateUri(articleInfo.article.pubDate).resolve(articleInfo.article.uri)).toString,
+    a(href := new URI("/").resolve(articleInfo.article.uri).toString,
       h2(`class` := "p-name", articleInfo.article.heading)) ::
     renderEntryHeader(articleInfo) ::: renderEntryBody(articleInfo.article)
 

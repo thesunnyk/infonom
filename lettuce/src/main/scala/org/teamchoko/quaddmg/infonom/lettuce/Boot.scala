@@ -7,6 +7,7 @@ import java.net.URI
 import org.clapper.markwrap.MarkupType
 import org.clapper.markwrap.MarkWrap
 import org.joda.time.DateTime
+import org.joda.time.format.DateTimeFormatterBuilder
 import org.slf4j.LoggerFactory
 import org.teamchoko.infonom.carrot.Articles.Article
 import org.teamchoko.infonom.carrot.Articles.Author
@@ -69,6 +70,11 @@ object Boot extends App {
     }
   }
 
+  val formatter = new DateTimeFormatterBuilder().appendYear(4, 4).appendLiteral('/').appendMonthOfYear(2)
+    .appendLiteral('/').appendDayOfMonth(2).toFormatter()
+
+  def formatDate(pubDate: DateTime): String = formatter.print(pubDate)
+
   var allAuthors: Map[String, Author] = Map()
 
   var allCategories: Map[String, Category] = Map()
@@ -95,7 +101,7 @@ object Boot extends App {
     pullquote: Option[String] = getItem(x, "pullquote")
     extract: Option[String] = getItem(x, "extract")
     article: Article = Article(heading, renderPullquote(pullquote) + renderArticleText(text, textFilter),
-      extract, pubDate, new URI(uri))
+      extract, pubDate, new URI(formatDate(pubDate) + "/" + uri + ".html"))
   } yield CompleteArticleCase(article, comments, categories, author)
   
   def renderArticleText(article: String, textFilter: TextFilter): String = textFilter match {

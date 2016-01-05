@@ -8,7 +8,7 @@ object Articles {
   case object Textile extends TextFilter
   case object Html extends TextFilter
 
-  case class Author(name: String, email: Option[String], uri: Option[URI])
+  case class Author(name: String, email: Option[String], uri: URI)
   case class Category(name: String, uri: URI)
   case class Comment(text: String, pubDate: DateTime)
   case class Article(heading: String,

@@ -141,8 +141,8 @@ class DbConnSpec extends FlatSpec with Matchers {
     }
   }
 
-  val author = Author("things", None, Some(new URI("/author/things")))
-  val author2 = Author("things", None, Some(new URI("/author/dthing")))
+  val author = Author("things", None, new URI("/author/things"))
+  val author2 = Author("things", None, new URI("/author/dthing"))
 
   "Author SQL" should behave like doBasicCrud(DbConn.AuthorCrud, author, author2)
   it should behave like listAllItems(DbConn.AuthorCrud, author, author2)
@@ -244,7 +244,7 @@ class DbConnSpec extends FlatSpec with Matchers {
     retArt should equal(Some(extArticleSimp))
   }
 
-  val author3 = Author("dthings", None, Some(new URI("/author/dthing")))
+  val author3 = Author("dthings", None, new URI("/author/dthing"))
   val extComment = CompleteCommentCase(comment, author3)
   val extArticle = CompleteArticleCase(article, List(extComment), List(category), author)
 
