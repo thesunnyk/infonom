@@ -454,7 +454,7 @@ object DbConn {
       """.query[CompleteArticleDb]
 
     def create(a: CompleteArticleDb): ConnectionIO[Int] =
-      createSql(a).run
+      createSql(a).run *> lastVal
 
     def createSql(a: CompleteArticleDb): Update0 = sql"""
         insert into completearticle (articleid, authorid)
