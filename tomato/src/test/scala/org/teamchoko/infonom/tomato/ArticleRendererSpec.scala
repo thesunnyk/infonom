@@ -12,10 +12,10 @@ class ArticleRendererSpec extends FlatSpec with Matchers {
         new DateTime(2013, 5, 10, 10, 10, 10), new URI("2013/05/10/articles/article.html"))
       val comments: List[CompleteComment] = Nil
       val categories: List[Category] = Nil
-      val author: Author = Author("name", None, new URI("name"))
+      val author: Author = Author("name", None, Some(new URI("name")))
     }
 
-    val author2: Author = Author("altname", None, new URI("alt"))
+    val author2: Author = Author("altname", None, Some(new URI("alt")))
 
 	"ArticleRenderer" should "render" in {
       ArticleRenderer.render(complete) should equal("<!DOCTYPE html><html lang=\"en-AU\"><head><title>heading" +

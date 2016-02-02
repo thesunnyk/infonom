@@ -62,7 +62,7 @@ object DbConn {
   }
 
   object AuthorCrud extends DbBasicCrud[Author] with DbSearch[Author] {
-    val testAuthor = Author("", None, new URI("/"))
+    val testAuthor = Author("", None, None)
     override def analyse: ConnectionIO[Unit] = for {
       _ <- getByIdSql(0).analysis
       _ <- getIdByNameSql("").analysis
@@ -113,7 +113,7 @@ object DbConn {
           id serial primary key,
           name varchar not null,
           email varchar,
-          uri varchar not null
+          uri varchar
         )
       """.update
   }

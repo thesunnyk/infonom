@@ -75,7 +75,7 @@ object ArticleRenderer {
     renderAtomList(items, absUrl, appendHtml(cat.uri), cat.name + ": " + siteName)
 
   def renderAuthorAtom(author: Author, items: List[CompleteArticle], absUrl: URI): String =
-    renderAtomList(items, absUrl, appendHtml(author.uri), author.name + ": " + siteName)
+    renderAtomList(items, absUrl, appendHtml(author.uri.get), author.name + ": " + siteName)
 
   def renderIndexAtom(items: List[CompleteArticle], absUrl: URI): String =
     renderAtomList(items, absUrl, new URI("/"), siteName)
@@ -90,7 +90,7 @@ object ArticleRenderer {
     entry(title(item.article.heading), link(href :=
       absUrl.resolve("/").resolve(item.article.uri).toString),
       updated(item.article.pubDate.toString), author(Atom.name(item.author.name),
-        Atom.uri(appendHtml(absUrl.resolve("/").resolve(item.author.uri)).toString)),
+        Atom.uri(appendHtml(absUrl.resolve("/").resolve(item.author.uri.get)).toString)),
       id(new URI("/").resolve(item.article.uri).toString),
       item.article.extract.toList.map(x => summary(x)),
       Atom.content(item.article.text),
@@ -132,7 +132,7 @@ object ArticleRenderer {
     ul(articles.map(art => li(`class` := "h-entry", renderArticleHeaderForList(art))))
 
   def renderAuthorHeading(author: Author): Modifier =
-    h3(a(href := appendHtml(authorUri.resolve(author.uri)).toString, author.name))
+    h3(a(href := appendHtml(authorUri.resolve(author.uri.get)).toString, author.name))
 
   def renderCategoryHeading(cat: Category): Modifier = h3(a(href := appendHtml(catUri.resolve(cat.uri)).toString,
     cat.name))
@@ -148,8 +148,8 @@ object ArticleRenderer {
      List(
       article.extract.map(extract => p(`class` := "extract, p-summary")(extract)).getOrElse(""),
 	  p(`class` := "byline", "by ", a(`class`:= "p-author",
-        href := appendHtml(authorUri.resolve(articleInfo.author.uri)).toString, (articleInfo.author.name)),
-        " on ", span(`class` := "dt-published", renderDate(article.pubDate)))
+        href := appendHtml(authorUri.resolve(articleInfo.author.uri.get)).toString,
+        (articleInfo.author.name)), " on ", span(`class` := "dt-published", renderDate(article.pubDate)))
 	)
   }
   

@@ -101,7 +101,7 @@ object SaveToFile {
 
   def saveAuthor(author: Author, articles: List[CompleteArticle]) = for {
     dir <- extractErrors(new File("authors"))
-    file <- extractErrors(new File(dir, author.uri.toASCIIString + ".html"))
+    file <- extractErrors(new File(dir, author.uri.get.toASCIIString + ".html"))
     _ <- extractErrors(dir.mkdirs())
     writer <- extractErrors(new FileWriter(file))
     rendered = ArticleRenderer.renderAuthor(author, articles)
@@ -111,7 +111,7 @@ object SaveToFile {
   
   def saveAuthorAtom(absUrl: URI, author: Author, articles: List[CompleteArticle]) = for {
     dir <- extractErrors(new File("authors"))
-    file <- extractErrors(new File(dir, author.uri.toASCIIString + ".atom"))
+    file <- extractErrors(new File(dir, author.uri.get.toASCIIString + ".atom"))
     _ <- extractErrors(dir.mkdirs())
     writer <- extractErrors(new FileWriter(file))
     rendered = ArticleRenderer.renderAuthorAtom(author, articles, absUrl)
