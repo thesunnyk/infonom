@@ -7,6 +7,7 @@ import doobie.imports.Query0
 import doobie.imports.toMoreConnectionIOOps
 import doobie.imports.toSqlInterpolator
 import doobie.imports.Update0
+import doobie.hi.connection.delay
 import java.net.URI
 import java.sql.Timestamp
 import org.joda.time.DateTime
@@ -372,9 +373,8 @@ object DbConn {
     } yield commentId
 
   object ArticleCrud extends DbBasicCrud[Article] {
-    val testArticle = Article("", "", None, new DateTime(), new URI(""))
+    val testArticle = Article("", List(), None, new DateTime(), new URI(""))
     override def analyse: ConnectionIO[Unit] = for {
-      _ <- getByIdSql(0).analysis
       _ <- getIdByUriSql(new URI("/")).analysis
       _ <- getAllArticleIdsSql.analysis
       _ <- createSql(testArticle).analysis
@@ -382,13 +382,8 @@ object DbConn {
       _ <- createTableSql.analysis
     } yield ()
 
-    override def getById(aid: Int) = getByIdSql(aid).option
-
-    def getByIdSql(aid: Int): Query0[Article] = sql"""
-        select heading, body, extract, pubdate, uri
-        from article
-        where id = $aid
-      """.query[Article]
+    // WARNING: This no longer gives any articles
+    override def getById(aid: Int) = delay(None)
 
     def getIdByUri(uri: URI): ConnectionIO[Option[Int]] = getIdByUriSql(uri).option
 
@@ -409,8 +404,8 @@ object DbConn {
     override def create(a: Article) = createSql(a).run *> lastVal
 
     def createSql(a: Article): Update0 = sql"""
-        insert into article (heading, body, extract, pubdate, uri)
-        values (${a.heading}, ${a.text}, ${a.extract}, ${a.pubDate}, ${a.uri})
+        insert into article (heading, extract, pubdate, uri)
+        values (${a.heading}, ${a.extract}, ${a.pubDate}, ${a.uri})
       """.update
 
     override def deleteById(aid: Int) = deleteByIdSql(aid).run

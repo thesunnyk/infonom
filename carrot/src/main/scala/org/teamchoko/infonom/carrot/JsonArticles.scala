@@ -1,18 +1,5 @@
 package org.teamchoko.infonom.carrot
 
-import java.net.URI
-
-import org.joda.time.DateTime
-import org.teamchoko.infonom.carrot.Articles.Article
-import org.teamchoko.infonom.carrot.Articles.Author
-import org.teamchoko.infonom.carrot.Articles.Category
-import org.teamchoko.infonom.carrot.Articles.Comment
-import org.teamchoko.infonom.carrot.Articles.CompleteArticleCase
-import org.teamchoko.infonom.carrot.Articles.CompleteCommentCase
-import org.teamchoko.infonom.carrot.Articles.Html
-import org.teamchoko.infonom.carrot.Articles.TextFilter
-import org.teamchoko.infonom.carrot.Articles.Textile
-
 import argonaut.Argonaut.BooleanDecodeJson
 import argonaut.Argonaut.BooleanEncodeJson
 import argonaut.Argonaut.CanBuildFromDecodeJson
@@ -27,6 +14,20 @@ import argonaut.Argonaut.StringDecodeJson
 import argonaut.Argonaut.StringEncodeJson
 import argonaut.Argonaut.TraversableOnceEncodeJson
 import argonaut.CodecJson
+import argonaut.Json
+import argonaut.JsonObject
+import java.net.URI
+import org.joda.time.DateTime
+import org.teamchoko.infonom.carrot.Articles.Article
+import org.teamchoko.infonom.carrot.Articles.ArticleChunk
+import org.teamchoko.infonom.carrot.Articles.Author
+import org.teamchoko.infonom.carrot.Articles.Category
+import org.teamchoko.infonom.carrot.Articles.Comment
+import org.teamchoko.infonom.carrot.Articles.CompleteArticleCase
+import org.teamchoko.infonom.carrot.Articles.CompleteCommentCase
+import org.teamchoko.infonom.carrot.Articles.HtmlText
+import org.teamchoko.infonom.carrot.Articles.PullQuote
+import org.teamchoko.infonom.carrot.Articles.TextileText
 
 object JsonArticles {
 
@@ -44,17 +45,19 @@ object JsonArticles {
     } yield DateTime.parse(item)
   )
 
-  implicit val TextFilterCodecJson: CodecJson[TextFilter] = CodecJson(
-      filter => jString(filter match {
-        case Html => "html"
-        case Textile => "textile"
-      }),
+  implicit val ArticleChunkCodecJson: CodecJson[ArticleChunk] = CodecJson(
+      filter => filter match {
+        case HtmlText(text) => Json(("type", jString("htmltext")), ("text", jString(text)))
+        case TextileText(text) => Json(("type", jString("textiletext")), ("text", jString(text)))
+        case PullQuote(text) => Json(("type", jString("pullquote")), ("text", jString(text)))
+      },
       js => for {
-        item <- js.as[String]
+        item <- (js --\ "type").as[String]
         lower = item.toLowerCase
-        filter = lower match {
-          case x if x == "html" => Html
-          case x if x == "textile" => Textile
+        filter <- lower match {
+          case x if x == "htmltext" => (js --\ "text").as[String].map(HtmlText(_))
+          case x if x == "textiletext" => (js --\ "text").as[String].map(TextileText(_))
+          case x if x == "pullquote" => (js --\ "text").as[String].map(PullQuote(_))
         }
       } yield filter
     )

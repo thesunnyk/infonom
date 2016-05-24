@@ -8,7 +8,7 @@ import org.teamchoko.infonom.carrot.Articles._
 
 class ArticleRendererSpec extends FlatSpec with Matchers {
     val complete = new CompleteArticle {
-      val article: Article = Article("heading", "some things are stuff", None,
+      val article: Article = Article("heading", List(HtmlText("some things are stuff")), None,
         new DateTime(2013, 5, 10, 10, 10, 10), new URI("2013/05/10/articles/article.html"))
       val comments: List[CompleteComment] = Nil
       val categories: List[Category] = Nil

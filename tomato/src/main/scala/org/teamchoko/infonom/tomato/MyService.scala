@@ -107,7 +107,7 @@ trait MyService {
   def toError(err: StringError[Unit]): String = err.fold(err => err, succ => "Success")
 
   def makeString(body: ByteVector): String = new String(body.toArray)
-  
+
   def service(implicit executionContext: ExecutionContext): HttpService = HttpService {
     case GET -> Root => Ok("Server is up")
     case req@ POST -> Root / "new" => Ok(req.body.chunkAll.map(x => {
@@ -116,6 +116,7 @@ trait MyService {
     }))
     case GET -> Root / "publishAll" => Ok(toError(publishAllArticles))
     case GET -> Root / "index" => Ok(toError(publishIndex))
+    case GET -> Root / "list" => Ok()
   }
 
 }

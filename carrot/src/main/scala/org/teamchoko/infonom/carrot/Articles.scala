@@ -4,15 +4,21 @@ import java.net.URI
 import org.joda.time.DateTime
 
 object Articles {
-  sealed abstract class TextFilter
+  sealed trait TextFilter
   case object Textile extends TextFilter
   case object Html extends TextFilter
+
+  sealed trait ArticleChunk
+  case class TextileText(text: String) extends ArticleChunk
+  case class HtmlText(text: String) extends ArticleChunk
+  case class PullQuote(text: String) extends ArticleChunk
 
   case class Author(name: String, email: Option[String], uri: Option[URI])
   case class Category(name: String, uri: URI)
   case class Comment(text: String, pubDate: DateTime)
+
   case class Article(heading: String,
-                     text: String,
+                     content: List[ArticleChunk],
                      extract: Option[String],
                      pubDate: DateTime,
                      uri: URI)

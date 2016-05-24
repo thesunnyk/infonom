@@ -58,6 +58,11 @@
         <artifactId>h2</artifactId>
         <version>${h2.version}</version>
     </dependency>
+    <dependency><!-- For markdown. -->
+      <groupId>org.clapper</groupId>
+      <artifactId>markwrap_${scala.version.alias}</artifactId>
+      <version>${markwrap.version}</version>
+    </dependency>
     <dependency>
         <groupId>org.teamchoko.infonom</groupId>
         <artifactId>carrot</artifactId>

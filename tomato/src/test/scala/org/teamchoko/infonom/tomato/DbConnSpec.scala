@@ -164,8 +164,8 @@ class DbConnSpec extends FlatSpec with Matchers {
 
   "Comments SQL" should behave like doBasicCrud(DbConn.CommentCrud, comment, comment2)
 
-  val article = Article("heading", "content", None, new DateTime(0), new URI("/tmp"))
-  val article2 = Article("heading", "content 2", None, new DateTime(0), new URI("/tmp"))
+  val article = Article("heading", List(), None, new DateTime(0), new URI("/tmp"))
+  val article2 = Article("heading", List(), None, new DateTime(0), new URI("/tmp"))
 
 
   "Article SQL" should behave like doBasicCrud(DbConn.ArticleCrud, article, article2)

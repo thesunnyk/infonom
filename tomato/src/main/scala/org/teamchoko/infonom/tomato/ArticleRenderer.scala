@@ -1,14 +1,28 @@
 package org.teamchoko.infonom.tomato
 
+import Atom.author
+import Atom.category
+import Atom.entry
+import Atom.feed
+import Atom.id
+import Atom.scheme
+import Atom.summary
+import Atom.term
+import Atom.updated
+import Atom.uri
+import java.net.URI
+import org.clapper.markwrap.MarkupType
+import org.clapper.markwrap.MarkWrap
 import org.joda.time.DateTime
 import org.joda.time.format.DateTimeFormat
 import org.teamchoko.infonom.carrot.Articles.Article
+import org.teamchoko.infonom.carrot.Articles.ArticleChunk
 import org.teamchoko.infonom.carrot.Articles.Author
 import org.teamchoko.infonom.carrot.Articles.Category
 import org.teamchoko.infonom.carrot.Articles.CompleteArticle
-import org.teamchoko.infonom.carrot.Articles.Html
-import org.teamchoko.infonom.carrot.Articles.Textile
-
+import org.teamchoko.infonom.carrot.Articles.HtmlText
+import org.teamchoko.infonom.carrot.Articles.PullQuote
+import org.teamchoko.infonom.carrot.Articles.TextileText
 import scalatags.Text.all.`class`
 import scalatags.Text.all.`type`
 import scalatags.Text.all.a
@@ -43,19 +57,6 @@ import scalatags.Text.all.xmlns
 import scalatags.Text.tags2.section
 import scalatags.Text.tags2.title
 
-import Atom.author
-import Atom.category
-import Atom.entry
-import Atom.feed
-import Atom.id
-import Atom.scheme
-import Atom.summary
-import Atom.term
-import Atom.updated
-import Atom.uri
-
-import java.net.URI
-
 object ArticleRenderer {
   val siteName: String = "The USS Quad Damage"
   val categoriesString: String = "Categories"
@@ -86,6 +87,21 @@ object ArticleRenderer {
       updated(getFirstArticlePubDate(items)),
       items.map(x => renderAtomEntry(x, absurl)))
 
+  // Returns strings because of escaped vs raw rendering.
+  def renderChunks(chunks: List[ArticleChunk]): String = chunks.map(renderChunk).mkString("\n")
+
+  def renderChunk(chunk: ArticleChunk): String = chunk match {
+    case TextileText(text) => MarkWrap.parserFor(MarkupType.Textile).parseToHTML(text);
+    case HtmlText(text) => text
+    case PullQuote(text) => renderPullquote(text)
+  }
+
+  def renderPullquote(pullQuote: String): String =
+    if (!pullQuote.trim.isEmpty)
+      span(`class` := "pullquote", pullQuote).toString
+    else
+      ""
+
   def renderAtomEntry(item: CompleteArticle, absUrl: URI): Modifier =
     entry(title(item.article.heading), link(href :=
       absUrl.resolve("/").resolve(item.article.uri).toString),
@@ -93,7 +109,7 @@ object ArticleRenderer {
         Atom.uri(appendHtml(absUrl.resolve("/").resolve(item.author.uri.get)).toString)),
       id(new URI("/").resolve(item.article.uri).toString),
       item.article.extract.toList.map(x => summary(x)),
-      Atom.content(item.article.text),
+      Atom.content(renderChunks(item.article.content)),
       item.categories.map(x => category(term := x.name, scheme := absUrl.resolve("/").resolve(x.uri).toString)))
 
   def renderIndex(items: List[CompleteArticle]): String =
@@ -154,7 +170,7 @@ object ArticleRenderer {
   }
   
   def renderEntryBody(article: Article): List[Modifier] =
-    List(div(`class` := "e-content", raw(article.text)))
+    List(div(`class` := "e-content", raw(renderChunks(article.content))))
   
   def renderEntryWithPermalink(articleInfo: CompleteArticle): List[Modifier] =
     a(href := new URI("/").resolve(articleInfo.article.uri).toString,

@@ -4,12 +4,11 @@ import argonaut._
 import argonaut.Argonaut._
 import java.io.File
 import java.net.URI
-import org.clapper.markwrap.MarkupType
-import org.clapper.markwrap.MarkWrap
 import org.joda.time.DateTime
 import org.joda.time.format.DateTimeFormatterBuilder
 import org.slf4j.LoggerFactory
 import org.teamchoko.infonom.carrot.Articles.Article
+import org.teamchoko.infonom.carrot.Articles.ArticleChunk
 import org.teamchoko.infonom.carrot.Articles.Author
 import org.teamchoko.infonom.carrot.Articles.Category
 import org.teamchoko.infonom.carrot.Articles.Comment
@@ -18,8 +17,11 @@ import org.teamchoko.infonom.carrot.Articles.CompleteArticleCase
 import org.teamchoko.infonom.carrot.Articles.CompleteComment
 import org.teamchoko.infonom.carrot.Articles.CompleteCommentCase
 import org.teamchoko.infonom.carrot.Articles.Html
+import org.teamchoko.infonom.carrot.Articles.HtmlText
+import org.teamchoko.infonom.carrot.Articles.PullQuote
 import org.teamchoko.infonom.carrot.Articles.TextFilter
 import org.teamchoko.infonom.carrot.Articles.Textile
+import org.teamchoko.infonom.carrot.Articles.TextileText
 import org.teamchoko.infonom.carrot.JsonArticles._
 import scala.xml.Elem
 import scala.xml.Node
@@ -100,17 +102,15 @@ object Boot extends App {
     categories: List[Category] = categoriesFromIds((x \ "categories" \ "category").toList.map(getId).flatten)
     pullquote: Option[String] = getItem(x, "pullquote")
     extract: Option[String] = getItem(x, "extract")
-    article: Article = Article(heading, renderPullquote(pullquote) + renderArticleText(text, textFilter),
+    article: Article = Article(heading, articleChunks(text, textFilter, pullquote),
       extract, pubDate, new URI(formatDate(pubDate) + "/" + uri + ".html"))
   } yield CompleteArticleCase(article, comments, categories, author)
-  
-  def renderArticleText(article: String, textFilter: TextFilter): String = textFilter match {
-    case Textile => MarkWrap.parserFor(MarkupType.Textile).parseToHTML(article);
-    case Html => article
-  }
 
-  def renderPullquote(pullQuote: Option[String]): String =
-    pullQuote.filter(!_.trim.isEmpty).map(x => span(`class` := "pullquote", x).toString).getOrElse("")
+  def articleChunks(text: String, filter: TextFilter, pullquote: Option[String]): List[ArticleChunk] =
+    List(Some(filter match {
+      case Html => HtmlText(text)
+      case Textile => TextileText(text)
+    }), pullquote.map(PullQuote(_))).flatten
 
   def setAllAuthors(authors: List[(String, Author)]): Unit =
     authors.foreach(data => allAuthors = allAuthors ++ Map(data._1 -> data._2))
