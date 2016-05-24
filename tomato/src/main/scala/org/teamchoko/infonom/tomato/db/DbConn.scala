@@ -1,4 +1,4 @@
-package org.teamchoko.infonom.tomato
+package org.teamchoko.infonom.tomato.db
 
 import doobie.imports.ConnectionIO
 import doobie.imports.DriverManagerTransactor

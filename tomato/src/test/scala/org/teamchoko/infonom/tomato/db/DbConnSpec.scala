@@ -1,7 +1,19 @@
-package org.teamchoko.infonom.tomato
+package org.teamchoko.infonom.tomato.db
 
 import java.net.URI
 
+import DbConn.ArticleCategoryDb
+import DbConn.CompleteArticleDb
+import DbConn.CompleteCommentDb
+import DbConn.DbBasicCrud
+import DbConn.DbBasicCrud
+import DbConn.DbSearch
+import DbConn.DbSearch
+import doobie.imports.ConnectionIO
+import doobie.imports.DriverManagerTransactor
+import doobie.imports.Query0
+import doobie.imports.toMoreConnectionIOOps
+import doobie.imports.Update0
 import org.joda.time.DateTime
 import org.scalatest.FlatSpec
 import org.scalatest.Matchers
@@ -9,25 +21,11 @@ import org.teamchoko.infonom.carrot.Articles.Article
 import org.teamchoko.infonom.carrot.Articles.Author
 import org.teamchoko.infonom.carrot.Articles.Category
 import org.teamchoko.infonom.carrot.Articles.Comment
-import org.teamchoko.infonom.carrot.Articles.Textile
 import org.teamchoko.infonom.carrot.Articles.CompleteArticleCase
 import org.teamchoko.infonom.carrot.Articles.CompleteCommentCase
-import org.teamchoko.infonom.tomato.DbConn.DbBasicCrud
-import org.teamchoko.infonom.tomato.DbConn.DbSearch
-
-import DbConn.CompleteArticleDb
-import DbConn.ArticleCategoryDb
-import DbConn.CompleteCommentDb
-import DbConn.DbBasicCrud
-import DbConn.DbSearch
-
-import doobie.imports.ConnectionIO
-import doobie.imports.DriverManagerTransactor
-import doobie.imports.Query0
-import doobie.imports.Update0
-import doobie.imports.toMoreConnectionIOOps
-import scalaz.concurrent.Task
+import org.teamchoko.infonom.carrot.Articles.Textile
 import scalaz.\/-
+import scalaz.concurrent.Task
 
 class DbConnSpec extends FlatSpec with Matchers {
   def xaTest = DriverManagerTransactor[Task]("org.h2.Driver", "jdbc:h2:mem:test", "sa", "")

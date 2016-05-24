@@ -1,31 +1,32 @@
 package org.teamchoko.infonom.tomato
 
-import scala.concurrent.ExecutionContext
-import org.http4s.server.HttpService
+import argonaut.Argonaut.StringToParseWrap
 import org.http4s.dsl.->
 import org.http4s.dsl./
-import org.http4s.dsl.Root
 import org.http4s.dsl.Ok
 import org.http4s.dsl.OkSyntax
+import org.http4s.dsl.Root
 import org.http4s.Method.GET
 import org.http4s.Method.POST
-import org.teamchoko.infonom.carrot.Articles.CompleteArticleCase
-import org.teamchoko.infonom.carrot.Articles.Category
+import org.http4s.server.HttpService
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import org.teamchoko.infonom.carrot.Articles.Author
+import org.teamchoko.infonom.carrot.Articles.Category
+import org.teamchoko.infonom.carrot.Articles.CompleteArticleCase
 import org.teamchoko.infonom.carrot.JsonArticles.CompleteArticleCodecJson
+import org.teamchoko.infonom.tomato.db.DbConn
 import org.teamchoko.infonom.tomato.Errors.StringError
-import argonaut.Argonaut.StringToParseWrap
+import scala.concurrent.ExecutionContext
 import scalaz._
 import scalaz.Scalaz._
 import scodec.bits.ByteVector
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 
 import doobie.imports.ConnectionIO
 import doobie.imports.DriverManagerTransactor
 import doobie.imports.Query0
-import doobie.imports.Update0
 import doobie.imports.toMoreConnectionIOOps
+import doobie.imports.Update0
 import scalaz.concurrent.Task
 
 import java.net.URI

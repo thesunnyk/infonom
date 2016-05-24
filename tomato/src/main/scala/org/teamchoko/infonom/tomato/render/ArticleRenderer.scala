@@ -1,4 +1,4 @@
-package org.teamchoko.infonom.tomato
+package org.teamchoko.infonom.tomato.render
 
 import Atom.author
 import Atom.category

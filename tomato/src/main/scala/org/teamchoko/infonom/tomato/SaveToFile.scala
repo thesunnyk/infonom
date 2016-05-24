@@ -11,6 +11,7 @@ import org.teamchoko.infonom.tomato.Errors.StringError
 import org.teamchoko.infonom.tomato.Errors.checkTrue
 import org.teamchoko.infonom.tomato.Errors.extractErrors
 import org.teamchoko.infonom.tomato.Errors.success
+import org.teamchoko.infonom.tomato.render.ArticleRenderer
 import org.slf4j.LoggerFactory
 
 object SaveToFile {
