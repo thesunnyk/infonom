@@ -1,7 +1,7 @@
 package org.teamchoko.infonom.carrot
 
 import java.io.File
-import scalaz.\/.fromTryCatch
+import scalaz.\/.fromTryCatchNonFatal
 
 object SystemConfig {
   def getDataDirName = System.getProperty("infonom.data.dir", "data")
@@ -9,7 +9,7 @@ object SystemConfig {
   def getDataDir: File = new File(getDataDirName)
 
   def ensureExists(dir: File): Boolean = if (dir.exists) true
-  	else fromTryCatch {
+  	else fromTryCatchNonFatal {
       dir.mkdirs()
     }.fold(x => false, x => x)
 }
