@@ -42,7 +42,6 @@
     <joda-time.version>2.8</joda-time.version>
     <joda-convert.version>1.7</joda-convert.version>
     <scalaz.version>7.1.8</scalaz.version>
-    <scalaz-stream.version>0.7.1a</scalaz-stream.version>
     <doobie.version>0.2.2</doobie.version>
     <markwrap.version>1.0.2</markwrap.version>
     <scalatags.version>0.5.2</scalatags.version>

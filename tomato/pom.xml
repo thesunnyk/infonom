@@ -79,11 +79,6 @@
       <version>${scalaz.version}</version>
     </dependency>
     <dependency>
-      <groupId>org.scalaz.stream</groupId>
-      <artifactId>scalaz-stream_${scala.version.alias}</artifactId>
-      <version>${scalaz-stream.version}</version>
-    </dependency>
-    <dependency>
         <groupId>org.http4s</groupId>
         <artifactId>http4s-dsl_${scala.version.alias}</artifactId>
         <version>${http4s.version}</version>
