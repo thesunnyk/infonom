@@ -19,15 +19,9 @@ import org.teamchoko.infonom.tomato.db.DbConn
 import org.teamchoko.infonom.tomato.Errors.StringError
 import scala.concurrent.ExecutionContext
 import scalaz._
+import scalaz.concurrent.Task
 import scalaz.Scalaz._
 import scodec.bits.ByteVector
-
-import doobie.imports.ConnectionIO
-import doobie.imports.DriverManagerTransactor
-import doobie.imports.Query0
-import doobie.imports.toMoreConnectionIOOps
-import doobie.imports.Update0
-import scalaz.concurrent.Task
 
 import java.net.URI
 
@@ -39,17 +33,15 @@ trait MyService {
   def saveArticle(body: ByteVector): StringError[Unit] = for {
     article: CompleteArticleCase <- new String(body.toArray).decodeEither[CompleteArticleCase]
     _ = log.info("Got an article: {}", article.article.heading)
-    _ <- DbConn.persistCompleteArticle(article).transact(DbConn.xa).attemptRun.leftMap(x => x.getMessage)
+    _ <- DbConn.saveArticle(article)
     _ = log.info("Saved")
   } yield ()
-
-  def getAllArticles(): Task[List[CompleteArticleCase]] = DbConn.getAllCompleteArticles.transact(DbConn.xa)
 
   def saveAllFiles(articles: List[CompleteArticleCase]): StringError[Unit] =
     articles.map(SaveToFile.saveToFile).fold(().point[StringError])((x, y) => y)
 
   def publishAllArticles(): StringError[Unit] = for {
-    articles <- getAllArticles.attemptRun.leftMap(x => x.getMessage)
+    articles <- DbConn.getAllArticles.attemptRun.leftMap(x => x.getMessage)
     _ = log.info("Publishing {} articles", articles.length)
     save <- saveAllFiles(articles)
   } yield ()
@@ -90,7 +82,7 @@ trait MyService {
     })
 
   def publishIndex(): StringError[Unit] = for {
-    articles <- getAllArticles.attemptRun.leftMap(x => x.getMessage)
+    articles <- DbConn.getAllArticles.attemptRun.leftMap(x => x.getMessage)
     _ <- SaveToFile.saveIndex(articles.take(10))
     _ <- SaveToFile.saveIndexAtom(quaddmg, articles.take(10))
     categories = extractCategories(articles)

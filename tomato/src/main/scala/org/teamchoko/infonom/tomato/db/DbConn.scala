@@ -483,6 +483,13 @@ object DbConn {
   def createCompleteComments(comments: List[CompleteComment], artId: Int): ConnectionIO[Unit] =
     comments.traverse(comment => createNewCompleteComment(comment, artId)).map(_ => ())
 
+  def saveArticle(article: CompleteArticle): String \/ Int =
+    persistCompleteArticle(article).transact(xa).attemptRun.leftMap(x => x.getMessage)
+
+  def getAllArticles(): Task[List[CompleteArticleCase]] = getAllCompleteArticles.transact(xa)
+
+  def initDb = initialiseDb.transact(xa).attemptRun.leftMap(x => x.getMessage)
+
   def persistCompleteArticle(a: CompleteArticle): ConnectionIO[Int] = for {
       authorId <- saveOrUpdateAuthor(a.author)
       articleId <- ArticleCrud.create(a.article)
