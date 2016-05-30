@@ -230,7 +230,7 @@ class DbConnSpec extends FlatSpec with Matchers {
 
   ////////////////// Test the persistence API
 
-  val extArticleSimp = CompleteArticleCase(article, Nil, Nil, author)
+  val extArticleSimp = CompleteArticleCase("id", article, Nil, Nil, author)
 
   "Complete Article" should "persist correctly for simple value" in {
     val retArt = (for {
@@ -244,7 +244,7 @@ class DbConnSpec extends FlatSpec with Matchers {
 
   val author3 = Author("dthings", None, Some(new URI("/author/dthing")))
   val extComment = CompleteCommentCase(comment, author3)
-  val extArticle = CompleteArticleCase(article, List(extComment), List(category), author)
+  val extArticle = CompleteArticleCase("id", article, List(extComment), List(category), author)
 
   it should "persist correctly for value with comments and categories" in {
     val retArt = (for {
@@ -256,7 +256,7 @@ class DbConnSpec extends FlatSpec with Matchers {
     retArt should equal(Some(extArticle))
   }
 
-  val altArticle = CompleteArticleCase(article, List(extComment), List(category), author2)
+  val altArticle = CompleteArticleCase("id", article, List(extComment), List(category), author2)
 
   it should "update author in a new article" in {
     val retArt = (for {
@@ -281,7 +281,7 @@ class DbConnSpec extends FlatSpec with Matchers {
     retArt.get.author should equal(author2)
   }
 
-  val catArticle = CompleteArticleCase(article, List(extComment), List(category2), author2)
+  val catArticle = CompleteArticleCase("id", article, List(extComment), List(category2), author2)
 
   it should "update category in a new article" in {
     val retArt = (for {
@@ -308,8 +308,8 @@ class DbConnSpec extends FlatSpec with Matchers {
   }
 
   val altCategory = Category("altName", new URI("/test"))
-  val secArticle = CompleteArticleCase(article, List(extComment), List(category), author3)
-  val secArticle2 = CompleteArticleCase(article, List(extComment), List(altCategory), author3)
+  val secArticle = CompleteArticleCase("id", article, List(extComment), List(category), author3)
+  val secArticle2 = CompleteArticleCase("id", article, List(extComment), List(altCategory), author3)
 
   // TODO This won't work since CompleteArticle uses Article ID now
   "Category search" should "give all articles by category id" in {

@@ -104,7 +104,7 @@ object Boot extends App {
     extract: Option[String] = getItem(x, "extract")
     article: Article = Article(heading, articleChunks(text, textFilter, pullquote),
       extract, pubDate, new URI(formatDate(pubDate) + "/" + uri + ".html"))
-  } yield CompleteArticleCase(article, comments, categories, author)
+  } yield CompleteArticleCase(uri, article, comments, categories, author)
 
   def articleChunks(text: String, filter: TextFilter, pullquote: Option[String]): List[ArticleChunk] =
     List(Some(filter match {

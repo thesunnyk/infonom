@@ -75,6 +75,7 @@ object JsonArticles {
     casecodec2(CompleteCommentCase.apply, CompleteCommentCase.unapply)("comment", "author")
 
   implicit def CompleteArticleCodecJson =
-    casecodec4(CompleteArticleCase.apply, CompleteArticleCase.unapply)("article", "comments", "categories", "author")
+    casecodec5(CompleteArticleCase.apply, CompleteArticleCase.unapply)("id",
+      "article", "comments", "categories", "author")
 
 }

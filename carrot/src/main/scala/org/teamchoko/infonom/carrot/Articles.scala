@@ -33,14 +33,15 @@ object Articles {
 
   trait CompleteArticle
   {
+    val id: String
     val article: Article
     val comments: List[CompleteComment]
     val categories: List[Category]
     val author: Author
   }
   
-  case class CompleteArticleCase(article: Article, comments: List[CompleteCommentCase], categories: List[Category],
-    author: Author) extends CompleteArticle
+  case class CompleteArticleCase(id: String, article: Article, comments: List[CompleteCommentCase],
+    categories: List[Category], author: Author) extends CompleteArticle
 
   case class RssFeed(folder: String, htmlurl: URI, xmlurl: URI, title: String, text: String, lastUpdate: DateTime)
 }

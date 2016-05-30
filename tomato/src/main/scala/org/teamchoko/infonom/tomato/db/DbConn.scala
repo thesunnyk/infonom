@@ -519,7 +519,7 @@ object DbConn {
     author <- OptionT(AuthorCrud.getById(cad.authorid))
     categories <- ArticleCategoryCrud.getCategoriesByCompleteArticleId(cad.articleid).liftM[OptionT]
     comments <- CompleteCommentCrud.getCompleteComments(a).liftM[OptionT]
-    item = CompleteArticleCase(article, comments, categories, author)
+    item = CompleteArticleCase(a.toString, article, comments, categories, author)
   } yield item).run
 
   val cruds: List[DbBasicCrud[_]] = List(AuthorCrud, CategoryCrud, CommentCrud, CompleteCommentCrud,
