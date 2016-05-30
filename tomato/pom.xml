@@ -49,11 +49,6 @@
         <version>${scalatags.version}</version>
     </dependency>
     <dependency>
-        <groupId>com.ibm</groupId>
-        <artifactId>couchdb-scala_${scala.version.alias}</artifactId>
-        <version>${couchdb.scala.version}</version>
-    </dependency>
-    <dependency>
         <groupId>org.tpolecat</groupId>
         <artifactId>doobie-core_${scala.version.alias}</artifactId>
         <version>${doobie.version}</version>
