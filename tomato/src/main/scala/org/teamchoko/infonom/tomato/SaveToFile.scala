@@ -3,16 +3,16 @@ package org.teamchoko.infonom.tomato
 import java.io.File
 import java.io.FileWriter
 import java.net.URI
-import org.teamchoko.infonom.carrot.Articles.Article
-import org.teamchoko.infonom.carrot.Articles.CompleteArticle
-import org.teamchoko.infonom.carrot.Articles.Category
-import org.teamchoko.infonom.carrot.Articles.Author
-import org.teamchoko.infonom.tomato.Errors.StringError
-import org.teamchoko.infonom.tomato.Errors.checkTrue
-import org.teamchoko.infonom.tomato.Errors.extractErrors
-import org.teamchoko.infonom.tomato.Errors.success
-import org.teamchoko.infonom.tomato.render.ArticleRenderer
 import org.slf4j.LoggerFactory
+import org.teamchoko.infonom.carrot.Articles.Article
+import org.teamchoko.infonom.carrot.Articles.Author
+import org.teamchoko.infonom.carrot.Articles.Category
+import org.teamchoko.infonom.carrot.Articles.CompleteArticle
+import org.teamchoko.infonom.carrot.Errors.checkTrue
+import org.teamchoko.infonom.carrot.Errors.extractErrors
+import org.teamchoko.infonom.carrot.Errors.StringError
+import org.teamchoko.infonom.carrot.Errors.success
+import org.teamchoko.infonom.tomato.render.ArticleRenderer
 
 object SaveToFile {
   

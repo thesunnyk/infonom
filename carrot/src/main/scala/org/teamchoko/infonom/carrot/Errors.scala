@@ -1,4 +1,4 @@
-package org.teamchoko.infonom.tomato
+package org.teamchoko.infonom.carrot
 
 import scalaz.{-\/, \/-, \/}
 import scalaz.\/.fromTryCatchNonFatal

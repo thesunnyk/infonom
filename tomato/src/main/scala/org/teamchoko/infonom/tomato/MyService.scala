@@ -14,9 +14,9 @@ import org.slf4j.LoggerFactory
 import org.teamchoko.infonom.carrot.Articles.Author
 import org.teamchoko.infonom.carrot.Articles.Category
 import org.teamchoko.infonom.carrot.Articles.CompleteArticleCase
+import org.teamchoko.infonom.carrot.Errors.StringError
 import org.teamchoko.infonom.carrot.JsonArticles.CompleteArticleCodecJson
 import org.teamchoko.infonom.tomato.db.DbConn
-import org.teamchoko.infonom.tomato.Errors.StringError
 import scala.concurrent.ExecutionContext
 import scalaz._
 import scalaz.concurrent.Task

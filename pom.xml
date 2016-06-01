@@ -47,7 +47,6 @@
     <scalatags.version>0.5.2</scalatags.version>
     <argonaut.version>6.1</argonaut.version>
     <scala-xml.version>1.0.4</scala-xml.version>
-    <scalaj.version>1.1.4</scalaj.version>
     <slf4j.version>1.7.12</slf4j.version>
     <h2.version>1.4.187</h2.version>
   </properties>

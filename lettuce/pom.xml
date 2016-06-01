@@ -55,11 +55,6 @@
       <version>${scalatest.version}</version>
       <scope>test</scope>
     </dependency>
-    <dependency>
-        <groupId>org.scalaj</groupId>
-        <artifactId>scalaj-http_${scala.version.alias}</artifactId>
-        <version>${scalaj.version}</version>
-    </dependency>
   </dependencies>
 
   <profiles>

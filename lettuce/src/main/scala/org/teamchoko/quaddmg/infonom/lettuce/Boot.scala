@@ -26,7 +26,6 @@ import org.teamchoko.infonom.carrot.JsonArticles._
 import scala.xml.Elem
 import scala.xml.Node
 import scala.xml.XML
-import scalaj.http.Http
 import scalatags.Text.all.`class`
 import scalatags.Text.all.span
 import scalatags.Text.all.stringAttr
@@ -133,12 +132,10 @@ object Boot extends App {
   }
 
   val allArticles: List[CompleteArticleCase] = fromCompleteXml(XML.loadFile(new File(args(0))))
-  val allJson: List[Json] = allArticles.map(_.asJson)
 
   log.info("Found {} verified articles", allArticles.size)
-  allJson.map(x => {
-    val response = Http("http://localhost:8080/new/").postData(x.spaces2).asString
-    log.info("Posted and got {}", response.body)
+  allArticles.map(x => {
+    log.info("Posted and got {}", JsonOutput.output(x))
   })
 }
 
