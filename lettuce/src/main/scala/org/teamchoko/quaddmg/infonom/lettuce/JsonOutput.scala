@@ -23,15 +23,15 @@ object JsonOutput {
   def createDirectory(file: File): StringError[Unit] =
     extractErrors(if (!file.exists()) file.mkdirs() else true).flatMap(x => checkTrue(x, "Could not create directory"))
 
-  def createFile(uri: URI): StringError[File] = for {
-    file <- extractErrors(new File(uri))
-  } yield (file)
-
   def output(ca: CompleteArticleCase): StringError[Unit] = for {
-    blogs <- createFile(new URI("blogs"))
+    blogs <- extractErrors(new File("blogs"))
+    _ = log.info("created blogs")
     _ <- createDirectory(blogs)
-    file <- createFile(new URI("blogs/" + ca.id))
+    _ = log.info("created dir")
+    file <- extractErrors(new File("blogs/" + ca.id + ".json"))
+    _ = log.info("created file")
     writer <- extractErrors(new FileWriter(file))
+    _ = log.info("created writer")
     _ <- extractErrors(writer.write(ca.asJson.spaces2))
     _ <- extractErrors(writer.close())
   } yield ()

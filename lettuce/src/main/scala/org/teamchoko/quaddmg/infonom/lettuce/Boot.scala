@@ -106,10 +106,10 @@ object Boot extends App {
   } yield CompleteArticleCase(uri, article, comments, categories, author)
 
   def articleChunks(text: String, filter: TextFilter, pullquote: Option[String]): List[ArticleChunk] =
-    List(Some(filter match {
+    List(pullquote.map(PullQuote(_)), Some(filter match {
       case Html => HtmlText(text)
       case Textile => TextileText(text)
-    }), pullquote.map(PullQuote(_))).flatten
+    })).flatten
 
   def setAllAuthors(authors: List[(String, Author)]): Unit =
     authors.foreach(data => allAuthors = allAuthors ++ Map(data._1 -> data._2))
