@@ -23,12 +23,6 @@
           <name>bintray scalaz</name>
           <url>http://dl.bintray.com/scalaz/releases</url>
       </repository>
-      <repository>
-          <snapshots><enabled>false</enabled></snapshots>
-          <id>doobie</id>
-          <name>bintray doobie</name>
-          <url>http://dl.bintray.com/tpolecat/maven</url>
-      </repository>
   </repositories>
 
   <properties>
@@ -38,17 +32,14 @@
     <scala.version>2.11.7</scala.version>
     <scala.version.alias>2.11</scala.version.alias>
     <scalatest.version>2.2.4</scalatest.version>
-    <http4s.version>0.6.5</http4s.version>
     <joda-time.version>2.8</joda-time.version>
     <joda-convert.version>1.7</joda-convert.version>
     <scalaz.version>7.1.8</scalaz.version>
-    <doobie.version>0.2.2</doobie.version>
     <markwrap.version>1.0.2</markwrap.version>
     <scalatags.version>0.5.2</scalatags.version>
     <argonaut.version>6.1</argonaut.version>
     <scala-xml.version>1.0.4</scala-xml.version>
     <slf4j.version>1.7.12</slf4j.version>
-    <h2.version>1.4.187</h2.version>
   </properties>
 
   <modules>

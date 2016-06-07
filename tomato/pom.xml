@@ -48,16 +48,6 @@
         <artifactId>scalatags_${scala.version.alias}</artifactId>
         <version>${scalatags.version}</version>
     </dependency>
-    <dependency>
-        <groupId>org.tpolecat</groupId>
-        <artifactId>doobie-core_${scala.version.alias}</artifactId>
-        <version>${doobie.version}</version>
-    </dependency>
-    <dependency>
-        <groupId>com.h2database</groupId>
-        <artifactId>h2</artifactId>
-        <version>${h2.version}</version>
-    </dependency>
     <dependency><!-- For markdown. -->
       <groupId>org.clapper</groupId>
       <artifactId>markwrap_${scala.version.alias}</artifactId>
@@ -72,21 +62,6 @@
       <groupId>org.scalaz</groupId>
       <artifactId>scalaz-core_${scala.version.alias}</artifactId>
       <version>${scalaz.version}</version>
-    </dependency>
-    <dependency>
-        <groupId>org.http4s</groupId>
-        <artifactId>http4s-dsl_${scala.version.alias}</artifactId>
-        <version>${http4s.version}</version>
-    </dependency>
-    <dependency>
-        <groupId>org.http4s</groupId>
-        <artifactId>http4s-blazecore_${scala.version.alias}</artifactId>
-        <version>${http4s.version}</version>
-    </dependency>
-    <dependency>
-        <groupId>org.http4s</groupId>
-        <artifactId>http4s-blazeserver_${scala.version.alias}</artifactId>
-        <version>${http4s.version}</version>
     </dependency>
     <dependency>
       <groupId>org.scalatest</groupId>
