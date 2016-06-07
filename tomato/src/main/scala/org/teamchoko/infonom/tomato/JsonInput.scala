@@ -14,8 +14,8 @@ import org.teamchoko.infonom.carrot.Articles.CompleteArticleCase
 import org.teamchoko.infonom.carrot.Errors._
 import org.teamchoko.infonom.carrot.JsonArticles._
 import scala.io.Source
-import scalaz.syntax.traverse._
 import scalaz.std.list._
+import scalaz.syntax.traverse._
 
 object JsonInput {
 
