@@ -18,13 +18,13 @@ object SaveToFile {
   
   val log = LoggerFactory.getLogger("SaveToFile")
 
-  def getDirectory(uri: URI): StringError[File] = extractErrors(new File(uri).getParentFile())
+  def getDirectory(uri: URI): StringError[File] = extractErrors(new File(uri.toString).getParentFile())
   
   def createDirectory(file: File): StringError[Unit] =
     extractErrors(if (!file.exists()) file.mkdirs() else true).flatMap(x => checkTrue(x, "Could not create directory"))
 
   def createFile(uri: URI): StringError[File] = for {
-    file <- extractErrors(new File(uri))
+    file <- extractErrors(new File(uri.toString))
   } yield (file)
   
   def saveToSpecificFile(file: File, article: CompleteArticle): StringError[Unit] =

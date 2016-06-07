@@ -22,7 +22,7 @@ object Boot extends App {
     articles.map(SaveToFile.saveToFile).fold(().point[StringError])((x, y) => y)
 
   def publishAllArticles(): StringError[Unit] = for {
-    articles <- JsonInput.input()
+    articles <- maybeArticles
     _ = log.info("Publishing {} articles", articles.length)
     save <- saveAllFiles(articles)
   } yield ()
@@ -63,7 +63,7 @@ object Boot extends App {
     })
 
   def publishIndex(): StringError[Unit] = for {
-    articles <- JsonInput.input()
+    articles <- maybeArticles
     _ <- SaveToFile.saveIndex(articles.take(10))
     _ <- SaveToFile.saveIndexAtom(quaddmg, articles.take(10))
     categories = extractCategories(articles)
@@ -79,6 +79,8 @@ object Boot extends App {
   } yield ()
   
   def toError(err: StringError[Unit]): String = err.fold(err => err, succ => "Success")
+
+  val maybeArticles = JsonInput.input()
 
   val articlesResult = publishAllArticles()
   log.info("Published all with result {}", articlesResult)
