@@ -21,20 +21,16 @@ object JsonOutput {
   def createDirectory(file: File): StringError[Unit] =
     extractErrors(if (!file.exists()) file.mkdirs() else true).flatMap(x => checkTrue(x, "Could not create directory"))
 
-  def newFile(str: String): StringError[File] = for {
+  def newFile(str: String, suffix: String): StringError[File] = for {
     file <- extractErrors(new File(str))
     _ <- checkTrue(!file.exists(), s"File ${file} already exists")
   } yield file
 
   def output(ca: CompleteArticleCase): StringError[Unit] = for {
-    blogs <- extractErrors(new File("blogs"))
-    _ = log.info("created blogs")
+    blogs <- extractErrors(new File("blogs/" + ca.article.pubDate.getYear))
     _ <- createDirectory(blogs)
-    _ = log.info("created dir")
-    file <- newFile("blogs/" + ca.id + ".json")
-    _ = log.info("created file")
+    file <- newFile("blogs/" + ca.article.pubDate.getYear + "/" + ca.id + ".json")
     writer <- extractErrors(new FileWriter(file))
-    _ = log.info("created writer")
     _ <- extractErrors(writer.write(ca.asJson.spaces2))
     _ <- extractErrors(writer.close())
     _ = file.setLastModified(ca.article.pubDate.getMillis)
