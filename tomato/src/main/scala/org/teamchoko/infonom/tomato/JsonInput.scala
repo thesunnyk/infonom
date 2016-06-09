@@ -21,10 +21,17 @@ object JsonInput {
 
   val log = LoggerFactory.getLogger("JsonInput")
 
+  def getFiles(file: File): StringError[List[File]] = for {
+    files <- extractErrors(file.listFiles.toList)
+    jsons <- extractErrors(files.filter(_.isFile))
+    dirs <- extractErrors(files.filter(_.isDirectory))
+    rest <- dirs.traverse(getFiles)
+  } yield jsons ++ rest.flatten
+
   def input(): StringError[List[CompleteArticleCase]] = for {
     blogs <- extractErrors(new File("blogs"))
     _ = log.info("Reading blogs directory")
-    files <- extractErrors(blogs.listFiles.toList)
+    files <- getFiles(blogs)
     articles <- files.traverse(readFile)
     _ = log.info("got files")
   } yield articles
