@@ -63,7 +63,9 @@ object Boot extends App {
     })
 
   def publishIndex(): StringError[Unit] = for {
-    articles <- maybeArticles
+    unsortedArticles <- maybeArticles
+    articles = unsortedArticles.sortWith((l, r) => l.article.pubDate.isAfter(r.article.pubDate))
+
     _ <- SaveToFile.saveIndex(articles.take(10))
     _ <- SaveToFile.saveIndexAtom(quaddmg, articles.take(10))
     categories = extractCategories(articles)
