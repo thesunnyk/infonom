@@ -1,0 +1,246 @@
+extern crate serde;
+
+use model::CompleteArticle;
+use model::CompleteComment;
+use model::Author;
+use model::Category;
+use model::Comment;
+use model::ArticleChunk;
+use model::Article;
+
+impl serde::Serialize for Author {
+    fn serialize<S>(&self, serializer: &mut S) -> Result<(), S::Error>
+        where S: serde::Serializer
+    {
+        serializer.serialize_struct("Author", ObjectVisitor::new(self))
+    }
+}
+
+struct ObjectVisitor<'a, T: 'a> {
+    value: &'a T,
+    state: u8
+}
+
+impl<'a, T> ObjectVisitor<'a, T> {
+    fn new(t: &'a T) -> ObjectVisitor<'a, T> {
+        ObjectVisitor {
+            value: t,
+            state: 0
+        }
+    }
+}
+
+impl<'a> serde::ser::MapVisitor for ObjectVisitor<'a, Author> {
+    fn visit<S>(&mut self, serializer: &mut S) -> Result<Option<()>, S::Error>
+        where S: serde::Serializer
+    {
+        match self.state {
+            0 => {
+                self.state += 1;
+                Ok(Some(try!(serializer.serialize_struct_elt("name", &self.value.name))))
+            }
+            1 => {
+                self.state += 1;
+                Ok(Some(try!(serializer.serialize_struct_elt("email", &self.value.email))))
+            }
+            2 => {
+                self.state += 1;
+                Ok(Some(try!(serializer.serialize_struct_elt("uri", &self.value.uri))))
+            }
+            _ => { Ok(None) }
+        }
+    }
+}
+
+impl serde::Serialize for Category {
+    fn serialize<S>(&self, serializer: &mut S) -> Result<(), S::Error>
+        where S: serde::Serializer
+    {
+        serializer.serialize_struct("Category", ObjectVisitor::new(self))
+    }
+}
+
+impl<'a> serde::ser::MapVisitor for ObjectVisitor<'a, Category> {
+    fn visit<S>(&mut self, serializer: &mut S) -> Result<Option<()>, S::Error>
+        where S: serde::Serializer
+    {
+        match self.state {
+            0 => {
+                self.state += 1;
+                Ok(Some(try!(serializer.serialize_struct_elt("name", &self.value.name))))
+            }
+            1 => {
+                self.state += 1;
+                Ok(Some(try!(serializer.serialize_struct_elt("uri", &self.value.uri))))
+            }
+            _ => { Ok(None) }
+        }
+    }
+}
+
+impl serde::Serialize for Comment {
+    fn serialize<S>(&self, serializer: &mut S) -> Result<(), S::Error>
+        where S: serde::Serializer
+    {
+        serializer.serialize_struct("Comment", ObjectVisitor::new(self))
+    }
+}
+
+impl<'a> serde::ser::MapVisitor for ObjectVisitor<'a, Comment> {
+    fn visit<S>(&mut self, serializer: &mut S) -> Result<Option<()>, S::Error>
+        where S: serde::Serializer
+    {
+        match self.state {
+            0 => {
+                self.state += 1;
+                Ok(Some(try!(serializer.serialize_struct_elt("text", &self.value.text))))
+            }
+            1 => {
+                self.state += 1;
+                Ok(Some(try!(serializer.serialize_struct_elt("pub_date",
+                                                             &self.value.pub_date.to_rfc3339()))))
+            }
+            _ => { Ok(None) }
+        }
+    }
+}
+
+impl serde::Serialize for ArticleChunk {
+    fn serialize<S>(&self, serializer: &mut S) -> Result<(), S::Error>
+        where S: serde::Serializer
+    {
+        serializer.serialize_struct("ArticleChunk", ObjectVisitor::new(self))
+    }
+}
+
+impl<'a> serde::ser::MapVisitor for ObjectVisitor<'a, ArticleChunk> {
+    fn visit<S>(&mut self, serializer: &mut S) -> Result<Option<()>, S::Error>
+        where S: serde::Serializer
+    {
+        match self.state {
+            0 => {
+                self.state += 1;
+                Ok(Some(try!(serializer.serialize_struct_elt("type", match self.value {
+                    &ArticleChunk::HtmlText(_) => { "htmltext" }
+                    &ArticleChunk::TextileText(_) => { "textiletext" }
+                    &ArticleChunk::PullQuote(_) => { "pullquote" }
+                }))))
+            }
+            1 => {
+                self.state += 1;
+                Ok(Some(try!(serializer.serialize_struct_elt("text", match self.value {
+                    &ArticleChunk::HtmlText(ref text) => { text }
+                    &ArticleChunk::TextileText(ref text) => { text }
+                    &ArticleChunk::PullQuote(ref text) => { text }
+                }))))
+            }
+            _ => { Ok(None) }
+        }
+    }
+
+}
+
+impl serde::Serialize for Article {
+    fn serialize<S>(&self, serializer: &mut S) -> Result<(), S::Error>
+        where S: serde::Serializer
+    {
+        serializer.serialize_struct("Article", ObjectVisitor::new(self))
+    }
+}
+
+impl<'a> serde::ser::MapVisitor for ObjectVisitor<'a, Article> {
+    fn visit<S>(&mut self, serializer: &mut S) -> Result<Option<()>, S::Error>
+        where S: serde::Serializer
+    {
+
+        match self.state {
+            0 => {
+                self.state += 1;
+                Ok(Some(try!(serializer.serialize_struct_elt("heading", &self.value.heading))))
+            }
+            1 => {
+                self.state += 1;
+                Ok(Some(try!(serializer.serialize_struct_elt("content", &self.value.content))))
+            }
+            2 => {
+                self.state += 1;
+                Ok(Some(try!(serializer.serialize_struct_elt("extract", &self.value.extract))))
+            }
+            3 => {
+                self.state += 1;
+                Ok(Some(try!(serializer.serialize_struct_elt("pub_date",
+                                                             &self.value.pub_date.to_rfc3339()))))
+            }
+            4 => {
+                self.state += 1;
+                Ok(Some(try!(serializer.serialize_struct_elt("uri", &self.value.uri))))
+            }
+            _ => { Ok(None) }
+        }
+    }
+}
+
+impl serde::Serialize for CompleteComment {
+    fn serialize<S>(&self, serializer: &mut S) -> Result<(), S::Error>
+        where S: serde::Serializer
+    {
+        serializer.serialize_struct("CompleteComment", ObjectVisitor::new(self))
+    }
+}
+
+impl<'a> serde::ser::MapVisitor for ObjectVisitor<'a, CompleteComment> {
+    fn visit<S>(&mut self, serializer: &mut S) -> Result<Option<()>, S::Error>
+        where S: serde::Serializer
+    {
+        match self.state {
+            0 => {
+                self.state += 1;
+                Ok(Some(try!(serializer.serialize_struct_elt("comment", &self.value.comment))))
+            }
+            1 => {
+                self.state += 1;
+                Ok(Some(try!(serializer.serialize_struct_elt("author", &self.value.author))))
+            }
+            _ => { Ok(None) }
+        }
+    }
+}
+
+impl serde::Serialize for CompleteArticle {
+    fn serialize<S>(&self, serializer: &mut S) -> Result<(), S::Error>
+        where S: serde::Serializer
+    {
+        serializer.serialize_struct("CompleteArticle", ObjectVisitor::new(self))
+    }
+}
+
+impl<'a> serde::ser::MapVisitor for ObjectVisitor<'a, CompleteArticle> {
+    fn visit<S>(&mut self, serializer: &mut S) -> Result<Option<()>, S::Error>
+        where S: serde::Serializer
+    {
+        match self.state {
+            0 => {
+                self.state += 1;
+                Ok(Some(try!(serializer.serialize_struct_elt("id", &self.value.id))))
+            }
+            1 => {
+                self.state += 1;
+                Ok(Some(try!(serializer.serialize_struct_elt("article", &self.value.article))))
+            }
+            2 => {
+                self.state += 1;
+                Ok(Some(try!(serializer.serialize_struct_elt("comments", &self.value.comments))))
+            }
+            3 => {
+                self.state += 1;
+                Ok(Some(try!(serializer.serialize_struct_elt("categories", &self.value.categories))))
+            }
+            4 => {
+                self.state += 1;
+                Ok(Some(try!(serializer.serialize_struct_elt("author", &self.value.author))))
+            }
+            _ => { Ok(None) }
+        }
+    }
+}
+
