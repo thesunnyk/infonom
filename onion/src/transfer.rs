@@ -52,6 +52,49 @@ impl<'a> serde::ser::MapVisitor for ObjectVisitor<'a, Author> {
     }
 }
 
+impl serde::Deserialize for Author {
+    fn deserialize<D>(deserializer: &mut D) -> Result<Author, D::Error>
+        where D: serde::Deserializer
+    {
+        static FIELDS: &'static [&'static str] = &["name", "email", "uri"];
+        deserializer.deserialize_struct("Author", FIELDS, AuthorVisitor)
+    }
+}
+
+struct AuthorVisitor;
+
+impl serde::de::Visitor for AuthorVisitor {
+    type Value = Author;
+
+    fn visit_map<V>(&mut self, mut visitor: V) -> Result<Author, V::Error>
+        where V: serde::de::MapVisitor
+    {
+        let mut name = None;
+        let mut email = None;
+        let mut uri = None;
+
+        loop {
+            let key = try!(visitor.visit_key::<String>());
+            match key.iter().next().map(|x| x.as_ref()) {
+                Some("name") => { name = try!(visitor.visit_value()); }
+                Some("email") => { email = try!(visitor.visit_value()); }
+                Some("uri") => { uri = try!(visitor.visit_value()); }
+                Some(_) => { /* ignore extra fields. */ }
+                None => { break; }
+            }
+        }
+
+        let name = match name {
+            Some(x) => x,
+            None => try!(visitor.missing_field("name"))
+        };
+
+        try!(visitor.end());
+
+        Ok(Author::new(name, email, uri))
+    }
+}
+
 impl serde::Serialize for Category {
     fn serialize<S>(&self, serializer: &mut S) -> Result<(), S::Error>
         where S: serde::Serializer

@@ -38,4 +38,11 @@ fn main() {
                                                 vec![complete_comment], vec![category], author.clone());
 
     println!("{}", ser::to_string_pretty(&complete_article).unwrap());
+
+    let author_new_str = ser::to_string_pretty(&author).unwrap();
+    let author_new: Author = serde_json::from_str(&author_new_str).unwrap();
+
+    println!("{}", author_new.name);
+    println!("{}", author_new.email.unwrap_or("unknown".to_string()));
+    println!("{}", author_new.uri.unwrap_or("unknown".to_string()));
 }
