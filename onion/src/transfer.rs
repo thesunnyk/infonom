@@ -1,4 +1,5 @@
 extern crate serde;
+extern crate serde_json;
 
 use model::CompleteArticle;
 use model::CompleteComment;
@@ -11,6 +12,8 @@ use model::LocalDateTime;
 
 use chrono::datetime::DateTime;
 use chrono::offset::local::Local;
+
+use serde_json::ser;
 
 impl serde::Serialize for Author {
     fn serialize<S>(&self, serializer: &mut S) -> Result<(), S::Error>
@@ -638,3 +641,29 @@ impl serde::de::Visitor for CompleteArticleVisitor {
     }
 }
 
+#[test]
+fn test_transfer_complete_article() {
+    let author = Author::new("Sunny Kalsi".to_string(),
+                             Some("thesunnyk@gmail.com".to_string()),
+                             Some("/thesunnyk".to_string()));
+
+    let category = Category::new("Fun and Games".to_string(), "/fun-n-games".to_string());
+
+    let comment = Comment::new("this is a comment".to_string(),
+                               LocalDateTime::new(Local::now()));
+
+    let chunk = ArticleChunk::textile("Things are built of lice".to_string());
+    
+    let article = Article::new("this is a heading".to_string(), vec![chunk], None,
+               LocalDateTime::new(Local::now()), "this-is-a-heading".to_string());
+
+    let complete_comment = CompleteComment::new(comment, author.clone());
+
+    let complete_article = CompleteArticle::new("things-are-built-of-lice".to_string(), article,
+                                                vec![complete_comment], vec![category], author.clone());
+
+    let article_new_str = ser::to_string_pretty(&complete_article).unwrap();
+    let article_new: CompleteArticle = serde_json::from_str(&article_new_str).unwrap();
+
+    assert_eq!(complete_article, article_new);
+}

@@ -3,7 +3,7 @@ extern crate chrono;
 use self::chrono::datetime::DateTime;
 use self::chrono::offset::local::Local;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct LocalDateTime {
     pub datetime: DateTime<Local>
 }
@@ -14,7 +14,7 @@ impl LocalDateTime {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum ArticleChunk {
     TextileText(String),
     HtmlText(String),
@@ -36,7 +36,7 @@ impl ArticleChunk {
 
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Author {
     pub name: String,
     pub email: Option<String>,
@@ -53,7 +53,7 @@ impl Author {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Category {
     pub name: String,
     pub uri: String
@@ -68,7 +68,7 @@ impl Category {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Comment {
     pub text: String,
     pub pub_date: LocalDateTime
@@ -83,7 +83,7 @@ impl Comment {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Article {
     pub heading: String,
     pub content: Vec<ArticleChunk>,
@@ -105,7 +105,7 @@ impl Article {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct CompleteComment {
     pub comment: Comment,
     pub author: Author
@@ -120,7 +120,7 @@ impl CompleteComment {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct CompleteArticle {
     pub id: String,
     pub article: Article,
