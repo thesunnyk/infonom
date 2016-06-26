@@ -308,7 +308,6 @@ impl<'a> serde::ser::MapVisitor for ObjectVisitor<'a, ArticleChunk> {
 
 }
 
-
 impl serde::Deserialize for ArticleChunk {
     fn deserialize<D>(deserializer: &mut D) -> Result<ArticleChunk, D::Error>
         where D: serde::Deserializer
@@ -398,6 +397,69 @@ impl<'a> serde::ser::MapVisitor for ObjectVisitor<'a, Article> {
         }
     }
 }
+
+impl serde::Deserialize for Article {
+    fn deserialize<D>(deserializer: &mut D) -> Result<Article, D::Error>
+        where D: serde::Deserializer
+    {
+        static FIELDS: &'static [&'static str] = &["heading", "content", "extract", "pub_date", "uri"];
+        deserializer.deserialize_struct("Article", FIELDS, ArticleVisitor)
+    }
+}
+
+struct ArticleVisitor;
+
+impl serde::de::Visitor for ArticleVisitor {
+    type Value = Article;
+
+    fn visit_map<V>(&mut self, mut visitor: V) -> Result<Article, V::Error>
+        where V: serde::de::MapVisitor
+    {
+        let mut heading: Option<String> = None;
+        let mut content: Option<Vec<ArticleChunk>> = None;
+        let mut extract: Option<String> = None;
+        let mut pub_date: Option<LocalDateTime> = None;
+        let mut uri: Option<String> = None;
+
+        loop {
+            let key = try!(visitor.visit_key::<String>());
+            match key.iter().next().map(|x| x.as_ref()) {
+                Some("heading") => { heading = try!(visitor.visit_value()); }
+                Some("content") => { content = try!(visitor.visit_value()); }
+                Some("extract") => { extract = try!(visitor.visit_value()); }
+                Some("pub_date") => { pub_date = try!(visitor.visit_value()); }
+                Some("uri") => { uri = try!(visitor.visit_value()); }
+                Some(_) => { /* ignore extra fields. */ }
+                None => { break; }
+            }
+        }
+
+        let heading = match heading {
+            Some(x) => x,
+            None => try!(visitor.missing_field("heading"))
+        };
+
+        let content = match content {
+            Some(x) => x,
+            None => try!(visitor.missing_field("content"))
+        };
+
+        let pub_date = match pub_date {
+            Some(x) => x,
+            None => try!(visitor.missing_field("pub_date"))
+        };
+
+        let uri = match uri {
+            Some(x) => x,
+            None => try!(visitor.missing_field("uri"))
+        };
+
+        try!(visitor.end());
+
+        Ok(Article::new(heading, content, extract, pub_date, uri))
+    }
+}
+
 
 impl serde::Serialize for CompleteComment {
     fn serialize<S>(&self, serializer: &mut S) -> Result<(), S::Error>
