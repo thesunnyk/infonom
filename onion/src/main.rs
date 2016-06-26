@@ -12,6 +12,7 @@ use self::model::Category;
 use self::model::Comment;
 use self::model::ArticleChunk;
 use self::model::Article;
+use self::model::LocalDateTime;
 
 use self::chrono::offset::local::Local;
 
@@ -25,12 +26,12 @@ fn main() {
     let category = Category::new("Fun and Games".to_string(), "/fun-n-games".to_string());
 
     let comment = Comment::new("this is a comment".to_string(),
-                               Local::now());
+                               LocalDateTime::new(Local::now()));
 
     let chunk = ArticleChunk::textile("Things are built of lice".to_string());
     
     let article = Article::new("this is a heading".to_string(), vec![chunk], None,
-               Local::now(), "this-is-a-heading".to_string());
+               LocalDateTime::new(Local::now()), "this-is-a-heading".to_string());
 
     let complete_comment = CompleteComment::new(comment, author.clone());
 

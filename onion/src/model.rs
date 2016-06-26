@@ -4,6 +4,17 @@ use self::chrono::datetime::DateTime;
 use self::chrono::offset::local::Local;
 
 #[derive(Debug, Clone)]
+pub struct LocalDateTime {
+    pub datetime: DateTime<Local>
+}
+
+impl LocalDateTime {
+    pub fn new(datetime: DateTime<Local>) -> LocalDateTime {
+        LocalDateTime { datetime: datetime }
+    }
+}
+
+#[derive(Debug, Clone)]
 pub enum ArticleChunk {
     TextileText(String),
     HtmlText(String),
@@ -60,11 +71,11 @@ impl Category {
 #[derive(Debug, Clone)]
 pub struct Comment {
     pub text: String,
-    pub pub_date: DateTime<Local>
+    pub pub_date: LocalDateTime
 }
 
 impl Comment {
-    pub fn new(text: String, pub_date: DateTime<Local>) -> Comment {
+    pub fn new(text: String, pub_date: LocalDateTime) -> Comment {
         Comment {
             text: text,
             pub_date: pub_date
@@ -77,13 +88,13 @@ pub struct Article {
     pub heading: String,
     pub content: Vec<ArticleChunk>,
     pub extract: Option<String>,
-    pub pub_date: DateTime<Local>,
+    pub pub_date: LocalDateTime,
     pub uri: String
 }
 
 impl Article {
     pub fn new(heading: String, content: Vec<ArticleChunk>, extract: Option<String>,
-               pub_date: DateTime<Local>, uri: String) -> Article {
+               pub_date: LocalDateTime, uri: String) -> Article {
         Article {
             heading: heading,
             content: content,
