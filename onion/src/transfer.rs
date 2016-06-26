@@ -571,3 +571,70 @@ impl<'a> serde::ser::MapVisitor for ObjectVisitor<'a, CompleteArticle> {
     }
 }
 
+impl serde::Deserialize for CompleteArticle {
+    fn deserialize<D>(deserializer: &mut D) -> Result<CompleteArticle, D::Error>
+        where D: serde::Deserializer
+    {
+        static FIELDS: &'static [&'static str] = &["comment", "author"];
+        deserializer.deserialize_struct("CompleteArticle", FIELDS, CompleteArticleVisitor)
+    }
+}
+
+struct CompleteArticleVisitor;
+
+impl serde::de::Visitor for CompleteArticleVisitor {
+    type Value = CompleteArticle;
+
+    fn visit_map<V>(&mut self, mut visitor: V) -> Result<CompleteArticle, V::Error>
+        where V: serde::de::MapVisitor
+    {
+        let mut id = None;
+        let mut article = None;
+        let mut comments = None;
+        let mut categories = None;
+        let mut author = None;
+
+        loop {
+            let key = try!(visitor.visit_key::<String>());
+            match key.iter().next().map(|x| x.as_ref()) {
+                Some("id") => { id = try!(visitor.visit_value()); }
+                Some("article") => { article = try!(visitor.visit_value()); }
+                Some("comments") => { comments = try!(visitor.visit_value()); }
+                Some("categories") => { categories = try!(visitor.visit_value()); }
+                Some("author") => { author = try!(visitor.visit_value()); }
+                Some(_) => { /* ignore extra fields. */ }
+                None => { break; }
+            }
+        }
+
+        let id = match id {
+            Some(x) => x,
+            None => try!(visitor.missing_field("id"))
+        };
+
+        let article = match article {
+            Some(x) => x,
+            None => try!(visitor.missing_field("article"))
+        };
+
+        let comments = match comments {
+            Some(x) => x,
+            None => try!(visitor.missing_field("comments"))
+        };
+
+        let categories = match categories {
+            Some(x) => x,
+            None => try!(visitor.missing_field("categories"))
+        };
+
+        let author = match author {
+            Some(x) => x,
+            None => try!(visitor.missing_field("author"))
+        };
+
+        try!(visitor.end());
+
+        Ok(CompleteArticle::new(id, article, comments, categories, author))
+    }
+}
+
