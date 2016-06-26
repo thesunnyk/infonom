@@ -69,7 +69,7 @@ object JsonArticles {
   implicit def CommentCodecJson = casecodec2(Comment.apply, Comment.unapply)("text", "pubdate")
 
   implicit def ArticleCodecJson = casecodec5(Article.apply, Article.unapply)("heading",
-      "text", "extract", "pubDate", "uri")
+      "content", "extract", "pubDate", "uri")
 
   implicit def CompleteCommentCodecJson =
     casecodec2(CompleteCommentCase.apply, CompleteCommentCase.unapply)("comment", "author")

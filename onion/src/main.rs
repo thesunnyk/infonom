@@ -5,22 +5,23 @@ mod model;
 
 mod transfer;
 
+use std::fs::File;
+use std::io::Read;
+
 use self::model::CompleteArticle;
-use self::model::CompleteComment;
-use self::model::Author;
-use self::model::Category;
-use self::model::Comment;
-use self::model::ArticleChunk;
-use self::model::Article;
-use self::model::LocalDateTime;
-
-use self::chrono::offset::local::Local;
-
-use self::serde_json::ser;
 
 fn main() {
-    // let article_new: CompleteArticle = serde_json::from_str(&article_new_str).unwrap();
+    let args = std::env::args();
 
-    // println!("{:?}", article_new);
-    println!("test")
+    let fname = args.skip(1).next().expect("Expected a filename");
+
+    println!("Opening {}", fname);
+
+    let mut f: File = File::open(fname).unwrap();
+    let mut s = String::new();
+    f.read_to_string(&mut s).unwrap();
+    
+    let article_new: CompleteArticle = serde_json::from_str(&s).unwrap();
+
+    println!("{:?}", article_new);
 }
