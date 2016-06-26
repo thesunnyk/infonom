@@ -197,7 +197,7 @@ impl serde::de::Visitor for DateVisitor {
     {
         DateTime::parse_from_rfc3339(val)
             .map(|dt| LocalDateTime::new(dt.with_timezone(&Local)))
-            .map_err(|e| serde::de::Error::invalid_value("Invalid datetime"))
+            .map_err(|_| serde::de::Error::invalid_value("Invalid datetime"))
     }
 }
 
@@ -306,6 +306,58 @@ impl<'a> serde::ser::MapVisitor for ObjectVisitor<'a, ArticleChunk> {
         }
     }
 
+}
+
+
+impl serde::Deserialize for ArticleChunk {
+    fn deserialize<D>(deserializer: &mut D) -> Result<ArticleChunk, D::Error>
+        where D: serde::Deserializer
+    {
+        static FIELDS: &'static [&'static str] = &["type", "text"];
+        deserializer.deserialize_struct("ArticleChunk", FIELDS, ArticleChunkVisitor)
+    }
+}
+
+struct ArticleChunkVisitor;
+
+impl serde::de::Visitor for ArticleChunkVisitor {
+    type Value = ArticleChunk;
+
+    fn visit_map<V>(&mut self, mut visitor: V) -> Result<ArticleChunk, V::Error>
+        where V: serde::de::MapVisitor
+    {
+        let mut the_type: Option<String> = None;
+        let mut text: Option<String> = None;
+
+        loop {
+            let key = try!(visitor.visit_key::<String>());
+            match key.iter().next().map(|x| x.as_ref()) {
+                Some("type") => { the_type = try!(visitor.visit_value()); }
+                Some("text") => { text = try!(visitor.visit_value()); }
+                Some(_) => { /* ignore extra fields. */ }
+                None => { break; }
+            }
+        }
+
+        let the_type = match the_type {
+            Some(x) => x,
+            None => try!(visitor.missing_field("type"))
+        };
+
+        let text = match text {
+            Some(x) => x,
+            None => try!(visitor.missing_field("text"))
+        };
+
+        try!(visitor.end());
+
+        match the_type.as_ref() {
+            "htmltext" => { Ok(ArticleChunk::html(text)) }
+            "pullquote" => { Ok(ArticleChunk::pullquote(text)) }
+            "textiletext" => { Ok(ArticleChunk::textile(text)) }
+            _ => { Err(serde::de::Error::invalid_value("invalid article chunk type")) }
+        }
+    }
 }
 
 impl serde::Serialize for Article {
