@@ -487,6 +487,52 @@ impl<'a> serde::ser::MapVisitor for ObjectVisitor<'a, CompleteComment> {
     }
 }
 
+impl serde::Deserialize for CompleteComment {
+    fn deserialize<D>(deserializer: &mut D) -> Result<CompleteComment, D::Error>
+        where D: serde::Deserializer
+    {
+        static FIELDS: &'static [&'static str] = &["comment", "author"];
+        deserializer.deserialize_struct("CompleteComment", FIELDS, CompleteCommentVisitor)
+    }
+}
+
+struct CompleteCommentVisitor;
+
+impl serde::de::Visitor for CompleteCommentVisitor {
+    type Value = CompleteComment;
+
+    fn visit_map<V>(&mut self, mut visitor: V) -> Result<CompleteComment, V::Error>
+        where V: serde::de::MapVisitor
+    {
+        let mut comment: Option<Comment> = None;
+        let mut author: Option<Author> = None;
+
+        loop {
+            let key = try!(visitor.visit_key::<String>());
+            match key.iter().next().map(|x| x.as_ref()) {
+                Some("comment") => { comment = try!(visitor.visit_value()); }
+                Some("author") => { author = try!(visitor.visit_value()); }
+                Some(_) => { /* ignore extra fields. */ }
+                None => { break; }
+            }
+        }
+
+        let comment = match comment {
+            Some(x) => x,
+            None => try!(visitor.missing_field("comment"))
+        };
+
+        let author = match author {
+            Some(x) => x,
+            None => try!(visitor.missing_field("author"))
+        };
+
+        try!(visitor.end());
+
+        Ok(CompleteComment::new(comment, author))
+    }
+}
+
 impl serde::Serialize for CompleteArticle {
     fn serialize<S>(&self, serializer: &mut S) -> Result<(), S::Error>
         where S: serde::Serializer
