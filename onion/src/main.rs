@@ -15,6 +15,7 @@ use gtk::HeaderBar;
 use gtk::Button;
 use gtk::TextView;
 use gtk::Frame;
+use gtk::ComboBox;
 use gtk::{ Entry, Label };
 use gtk::{ Box, Orientation };
 use gtk::{ Window, WindowType, Inhibit };
@@ -87,6 +88,8 @@ fn main() {
     let heading_entry = create_entry_with_label("heading");
     let date_entry = create_entry_with_label("date");
     let extract_entry = create_entry_with_label("extract");
+    let author = ComboBox::new();
+    let categories = ComboBox::new();
     let abox = Box::new(Orientation::Vertical, 4);
 
     let add_button = Button::new_with_label("Add");
@@ -97,6 +100,8 @@ fn main() {
 
     abox.add(&uri_entry.container);
     abox.add(&heading_entry.container);
+    abox.add(&author);
+    abox.add(&categories);
     abox.add(&date_entry.container);
     abox.add(&extract_entry.container);
     abox.add(&frame);
