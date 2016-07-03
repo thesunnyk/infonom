@@ -14,6 +14,7 @@ use gtk::{ ContainerExt, WindowExt, WidgetExt };
 use gtk::HeaderBar;
 use gtk::Button;
 use gtk::TextView;
+use gtk::Frame;
 use gtk::{ Entry, Label };
 use gtk::{ Box, Orientation };
 use gtk::{ Window, WindowType, Inhibit };
@@ -82,15 +83,24 @@ fn main() {
     window.set_title("Onion blog viewer");
 
     let text_view = TextView::new();
-    let id_entry = create_entry_with_label("id");
+    let uri_entry = create_entry_with_label("uri");
     let heading_entry = create_entry_with_label("heading");
+    let date_entry = create_entry_with_label("date");
+    let extract_entry = create_entry_with_label("extract");
     let abox = Box::new(Orientation::Vertical, 4);
+
+    let add_button = Button::new_with_label("Add");
+    let frame = Frame::new(Some("Textile"));
+    frame.add(&text_view);
 
     let header = create_header();
 
-    abox.add(&id_entry.container);
+    abox.add(&uri_entry.container);
     abox.add(&heading_entry.container);
-    abox.add(&text_view);
+    abox.add(&date_entry.container);
+    abox.add(&extract_entry.container);
+    abox.add(&frame);
+    abox.add(&add_button);
 
     window.set_titlebar(Some(&header.bar));
     window.add(&abox);
