@@ -50,25 +50,6 @@ fn create_header() -> HeaderBarData {
     }
 }
 
-struct EntryWithLabel {
-    pub label: Label,
-    pub entry: Entry,
-    pub container: Box
-}
-
-fn create_entry_with_label(text: &str) -> EntryWithLabel {
-    let label = Label::new(Some(text));
-    let entry = Entry::new();
-    let container = Box::new(Orientation::Horizontal, 4);
-    container.add(&label);
-    container.add(&entry);
-    EntryWithLabel {
-        label: label,
-        entry: entry,
-        container: container
-    }
-}
-
 fn main() {
     // let mut f: File = File::open(fname).unwrap();
     // let mut s = String::new();
@@ -84,28 +65,41 @@ fn main() {
     window.set_title("Onion blog viewer");
 
     let text_view = TextView::new();
-    let uri_entry = create_entry_with_label("uri");
-    let heading_entry = create_entry_with_label("heading");
-    let date_entry = create_entry_with_label("date");
-    let extract_entry = create_entry_with_label("extract");
-    let author = ComboBox::new();
-    let categories = ComboBox::new();
+    let first_line = vec!( Label::new(Some("URI")), Label::new(Some("Heading")), Label::new(Some("Date")));
+
+    let first_container = Box::new(Orientation::Horizontal, 4);
+    for entry in first_line {
+        first_container.add(&entry);
+        first_container.add(&Entry::new());
+    }
+
+    let second_line = vec!( Label::new(Some("Author")), Label::new(Some("Categories")));
+    let second_container = Box::new(Orientation::Horizontal, 4);
+
+    for entry in second_line {
+        second_container.add(&entry);
+        second_container.add(&ComboBox::new());
+    }
+
+    let third_container = Box::new(Orientation::Horizontal, 4);
+    third_container.add(&Label::new(Some("Extract")));
+    third_container.add(&Entry::new());
+
     let abox = Box::new(Orientation::Vertical, 4);
 
     let add_button = Button::new_with_label("Add");
+    let add_box = Box::new(Orientation::Horizontal, 4);
+    add_box.add(&add_button);
     let frame = Frame::new(Some("Textile"));
     frame.add(&text_view);
 
     let header = create_header();
 
-    abox.add(&uri_entry.container);
-    abox.add(&heading_entry.container);
-    abox.add(&author);
-    abox.add(&categories);
-    abox.add(&date_entry.container);
-    abox.add(&extract_entry.container);
+    abox.add(&first_container);
+    abox.add(&second_container);
+    abox.add(&third_container);
     abox.add(&frame);
-    abox.add(&add_button);
+    abox.add(&add_box);
 
     window.set_titlebar(Some(&header.bar));
     window.add(&abox);
