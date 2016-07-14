@@ -24,29 +24,84 @@ struct HeaderBarData {
     new_file: Button,
     open_file: Button,
     save_file: Button,
-    save_as_file: Button,
-    bar: HeaderBar
+    save_as_file: Button
 }
 
-fn create_header() -> HeaderBarData {
-    let header = HeaderBar::new();
-    header.set_subtitle(Some("Onion blog viewer"));
-    header.set_title(Some("New File"));
-    let new_file = Button::new_with_label("New");
-    let open_file = Button::new_with_label("Open");
-    let save_file = Button::new_with_label("Save");
-    let save_as_file = Button::new_with_label("Save As");
-    header.add(&new_file);
-    header.add(&open_file);
-    header.pack_end(&save_file);
-    header.pack_end(&save_as_file);
-    header.set_show_close_button(true);
-    HeaderBarData {
-        new_file: new_file,
-        open_file: open_file,
-        save_file: save_file,
-        save_as_file: save_as_file,
-        bar: header
+impl HeaderBarData {
+
+    fn new() -> HeaderBarData {
+        let new_file = Button::new_with_label("New");
+        let open_file = Button::new_with_label("Open");
+        let save_file = Button::new_with_label("Save");
+        let save_as_file = Button::new_with_label("Save As");
+        HeaderBarData {
+            new_file: new_file,
+            open_file: open_file,
+            save_file: save_file,
+            save_as_file: save_as_file
+        }
+    }
+
+    fn header_bar(&self) -> HeaderBar {
+        let header = HeaderBar::new();
+        header.set_subtitle(Some("Onion blog viewer"));
+        header.set_title(Some("New File"));
+        header.add(&self.new_file);
+        header.add(&self.open_file);
+        header.pack_end(&self.save_file);
+        header.pack_end(&self.save_as_file);
+        header.set_show_close_button(true);
+        header
+    }
+}
+
+struct ArticleEntry {
+    uri: Entry,
+    heading: Entry,
+    date: Entry,
+    author: ComboBox,
+    categories: ComboBox,
+    extract: Entry
+}
+
+impl ArticleEntry {
+    fn new() -> ArticleEntry {
+        ArticleEntry {
+            uri: Entry::new(),
+            heading: Entry::new(),
+            date: Entry::new(),
+            author: ComboBox::new(),
+            categories: ComboBox::new(),
+            extract: Entry::new(),
+        }
+    }
+
+    fn first_line(&self) -> Box {
+        let first_container = Box::new(Orientation::Horizontal, 4);
+        first_container.add(&Label::new(Some("URI")));
+        first_container.add(&self.uri);
+        first_container.add(&Label::new(Some("Heading")));
+        first_container.add(&self.heading);
+        first_container.add(&Label::new(Some("Date")));
+        first_container.add(&self.date);
+        first_container
+    }
+
+    fn second_line(&self) -> Box {
+        let second_container = Box::new(Orientation::Horizontal, 4);
+
+        second_container.add(&Label::new(Some("Author")));
+        second_container.add(&self.author);
+        second_container.add(&Label::new(Some("Categories")));
+        second_container.add(&self.categories);
+        second_container
+    }
+
+    fn third_line(&self) -> Box {
+        let third_container = Box::new(Orientation::Horizontal, 4);
+        third_container.add(&Label::new(Some("Extract")));
+        third_container.add(&self.extract);
+        third_container
     }
 }
 
@@ -65,25 +120,6 @@ fn main() {
     window.set_title("Onion blog viewer");
 
     let text_view = TextView::new();
-    let first_line = vec!( Label::new(Some("URI")), Label::new(Some("Heading")), Label::new(Some("Date")));
-
-    let first_container = Box::new(Orientation::Horizontal, 4);
-    for entry in first_line {
-        first_container.add(&entry);
-        first_container.add(&Entry::new());
-    }
-
-    let second_line = vec!( Label::new(Some("Author")), Label::new(Some("Categories")));
-    let second_container = Box::new(Orientation::Horizontal, 4);
-
-    for entry in second_line {
-        second_container.add(&entry);
-        second_container.add(&ComboBox::new());
-    }
-
-    let third_container = Box::new(Orientation::Horizontal, 4);
-    third_container.add(&Label::new(Some("Extract")));
-    third_container.add(&Entry::new());
 
     let abox = Box::new(Orientation::Vertical, 4);
 
@@ -93,15 +129,18 @@ fn main() {
     let frame = Frame::new(Some("Textile"));
     frame.add(&text_view);
 
-    let header = create_header();
+    let headerData = HeaderBarData::new();
+    let header = headerData.header_bar();
 
-    abox.add(&first_container);
-    abox.add(&second_container);
-    abox.add(&third_container);
+    let article = ArticleEntry::new();
+
+    abox.add(&article.first_line());
+    abox.add(&article.second_line());
+    abox.add(&article.third_line());
     abox.add(&frame);
     abox.add(&add_box);
 
-    window.set_titlebar(Some(&header.bar));
+    window.set_titlebar(Some(&header));
     window.add(&abox);
     window.resize(640, 480);
     window.show_all();
