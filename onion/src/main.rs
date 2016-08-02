@@ -8,15 +8,18 @@ mod transfer;
 
 use std::fs::File;
 use std::io::Read;
+use std::rc::Rc;
+use std::cell::RefCell;
 
 use self::model::CompleteArticle;
 use gtk::{ ContainerExt, WindowExt, WidgetExt };
 use gtk::HeaderBar;
-use gtk::Button;
+use gtk::{ Button, ButtonExt };
 use gtk::TextView;
 use gtk::Frame;
 use gtk::ComboBox;
-use gtk::{ Entry, Label };
+use gtk::{ FileChooserDialog, FileChooserExt, FileChooserAction };
+use gtk::{ Entry, EntryExt, Label };
 use gtk::{ Box, Orientation };
 use gtk::{ Window, WindowType, Inhibit };
 
@@ -24,7 +27,7 @@ struct HeaderBarData {
     new_file: Button,
     open_file: Button,
     save_file: Button,
-    save_as_file: Button
+    save_as_file: Button,
 }
 
 impl HeaderBarData {
@@ -34,11 +37,12 @@ impl HeaderBarData {
         let open_file = Button::new_with_label("Open");
         let save_file = Button::new_with_label("Save");
         let save_as_file = Button::new_with_label("Save As");
+
         HeaderBarData {
             new_file: new_file,
             open_file: open_file,
             save_file: save_file,
-            save_as_file: save_as_file
+            save_as_file: save_as_file,
         }
     }
 
@@ -52,6 +56,19 @@ impl HeaderBarData {
         header.pack_end(&self.save_as_file);
         header.set_show_close_button(true);
         header
+    }
+
+    fn attach_open(&self, wc: Rc<RefCell<Window>>) -> Rc<RefCell<FileChooserDialog>> {
+        let dw = wc.borrow();
+        let sw: Option<&Window> = Some(&dw);
+        let chooser = nrc(FileChooserDialog::new(Some("Open file"), sw, FileChooserAction::Open));
+
+        let c2 = chooser.clone();
+        self.open_file.connect_clicked(move |_| {
+            let cw = c2.borrow();
+            cw.show_all();
+        });
+        chooser
     }
 }
 
@@ -74,6 +91,13 @@ impl ArticleEntry {
             categories: ComboBox::new(),
             extract: Entry::new(),
         }
+    }
+
+    fn set_article(&self, article: &CompleteArticle) {
+        self.uri.set_text(&article.id);
+        self.heading.set_text(&article.article.heading);
+        let extract = article.article.extract.clone();
+        self.extract.set_text(&extract.unwrap_or("".to_string()));
     }
 
     fn first_line(&self) -> Box {
@@ -105,6 +129,10 @@ impl ArticleEntry {
     }
 }
 
+fn nrc<T>(x: T) -> Rc<RefCell<T>> {
+    Rc::new(RefCell::new(x))
+}
+
 fn main() {
     // let mut f: File = File::open(fname).unwrap();
     // let mut s = String::new();
@@ -112,11 +140,10 @@ fn main() {
     
     // let article_new: CompleteArticle = serde_json::from_str(&s).unwrap();
 
-    // println!("{:?}", article_new);
-
     gtk::init().unwrap();
 
-    let window = Window::new(WindowType::Toplevel);
+    let window_cell = nrc(Window::new(WindowType::Toplevel));
+    let window = &*window_cell.borrow();
     window.set_title("Onion blog viewer");
 
     let text_view = TextView::new();
@@ -129,8 +156,11 @@ fn main() {
     let frame = Frame::new(Some("Textile"));
     frame.add(&text_view);
 
-    let headerData = HeaderBarData::new();
-    let header = headerData.header_bar();
+    let header_data = HeaderBarData::new();
+
+    let chooser = header_data.attach_open(window_cell.clone());
+
+    let header = header_data.header_bar();
 
     let article = ArticleEntry::new();
 
