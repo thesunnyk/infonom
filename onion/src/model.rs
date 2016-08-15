@@ -12,6 +12,10 @@ impl LocalDateTime {
     pub fn new(datetime: DateTime<Local>) -> LocalDateTime {
         LocalDateTime { datetime: datetime }
     }
+
+    pub fn empty() -> LocalDateTime {
+        LocalDateTime::new(Local::now())
+    }
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -50,6 +54,10 @@ impl Author {
             email: email,
             uri: uri
         }
+    }
+
+    pub fn empty() -> Author {
+        Author::new("".to_string(), None, None)
     }
 }
 
@@ -103,6 +111,10 @@ impl Article {
             uri: uri
         }
     }
+
+    pub fn empty() -> Article {
+        Article::new("".to_string(), Vec::new(), None, LocalDateTime::empty(), "".to_string())
+    }
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -139,6 +151,11 @@ impl CompleteArticle {
             categories: categories,
             author: author
         }
+    }
+
+    pub fn empty() -> CompleteArticle {
+        CompleteArticle::new("".to_string(), Article::empty(), Vec::new(), Vec::new(),
+            Author::empty())
     }
 }
 

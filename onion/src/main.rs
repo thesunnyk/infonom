@@ -28,21 +28,31 @@ struct HeaderBarData {
     open_file: Button,
     save_file: Button,
     save_as_file: Button,
+    chooser: Rc<RefCell<FileChooserDialog>>,
+    saveas_chooser: Rc<RefCell<FileChooserDialog>>,
 }
 
 impl HeaderBarData {
 
-    fn new() -> HeaderBarData {
+    fn new(window_cell: Rc<RefCell<Window>>,
+           article_cell: Rc<RefCell<ArticleEntry>>) -> HeaderBarData {
         let new_file = Button::new_with_label("New");
         let open_file = Button::new_with_label("Open");
         let save_file = Button::new_with_label("Save");
         let save_as_file = Button::new_with_label("Save As");
+
+        let chooser = HeaderBarData::attach_open(&open_file, window_cell.clone());
+        let saveas_chooser = HeaderBarData::attach_save_as(&save_as_file, window_cell.clone());
+        HeaderBarData::attach_save(&save_file, article_cell.clone());
+        HeaderBarData::attach_new(&new_file, article_cell.clone());
 
         HeaderBarData {
             new_file: new_file,
             open_file: open_file,
             save_file: save_file,
             save_as_file: save_as_file,
+            chooser: chooser,
+            saveas_chooser: saveas_chooser
         }
     }
 
@@ -58,18 +68,49 @@ impl HeaderBarData {
         header
     }
 
-    fn attach_open(&self, wc: Rc<RefCell<Window>>) -> Rc<RefCell<FileChooserDialog>> {
+    fn attach_open(open_file: &Button, wc: Rc<RefCell<Window>>) -> Rc<RefCell<FileChooserDialog>> {
         let dw = wc.borrow();
         let sw: Option<&Window> = Some(&dw);
         let chooser = nrc(FileChooserDialog::new(Some("Open file"), sw, FileChooserAction::Open));
 
         let c2 = chooser.clone();
-        self.open_file.connect_clicked(move |_| {
+        open_file.connect_clicked(move |_| {
             let cw = c2.borrow();
             cw.show_all();
         });
         chooser
     }
+
+    fn attach_save(save_file: &Button, article_cell: Rc<RefCell<ArticleEntry>>) {
+        save_file.connect_clicked(move |_| {
+            let ac = article_cell.borrow();
+            // let article = ac.get_article();
+        });
+    }
+
+    fn attach_new(new_file: &Button, article_cell: Rc<RefCell<ArticleEntry>>) {
+        new_file.connect_clicked(move |_| {
+            let ac = article_cell.borrow();
+            let article = CompleteArticle::empty();
+            ac.set_article(&article);
+        });
+    }
+
+    fn attach_save_as(save_as_file: &Button, wc: Rc<RefCell<Window>>)
+        -> Rc<RefCell<FileChooserDialog>> {
+        let dw = wc.borrow();
+        let sw: Option<&Window> = Some(&dw);
+        let chooser = nrc(FileChooserDialog::new(Some("Save as file"), sw,
+            FileChooserAction::Save));
+
+        let c2 = chooser.clone();
+        save_as_file.connect_clicked(move |_| {
+            let cw = c2.borrow();
+            cw.show_all();
+        });
+        chooser
+    }
+
 }
 
 struct ArticleEntry {
@@ -156,13 +197,12 @@ fn main() {
     let frame = Frame::new(Some("Textile"));
     frame.add(&text_view);
 
-    let header_data = HeaderBarData::new();
+    let article_cell = nrc(ArticleEntry::new());
+    let article = &*article_cell.borrow();
 
-    let chooser = header_data.attach_open(window_cell.clone());
+    let header_data = HeaderBarData::new(window_cell.clone(), article_cell.clone());
 
     let header = header_data.header_bar();
-
-    let article = ArticleEntry::new();
 
     abox.add(&article.first_line());
     abox.add(&article.second_line());
