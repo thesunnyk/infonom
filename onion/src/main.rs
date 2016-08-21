@@ -12,6 +12,9 @@ use std::rc::Rc;
 use std::cell::RefCell;
 
 use self::model::CompleteArticle;
+use self::model::LocalDateTime;
+use self::model::Article;
+use self::model::Author;
 use gtk::{ ContainerExt, WindowExt, WidgetExt };
 use gtk::HeaderBar;
 use gtk::{ Button, ButtonExt };
@@ -114,6 +117,7 @@ impl HeaderBarData {
 }
 
 struct ArticleEntry {
+    id: Entry,
     uri: Entry,
     heading: Entry,
     date: Entry,
@@ -125,6 +129,7 @@ struct ArticleEntry {
 impl ArticleEntry {
     fn new() -> ArticleEntry {
         ArticleEntry {
+            id: Entry::new(),
             uri: Entry::new(),
             heading: Entry::new(),
             date: Entry::new(),
@@ -135,38 +140,54 @@ impl ArticleEntry {
     }
 
     fn set_article(&self, article: &CompleteArticle) {
+        self.id.set_text(&article.id);
         self.uri.set_text(&article.id);
         self.heading.set_text(&article.article.heading);
         let extract = article.article.extract.clone();
         self.extract.set_text(&extract.unwrap_or("".to_string()));
     }
 
+    fn get_article(&self) -> CompleteArticle {
+        let id = self.id.get_text().unwrap_or("".to_string());
+        let uri = self.uri.get_text().unwrap_or("".to_string());
+        let heading = self.heading.get_text().unwrap_or("".to_string());
+        let extract = self.extract.get_text();
+
+        let article = Article::new(heading, Vec::new(), extract,
+               LocalDateTime::empty(), uri);
+
+        CompleteArticle::new(id, article, Vec::new(),
+               Vec::new(), Author::empty())
+    }
+
     fn first_line(&self) -> Box {
-        let first_container = Box::new(Orientation::Horizontal, 4);
-        first_container.add(&Label::new(Some("URI")));
-        first_container.add(&self.uri);
-        first_container.add(&Label::new(Some("Heading")));
-        first_container.add(&self.heading);
-        first_container.add(&Label::new(Some("Date")));
-        first_container.add(&self.date);
-        first_container
+        let container = Box::new(Orientation::Horizontal, 4);
+        container.add(&Label::new(Some("ID")));
+        container.add(&self.id);
+        container.add(&Label::new(Some("URI")));
+        container.add(&self.uri);
+        container.add(&Label::new(Some("Heading")));
+        container.add(&self.heading);
+        container
     }
 
     fn second_line(&self) -> Box {
-        let second_container = Box::new(Orientation::Horizontal, 4);
+        let container = Box::new(Orientation::Horizontal, 4);
 
-        second_container.add(&Label::new(Some("Author")));
-        second_container.add(&self.author);
-        second_container.add(&Label::new(Some("Categories")));
-        second_container.add(&self.categories);
-        second_container
+        container.add(&Label::new(Some("Date")));
+        container.add(&self.date);
+        container.add(&Label::new(Some("Author")));
+        container.add(&self.author);
+        container.add(&Label::new(Some("Categories")));
+        container.add(&self.categories);
+        container
     }
 
     fn third_line(&self) -> Box {
-        let third_container = Box::new(Orientation::Horizontal, 4);
-        third_container.add(&Label::new(Some("Extract")));
-        third_container.add(&self.extract);
-        third_container
+        let container = Box::new(Orientation::Horizontal, 4);
+        container.add(&Label::new(Some("Extract")));
+        container.add(&self.extract);
+        container
     }
 }
 
