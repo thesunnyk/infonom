@@ -8,8 +8,7 @@ mod transfer;
 
 use std::fs::File;
 use std::io::Read;
-use std::rc::Rc;
-use std::cell::RefCell;
+use std::io::BufReader;
 
 use self::model::CompleteArticle;
 use self::model::LocalDateTime;
@@ -23,6 +22,7 @@ use gtk::Frame;
 use gtk::ComboBox;
 use gtk::{ FileChooserDialog, FileChooserExt, FileChooserAction };
 use gtk::DialogExt;
+use gtk::prelude::DialogExtManual;
 use gtk::{ Entry, EntryExt, Label };
 use gtk::{ Box, Orientation };
 use gtk::{ Window, WindowType, Inhibit };
@@ -42,7 +42,7 @@ impl HeaderBarData {
         let save_file = Button::new_with_label("Save");
         let save_as_file = Button::new_with_label("Save As");
 
-        HeaderBarData::attach_open(&open_file, window.clone());
+        HeaderBarData::attach_open(&open_file, window.clone(), article.clone());
         HeaderBarData::attach_save_as(&save_as_file, window.clone());
         HeaderBarData::attach_save(&save_file, article.clone());
         HeaderBarData::attach_new(&new_file, article.clone());
@@ -67,10 +67,26 @@ impl HeaderBarData {
         header
     }
 
-    fn attach_open(open_file: &Button, wc: Window) {
+    fn attach_open(open_file: &Button, wc: Window, article: ArticleEntry) {
         open_file.connect_clicked(move |_| {
             let chooser = FileChooserDialog::new(Some("Open file"), Some(&wc), FileChooserAction::Open);
-            chooser.show_all();
+            chooser.add_buttons(&[
+                ("Open", gtk::ResponseType::Ok.into()),
+                ("Cancel", gtk::ResponseType::Cancel.into()),
+            ]);
+
+            if chooser.run() == gtk::ResponseType::Ok.into() {
+                let filename = chooser.get_filename().unwrap();
+                let file = File::open(&filename).unwrap();
+
+                let mut reader = BufReader::new(file);
+                let mut contents = String::new();
+                let _ = reader.read_to_string(&mut contents);
+
+                let article_new: CompleteArticle = serde_json::from_str(&contents).unwrap();
+                article.set_article(&article_new);
+            }
+            chooser.destroy();
         });
     }
 
@@ -93,13 +109,18 @@ impl HeaderBarData {
         save_as_file.connect_clicked(move |_| {
             let chooser = FileChooserDialog::new(Some("Save as file"), Some(&wc),
                 FileChooserAction::Save);
+            chooser.add_buttons(&[
+                ("Save", gtk::ResponseType::Ok.into()),
+                ("Cancel", gtk::ResponseType::Cancel.into()),
+            ]);
+
             chooser.connect_response(move |x, r| {
                 println!("Responded with {:?}, {:?}", x.get_filename(), r);
             });
-            chooser.show_all();
+            chooser.run();
+            chooser.destroy();
         });
     }
-
 }
 
 #[derive(Debug, Clone)]
