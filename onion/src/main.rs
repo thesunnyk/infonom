@@ -22,6 +22,7 @@ use gtk::TextView;
 use gtk::Frame;
 use gtk::ComboBox;
 use gtk::{ FileChooserDialog, FileChooserExt, FileChooserAction };
+use gtk::DialogExt;
 use gtk::{ Entry, EntryExt, Label };
 use gtk::{ Box, Orientation };
 use gtk::{ Window, WindowType, Inhibit };
@@ -31,31 +32,26 @@ struct HeaderBarData {
     open_file: Button,
     save_file: Button,
     save_as_file: Button,
-    chooser: Rc<RefCell<FileChooserDialog>>,
-    saveas_chooser: Rc<RefCell<FileChooserDialog>>,
 }
 
 impl HeaderBarData {
 
-    fn new(window_cell: Rc<RefCell<Window>>,
-           article_cell: Rc<RefCell<ArticleEntry>>) -> HeaderBarData {
+    fn new(window: Window, article: ArticleEntry) -> HeaderBarData {
         let new_file = Button::new_with_label("New");
         let open_file = Button::new_with_label("Open");
         let save_file = Button::new_with_label("Save");
         let save_as_file = Button::new_with_label("Save As");
 
-        let chooser = HeaderBarData::attach_open(&open_file, window_cell.clone());
-        let saveas_chooser = HeaderBarData::attach_save_as(&save_as_file, window_cell.clone());
-        HeaderBarData::attach_save(&save_file, article_cell.clone());
-        HeaderBarData::attach_new(&new_file, article_cell.clone());
+        HeaderBarData::attach_open(&open_file, window.clone());
+        HeaderBarData::attach_save_as(&save_as_file, window.clone());
+        HeaderBarData::attach_save(&save_file, article.clone());
+        HeaderBarData::attach_new(&new_file, article.clone());
 
         HeaderBarData {
             new_file: new_file,
             open_file: open_file,
             save_file: save_file,
             save_as_file: save_as_file,
-            chooser: chooser,
-            saveas_chooser: saveas_chooser
         }
     }
 
@@ -71,51 +67,42 @@ impl HeaderBarData {
         header
     }
 
-    fn attach_open(open_file: &Button, wc: Rc<RefCell<Window>>) -> Rc<RefCell<FileChooserDialog>> {
-        let dw = wc.borrow();
-        let sw: Option<&Window> = Some(&dw);
-        let chooser = nrc(FileChooserDialog::new(Some("Open file"), sw, FileChooserAction::Open));
-
-        let c2 = chooser.clone();
+    fn attach_open(open_file: &Button, wc: Window) {
         open_file.connect_clicked(move |_| {
-            let cw = c2.borrow();
-            cw.show_all();
+            let chooser = FileChooserDialog::new(Some("Open file"), Some(&wc), FileChooserAction::Open);
+            chooser.show_all();
         });
-        chooser
     }
 
-    fn attach_save(save_file: &Button, article_cell: Rc<RefCell<ArticleEntry>>) {
+    fn attach_save(save_file: &Button, article: ArticleEntry) {
         save_file.connect_clicked(move |_| {
-            let ac = article_cell.borrow();
-            // let article = ac.get_article();
+            let a = article.get_article();
+            println!("article: {:?}", &a);
         });
     }
 
-    fn attach_new(new_file: &Button, article_cell: Rc<RefCell<ArticleEntry>>) {
+    fn attach_new(new_file: &Button, ae: ArticleEntry) {
         new_file.connect_clicked(move |_| {
-            let ac = article_cell.borrow();
             let article = CompleteArticle::empty();
-            ac.set_article(&article);
+            ae.set_article(&article);
         });
     }
 
-    fn attach_save_as(save_as_file: &Button, wc: Rc<RefCell<Window>>)
-        -> Rc<RefCell<FileChooserDialog>> {
-        let dw = wc.borrow();
-        let sw: Option<&Window> = Some(&dw);
-        let chooser = nrc(FileChooserDialog::new(Some("Save as file"), sw,
-            FileChooserAction::Save));
+    fn attach_save_as(save_as_file: &Button, wc: Window) {
 
-        let c2 = chooser.clone();
         save_as_file.connect_clicked(move |_| {
-            let cw = c2.borrow();
-            cw.show_all();
+            let chooser = FileChooserDialog::new(Some("Save as file"), Some(&wc),
+                FileChooserAction::Save);
+            chooser.connect_response(move |x, r| {
+                println!("Responded with {:?}, {:?}", x.get_filename(), r);
+            });
+            chooser.show_all();
         });
-        chooser
     }
 
 }
 
+#[derive(Debug, Clone)]
 struct ArticleEntry {
     id: Entry,
     uri: Entry,
@@ -191,10 +178,6 @@ impl ArticleEntry {
     }
 }
 
-fn nrc<T>(x: T) -> Rc<RefCell<T>> {
-    Rc::new(RefCell::new(x))
-}
-
 fn main() {
     // let mut f: File = File::open(fname).unwrap();
     // let mut s = String::new();
@@ -204,8 +187,7 @@ fn main() {
 
     gtk::init().unwrap();
 
-    let window_cell = nrc(Window::new(WindowType::Toplevel));
-    let window = &*window_cell.borrow();
+    let window = Window::new(WindowType::Toplevel);
     window.set_title("Onion blog viewer");
 
     let text_view = TextView::new();
@@ -218,10 +200,9 @@ fn main() {
     let frame = Frame::new(Some("Textile"));
     frame.add(&text_view);
 
-    let article_cell = nrc(ArticleEntry::new());
-    let article = &*article_cell.borrow();
+    let article = ArticleEntry::new();
 
-    let header_data = HeaderBarData::new(window_cell.clone(), article_cell.clone());
+    let header_data = HeaderBarData::new(window.clone(), article.clone());
 
     let header = header_data.header_bar();
 
