@@ -9,11 +9,14 @@ mod transfer;
 use std::fs::File;
 use std::io::Read;
 use std::io::BufReader;
+use std::cell::RefCell;
+use std::rc::Rc;
 
 use self::model::CompleteArticle;
 use self::model::LocalDateTime;
 use self::model::Article;
 use self::model::Author;
+use gtk::Builder;
 use gtk::{ ContainerExt, WindowExt, WidgetExt };
 use gtk::HeaderBar;
 use gtk::{ Button, ButtonExt };
@@ -36,7 +39,7 @@ struct HeaderBarData {
 
 impl HeaderBarData {
 
-    fn new(window: Window, article: ArticleEntry) -> HeaderBarData {
+    fn new(window: Window, article: Rc<RefCell<ArticleEntry>>) -> HeaderBarData {
         let new_file = Button::new_with_label("New");
         let open_file = Button::new_with_label("Open");
         let save_file = Button::new_with_label("Save");
@@ -67,7 +70,7 @@ impl HeaderBarData {
         header
     }
 
-    fn attach_open(open_file: &Button, wc: Window, article: ArticleEntry) {
+    fn attach_open(open_file: &Button, wc: Window, article: Rc<RefCell<ArticleEntry>>) {
         open_file.connect_clicked(move |_| {
             let chooser = FileChooserDialog::new(Some("Open file"), Some(&wc), FileChooserAction::Open);
             chooser.add_buttons(&[
@@ -84,23 +87,23 @@ impl HeaderBarData {
                 let _ = reader.read_to_string(&mut contents);
 
                 let article_new: CompleteArticle = serde_json::from_str(&contents).unwrap();
-                article.set_article(&article_new);
+                article.borrow().set_article(&article_new);
             }
             chooser.destroy();
         });
     }
 
-    fn attach_save(save_file: &Button, article: ArticleEntry) {
+    fn attach_save(save_file: &Button, article: Rc<RefCell<ArticleEntry>>) {
         save_file.connect_clicked(move |_| {
-            let a = article.get_article();
+            let a = article.borrow().get_article();
             println!("article: {:?}", &a);
         });
     }
 
-    fn attach_new(new_file: &Button, ae: ArticleEntry) {
+    fn attach_new(new_file: &Button, ae: Rc<RefCell<ArticleEntry>>) {
         new_file.connect_clicked(move |_| {
             let article = CompleteArticle::empty();
-            ae.set_article(&article);
+            ae.borrow().set_article(&article);
         });
     }
 
@@ -125,41 +128,39 @@ impl HeaderBarData {
 
 #[derive(Debug, Clone)]
 struct ArticleEntry {
-    id: Entry,
-    uri: Entry,
-    heading: Entry,
-    date: Entry,
-    author: ComboBox,
-    categories: ComboBox,
-    extract: Entry
+    builder: Rc<Builder>
 }
 
 impl ArticleEntry {
-    fn new() -> ArticleEntry {
+    fn new(builder: Rc<Builder>) -> ArticleEntry {
         ArticleEntry {
-            id: Entry::new(),
-            uri: Entry::new(),
-            heading: Entry::new(),
-            date: Entry::new(),
-            author: ComboBox::new(),
-            categories: ComboBox::new(),
-            extract: Entry::new(),
+            builder: builder
         }
     }
 
     fn set_article(&self, article: &CompleteArticle) {
-        self.id.set_text(&article.id);
-        self.uri.set_text(&article.id);
-        self.heading.set_text(&article.article.heading);
-        let extract = article.article.extract.clone();
-        self.extract.set_text(&extract.unwrap_or("".to_string()));
+        let id: Entry = self.builder.get_object("id").unwrap();
+        let uri: Entry = self.builder.get_object("uri").unwrap();
+        let heading: Entry = self.builder.get_object("heading").unwrap();
+        let extract: Entry = self.builder.get_object("extract").unwrap();
+
+        id.set_text(&article.id);
+        uri.set_text(&article.id);
+        heading.set_text(&article.article.heading);
+        let e_str = article.article.extract.clone();
+        extract.set_text(&e_str.unwrap_or("".to_string()));
     }
 
     fn get_article(&self) -> CompleteArticle {
-        let id = self.id.get_text().unwrap_or("".to_string());
-        let uri = self.uri.get_text().unwrap_or("".to_string());
-        let heading = self.heading.get_text().unwrap_or("".to_string());
-        let extract = self.extract.get_text();
+        let id_e: Entry = self.builder.get_object("id").unwrap();
+        let uri_e: Entry = self.builder.get_object("uri").unwrap();
+        let heading_e: Entry = self.builder.get_object("heading").unwrap();
+        let extract_e: Entry = self.builder.get_object("extract").unwrap();
+
+        let id = id_e.get_text().unwrap_or("".to_string());
+        let uri = uri_e.get_text().unwrap_or("".to_string());
+        let heading = heading_e.get_text().unwrap_or("".to_string());
+        let extract = extract_e.get_text();
 
         let article = Article::new(heading, Vec::new(), extract,
                LocalDateTime::empty(), uri);
@@ -168,35 +169,6 @@ impl ArticleEntry {
                Vec::new(), Author::empty())
     }
 
-    fn first_line(&self) -> Box {
-        let container = Box::new(Orientation::Horizontal, 4);
-        container.add(&Label::new(Some("ID")));
-        container.add(&self.id);
-        container.add(&Label::new(Some("URI")));
-        container.add(&self.uri);
-        container.add(&Label::new(Some("Heading")));
-        container.add(&self.heading);
-        container
-    }
-
-    fn second_line(&self) -> Box {
-        let container = Box::new(Orientation::Horizontal, 4);
-
-        container.add(&Label::new(Some("Date")));
-        container.add(&self.date);
-        container.add(&Label::new(Some("Author")));
-        container.add(&self.author);
-        container.add(&Label::new(Some("Categories")));
-        container.add(&self.categories);
-        container
-    }
-
-    fn third_line(&self) -> Box {
-        let container = Box::new(Orientation::Horizontal, 4);
-        container.add(&Label::new(Some("Extract")));
-        container.add(&self.extract);
-        container
-    }
 }
 
 fn main() {
@@ -208,34 +180,15 @@ fn main() {
 
     gtk::init().unwrap();
 
-    let window = Window::new(WindowType::Toplevel);
-    window.set_title("Onion blog viewer");
+    let glade_src = include_str!("ui.glade");
 
-    let text_view = TextView::new();
+    let builder = Rc::new(Builder::new_from_string(glade_src));
 
-    let abox = Box::new(Orientation::Vertical, 4);
-
-    let add_button = Button::new_with_label("Add");
-    let add_box = Box::new(Orientation::Horizontal, 4);
-    add_box.add(&add_button);
-    let frame = Frame::new(Some("Textile"));
-    frame.add(&text_view);
-
-    let article = ArticleEntry::new();
-
-    let header_data = HeaderBarData::new(window.clone(), article.clone());
-
-    let header = header_data.header_bar();
-
-    abox.add(&article.first_line());
-    abox.add(&article.second_line());
-    abox.add(&article.third_line());
-    abox.add(&frame);
-    abox.add(&add_box);
+    let window: Window = builder.get_object("app").unwrap();
+    let header: HeaderBar = builder.get_object("header").unwrap();
 
     window.set_titlebar(Some(&header));
-    window.add(&abox);
-    window.resize(640, 480);
+
     window.show_all();
     window.connect_delete_event(|_, _| {
         gtk::main_quit();
