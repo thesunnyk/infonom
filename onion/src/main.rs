@@ -17,113 +17,75 @@ use self::model::LocalDateTime;
 use self::model::Article;
 use self::model::Author;
 use gtk::Builder;
-use gtk::{ ContainerExt, WindowExt, WidgetExt };
+use gtk::{ WindowExt, WidgetExt };
 use gtk::HeaderBar;
 use gtk::{ Button, ButtonExt };
-use gtk::TextView;
-use gtk::Frame;
-use gtk::ComboBox;
 use gtk::{ FileChooserDialog, FileChooserExt, FileChooserAction };
 use gtk::DialogExt;
 use gtk::prelude::DialogExtManual;
-use gtk::{ Entry, EntryExt, Label };
-use gtk::{ Box, Orientation };
-use gtk::{ Window, WindowType, Inhibit };
+use gtk::{ Entry, EntryExt };
+use gtk::{ Window, Inhibit };
 
-struct HeaderBarData {
-    new_file: Button,
-    open_file: Button,
-    save_file: Button,
-    save_as_file: Button,
+
+fn attach_open(builder: Rc<Builder>, article: Rc<RefCell<ArticleEntry>>) {
+    let open_file: Button = builder.get_object("open").unwrap();
+    let wc: Window = builder.get_object("app").unwrap();
+    open_file.connect_clicked(move |_| {
+        let chooser = FileChooserDialog::new(Some("Open file"), Some(&wc), FileChooserAction::Open);
+        chooser.add_buttons(&[
+            ("Open", gtk::ResponseType::Ok.into()),
+            ("Cancel", gtk::ResponseType::Cancel.into()),
+        ]);
+
+        if chooser.run() == gtk::ResponseType::Ok.into() {
+            let filename = chooser.get_filename().unwrap();
+            let file = File::open(&filename).unwrap();
+
+            let mut reader = BufReader::new(file);
+            let mut contents = String::new();
+            let _ = reader.read_to_string(&mut contents);
+
+            let article_new: CompleteArticle = serde_json::from_str(&contents).unwrap();
+            article.borrow().set_article(&article_new);
+        }
+        chooser.destroy();
+    });
 }
 
-impl HeaderBarData {
+fn attach_save(builder: Rc<Builder>, article: Rc<RefCell<ArticleEntry>>) {
+    let save_file: Button = builder.get_object("save").unwrap();
+    save_file.connect_clicked(move |_| {
+        let a = article.borrow().get_article();
+        println!("article: {:?}", &a);
+    });
+}
 
-    fn new(window: Window, article: Rc<RefCell<ArticleEntry>>) -> HeaderBarData {
-        let new_file = Button::new_with_label("New");
-        let open_file = Button::new_with_label("Open");
-        let save_file = Button::new_with_label("Save");
-        let save_as_file = Button::new_with_label("Save As");
+fn attach_new(builder: Rc<Builder>, ae: Rc<RefCell<ArticleEntry>>) {
+    let new_file: Button = builder.get_object("new").unwrap();
+    new_file.connect_clicked(move |_| {
+        let article = CompleteArticle::empty();
+        ae.borrow().set_article(&article);
+    });
+}
 
-        HeaderBarData::attach_open(&open_file, window.clone(), article.clone());
-        HeaderBarData::attach_save_as(&save_as_file, window.clone());
-        HeaderBarData::attach_save(&save_file, article.clone());
-        HeaderBarData::attach_new(&new_file, article.clone());
+fn attach_save_as(builder: Rc<Builder>) {
+    let save_as_file: Button = builder.get_object("save_as").unwrap();
+    let wc: Window = builder.get_object("app").unwrap();
 
-        HeaderBarData {
-            new_file: new_file,
-            open_file: open_file,
-            save_file: save_file,
-            save_as_file: save_as_file,
-        }
-    }
+    save_as_file.connect_clicked(move |_| {
+        let chooser = FileChooserDialog::new(Some("Save as file"), Some(&wc),
+            FileChooserAction::Save);
+        chooser.add_buttons(&[
+            ("Save", gtk::ResponseType::Ok.into()),
+            ("Cancel", gtk::ResponseType::Cancel.into()),
+        ]);
 
-    fn header_bar(&self) -> HeaderBar {
-        let header = HeaderBar::new();
-        header.set_subtitle(Some("Onion blog viewer"));
-        header.set_title(Some("New File"));
-        header.add(&self.new_file);
-        header.add(&self.open_file);
-        header.pack_end(&self.save_file);
-        header.pack_end(&self.save_as_file);
-        header.set_show_close_button(true);
-        header
-    }
-
-    fn attach_open(open_file: &Button, wc: Window, article: Rc<RefCell<ArticleEntry>>) {
-        open_file.connect_clicked(move |_| {
-            let chooser = FileChooserDialog::new(Some("Open file"), Some(&wc), FileChooserAction::Open);
-            chooser.add_buttons(&[
-                ("Open", gtk::ResponseType::Ok.into()),
-                ("Cancel", gtk::ResponseType::Cancel.into()),
-            ]);
-
-            if chooser.run() == gtk::ResponseType::Ok.into() {
-                let filename = chooser.get_filename().unwrap();
-                let file = File::open(&filename).unwrap();
-
-                let mut reader = BufReader::new(file);
-                let mut contents = String::new();
-                let _ = reader.read_to_string(&mut contents);
-
-                let article_new: CompleteArticle = serde_json::from_str(&contents).unwrap();
-                article.borrow().set_article(&article_new);
-            }
-            chooser.destroy();
+        chooser.connect_response(move |x, r| {
+            println!("Responded with {:?}, {:?}", x.get_filename(), r);
         });
-    }
-
-    fn attach_save(save_file: &Button, article: Rc<RefCell<ArticleEntry>>) {
-        save_file.connect_clicked(move |_| {
-            let a = article.borrow().get_article();
-            println!("article: {:?}", &a);
-        });
-    }
-
-    fn attach_new(new_file: &Button, ae: Rc<RefCell<ArticleEntry>>) {
-        new_file.connect_clicked(move |_| {
-            let article = CompleteArticle::empty();
-            ae.borrow().set_article(&article);
-        });
-    }
-
-    fn attach_save_as(save_as_file: &Button, wc: Window) {
-
-        save_as_file.connect_clicked(move |_| {
-            let chooser = FileChooserDialog::new(Some("Save as file"), Some(&wc),
-                FileChooserAction::Save);
-            chooser.add_buttons(&[
-                ("Save", gtk::ResponseType::Ok.into()),
-                ("Cancel", gtk::ResponseType::Cancel.into()),
-            ]);
-
-            chooser.connect_response(move |x, r| {
-                println!("Responded with {:?}, {:?}", x.get_filename(), r);
-            });
-            chooser.run();
-            chooser.destroy();
-        });
-    }
+        chooser.run();
+        chooser.destroy();
+    });
 }
 
 #[derive(Debug, Clone)]
@@ -188,6 +150,13 @@ fn main() {
     let header: HeaderBar = builder.get_object("header").unwrap();
 
     window.set_titlebar(Some(&header));
+
+    let ae = Rc::new(RefCell::new(ArticleEntry::new(builder.clone())));
+
+    attach_new(builder.clone(), ae.clone());
+    attach_open(builder.clone(), ae.clone());
+    attach_save(builder.clone(), ae.clone());
+    attach_save_as(builder.clone());
 
     window.show_all();
     window.connect_delete_event(|_, _| {
