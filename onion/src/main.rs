@@ -19,16 +19,28 @@ use self::model::CompleteArticle;
 use self::model::LocalDateTime;
 use self::model::Article;
 use self::model::Author;
+use self::model::ArticleChunk;
+use self::model::ArticleChunk::HtmlText;
+use self::model::ArticleChunk::PullQuote;
+use self::model::ArticleChunk::TextileText;
 use gtk::Builder;
+use gtk::Label;
+use gtk::{TextView, TextBuffer};
 use gtk::{ WindowExt, WidgetExt };
 use gtk::HeaderBar;
 use gtk::{ Button, ButtonExt };
 use gtk::{ FileChooserDialog, FileChooserExt, FileChooserAction };
 use gtk::DialogExt;
+use gtk::ContainerExt;
 use gtk::prelude::DialogExtManual;
+use gtk::ListBox;
+use gtk::ListBoxRow;
 use gtk::{ Entry, EntryExt };
 use gtk::{ Window, Inhibit };
 
+// TODO:
+// Add button should work
+// Save text when switching list items
 
 fn attach_open(builder: Rc<Builder>, article: Rc<RefCell<ArticleEntry>>) {
     let open_file: Button = builder.get_object("open").unwrap();
@@ -60,7 +72,7 @@ fn attach_new(builder: Rc<Builder>, ae: Rc<RefCell<ArticleEntry>>) {
     let new_file: Button = builder.get_object("new").unwrap();
     new_file.connect_clicked(move |_| {
         let article = CompleteArticle::empty();
-        ae.borrow().set_article(&article);
+        ae.borrow_mut().set_article(&article);
     });
 }
 
@@ -83,17 +95,27 @@ fn attach_save_as(builder: Rc<Builder>, article: Rc<RefCell<ArticleEntry>>) {
     });
 }
 
+fn attach_list(builder: Rc<Builder>, article: Rc<RefCell<ArticleEntry>>) {
+    let list: ListBox = builder.get_object("item_list").unwrap();
+    list.connect_row_selected(move |_, row| {
+        // TODO Fix panic on unwrap()
+        article.borrow_mut().set_row(row.as_ref().unwrap().get_index());
+    });
+}
+
 #[derive(Debug, Clone)]
 struct ArticleEntry {
     builder: Rc<Builder>,
-    fname: Option<PathBuf>
+    fname: Option<PathBuf>,
+    items: Vec<ArticleChunk>
 }
 
 impl ArticleEntry {
     fn new(builder: Rc<Builder>) -> ArticleEntry {
         ArticleEntry {
             builder: builder,
-            fname: None
+            fname: None,
+            items: Vec::new()
         }
     }
 
@@ -127,17 +149,46 @@ impl ArticleEntry {
         self.save();
     }
 
-    fn set_article(&self, article: &CompleteArticle) {
+    fn set_row(&mut self, row: i32) {
+        let text_view: TextView = self.builder.get_object("text_view").unwrap();
+
+        let item = self.items.get(row as usize).unwrap();
+        let text = match item {
+            &TextileText(ref x) => x,
+            &HtmlText(ref x) => x,
+            &PullQuote(ref x) => x
+        };
+        let buf = TextBuffer::new(None);
+        buf.set_text(text.as_ref());
+        text_view.set_buffer(Some(&buf));
+        text_view.show_all();
+    }
+
+    fn set_article(&mut self, article: &CompleteArticle) {
         let id: Entry = self.builder.get_object("id").unwrap();
         let uri: Entry = self.builder.get_object("uri").unwrap();
         let heading: Entry = self.builder.get_object("heading").unwrap();
         let extract: Entry = self.builder.get_object("extract").unwrap();
+        let list: ListBox = self.builder.get_object("item_list").unwrap();
 
         id.set_text(&article.id);
         uri.set_text(&article.id);
         heading.set_text(&article.article.heading);
         let e_str = article.article.extract.clone();
         extract.set_text(&e_str.unwrap_or("".to_string()));
+        self.items = article.article.content.clone();
+
+        for content in &article.article.content {
+            let string = match content {
+                &TextileText(_) => "textile",
+                &HtmlText(_) => "html",
+                &PullQuote(_) => "pullquote"
+            };
+            let list_item = ListBoxRow::new();
+            list_item.add(&Label::new(Some(string)));
+            list.add(&list_item);
+        }
+        list.show_all();
     }
 
     fn get_article(&self) -> CompleteArticle {
@@ -178,6 +229,7 @@ fn main() {
     attach_open(builder.clone(), ae.clone());
     attach_save(builder.clone(), ae.clone());
     attach_save_as(builder.clone(), ae.clone());
+    attach_list(builder.clone(), ae.clone());
 
     window.show_all();
     window.connect_delete_event(|_, _| {
