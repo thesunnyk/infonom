@@ -24,6 +24,7 @@ use self::model::ArticleChunk::HtmlText;
 use self::model::ArticleChunk::PullQuote;
 use self::model::ArticleChunk::TextileText;
 use gtk::Builder;
+use gtk::ComboBoxText;
 use gtk::Label;
 use gtk::{TextView, TextBuffer};
 use gtk::{ WindowExt, WidgetExt };
@@ -103,6 +104,13 @@ fn attach_list(builder: Rc<Builder>, article: Rc<RefCell<ArticleEntry>>) {
     });
 }
 
+fn attach_add(builder: Rc<Builder>, article: Rc<RefCell<ArticleEntry>>) {
+    let button: Button = builder.get_object("add_item").unwrap();
+    button.connect_clicked(move |_| {
+        article.borrow_mut().add_row(0);
+    });
+}
+
 #[derive(Debug, Clone)]
 struct ArticleEntry {
     builder: Rc<Builder>,
@@ -164,12 +172,42 @@ impl ArticleEntry {
         text_view.show_all();
     }
 
+    fn update_row(&mut self, row: i32, item: ArticleChunk) {
+    }
+
+    fn get_selected_item(&self) -> ArticleChunk {
+        let item_type: ComboBoxText = self.builder.get_object("item_type").unwrap();
+        let text_view: TextView = self.builder.get_object("text_view").unwrap();
+
+        let content = text_view.get_buffer().and_then(|b| {
+            let (start, end) = b.get_bounds();
+            b.get_text(&start, &end, false)
+        }).unwrap();
+
+        match item_type.get_active_text().unwrap().as_ref() {
+            "Html" => ArticleChunk::html(content),
+            "Pullquote" => ArticleChunk::pullquote(content),
+            _ => ArticleChunk::textile(content)
+        }
+    }
+
+    fn add_row(&mut self, row: usize) {
+        let item_type: ComboBoxText = self.builder.get_object("item_type").unwrap();
+        let content: String = "".to_string();
+
+        self.items.insert(row, match item_type.get_active_text().unwrap().as_ref() {
+            "Html" => ArticleChunk::html(content),
+            "Pullquote" => ArticleChunk::pullquote(content),
+            _ => ArticleChunk::textile(content)
+        });
+        self.update_content();
+    }
+
     fn set_article(&mut self, article: &CompleteArticle) {
         let id: Entry = self.builder.get_object("id").unwrap();
         let uri: Entry = self.builder.get_object("uri").unwrap();
         let heading: Entry = self.builder.get_object("heading").unwrap();
         let extract: Entry = self.builder.get_object("extract").unwrap();
-        let list: ListBox = self.builder.get_object("item_list").unwrap();
 
         id.set_text(&article.id);
         uri.set_text(&article.id);
@@ -178,7 +216,15 @@ impl ArticleEntry {
         extract.set_text(&e_str.unwrap_or("".to_string()));
         self.items = article.article.content.clone();
 
-        for content in &article.article.content {
+        self.update_content();
+    }
+
+    fn update_content(&mut self) {
+        let list: ListBox = self.builder.get_object("item_list").unwrap();
+        for item in list.get_children() {
+            list.remove(&item);
+        }
+        for content in &self.items {
             let string = match content {
                 &TextileText(_) => "textile",
                 &HtmlText(_) => "html",
@@ -202,7 +248,7 @@ impl ArticleEntry {
         let heading = heading_e.get_text().unwrap_or("".to_string());
         let extract = extract_e.get_text();
 
-        let article = Article::new(heading, Vec::new(), extract,
+        let article = Article::new(heading, self.items.clone(), extract,
                LocalDateTime::empty(), uri);
 
         CompleteArticle::new(id, article, Vec::new(),
@@ -230,6 +276,7 @@ fn main() {
     attach_save(builder.clone(), ae.clone());
     attach_save_as(builder.clone(), ae.clone());
     attach_list(builder.clone(), ae.clone());
+    attach_add(builder.clone(), ae.clone());
 
     window.show_all();
     window.connect_delete_event(|_, _| {
