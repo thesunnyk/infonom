@@ -52,18 +52,30 @@ enum Actions {
     Open(PathBuf),
     Save,
     SaveAs(PathBuf),
-    SelectRow(i32),
+    SelectRow(u32),
     AddRow,
+    DetailsUpdated {
+        id: String, uri: String, heading: String, extract: String
+    },
+    ItemUpdated(ArticleChunk)
+}
+
+#[derive(Debug, Clone)]
+enum Show {
+    SetTextBuffer(String),
+    SetArticle {
+        id: String, uri: String, heading: String, extract: String
+    }
 }
 
 struct View {
-    rx: Rc<RefCell<Receiver<i32>>>,
+    rx: Rc<RefCell<Receiver<Show>>>,
     tx: Rc<RefCell<Sender<Actions>>>,
     builder: Rc<Builder>,
 }
 
 impl View {
-    fn new(rx: Receiver<i32>, tx: Sender<Actions>, builder: Rc<Builder>) -> View {
+    fn new(rx: Receiver<Show>, tx: Sender<Actions>, builder: Rc<Builder>) -> View {
         let view = View {
             rx: Rc::new(RefCell::new(rx)),
             tx: Rc::new(RefCell::new(tx)),
@@ -92,6 +104,67 @@ impl View {
         gtk::main();
     }
 
+    fn get_selected_item(&self) {
+        let item_type: ComboBoxText = self.builder.get_object("item_type").unwrap();
+        let text_view: TextView = self.builder.get_object("text_view").unwrap();
+
+        let content = text_view.get_buffer().and_then(|b| {
+            let (start, end) = b.get_bounds();
+            b.get_text(&start, &end, false)
+        }).unwrap();
+
+        let chunk = match item_type.get_active_text().unwrap().as_ref() {
+            "Html" => ArticleChunk::html(content),
+            "Pullquote" => ArticleChunk::pullquote(content),
+            _ => ArticleChunk::textile(content)
+        };
+
+        self.tx.borrow().send(Actions::ItemUpdated(chunk)).unwrap();
+    }
+
+    fn update_text(&self, text: String) {
+        let buf = TextBuffer::new(None);
+        buf.set_text(text.as_ref());
+
+        let text_view: TextView = self.builder.get_object("text_view").unwrap();
+        text_view.set_buffer(Some(&buf));
+        text_view.show_all();
+    }
+
+    fn get_article(&self) {
+        let id_e: Entry = self.builder.get_object("id").unwrap();
+        let uri_e: Entry = self.builder.get_object("uri").unwrap();
+        let heading_e: Entry = self.builder.get_object("heading").unwrap();
+        let extract_e: Entry = self.builder.get_object("extract").unwrap();
+
+        let id = id_e.get_text().unwrap_or("".to_string());
+        let uri = uri_e.get_text().unwrap_or("".to_string());
+        let heading = heading_e.get_text().unwrap_or("".to_string());
+        let extract = extract_e.get_text().unwrap_or("".to_string());
+
+        self.tx.borrow().send(Actions::DetailsUpdated {
+            id: id, uri: uri, heading: heading, extract: extract
+        }).unwrap();
+    }
+
+    fn update_content(&mut self, items: Vec<ArticleChunk>) {
+        let list: ListBox = self.builder.get_object("item_list").unwrap();
+        for item in list.get_children() {
+            list.remove(&item);
+        }
+        for content in &items {
+            let string = match content {
+                &TextileText(_) => "textile",
+                &HtmlText(_) => "html",
+                &PullQuote(_) => "pullquote"
+            };
+            let list_item = ListBoxRow::new();
+            list_item.add(&Label::new(Some(string)));
+            list.add(&list_item);
+        }
+        list.show_all();
+    }
+
     fn attach_header(&self) {
         let window: Window = self.builder.get_object("app").unwrap();
         let header: HeaderBar = self.builder.get_object("header").unwrap();
@@ -118,7 +191,7 @@ impl View {
 
             if chooser.run() == gtk::ResponseType::Ok.into() {
                 chooser.get_filename().map(
-                    |filename| tx.borrow().send(Actions::Open(filename))
+                    |filename| tx.borrow().send(Actions::Open(filename)).unwrap()
                 );
             }
             chooser.destroy();
@@ -129,7 +202,7 @@ impl View {
         let save_file: Button = self.builder.get_object("save").unwrap();
         let tx = self.tx.clone();
         save_file.connect_clicked(move |_| {
-            tx.borrow().send(Actions::Save);
+            tx.borrow().send(Actions::Save).unwrap();
         });
     }
 
@@ -137,7 +210,7 @@ impl View {
         let new_file: Button = self.builder.get_object("new").unwrap();
         let tx = self.tx.clone();
         new_file.connect_clicked(move |_| {
-            tx.borrow().send(Actions::New);
+            tx.borrow().send(Actions::New).unwrap();
         });
     }
 
@@ -155,7 +228,7 @@ impl View {
             ]);
 
             if chooser.run() == gtk::ResponseType::Ok.into() {
-                chooser.get_filename().map(|fname| tx.borrow().send(Actions::SaveAs(fname)));
+                chooser.get_filename().map(|fname| tx.borrow().send(Actions::SaveAs(fname)).unwrap());
             }
             chooser.destroy();
         });
@@ -165,7 +238,7 @@ impl View {
         let list: ListBox = self.builder.get_object("item_list").unwrap();
         let tx = self.tx.clone();
         list.connect_row_selected(move |_, row| {
-            tx.borrow().send(Actions::SelectRow(row.as_ref().unwrap().get_index()));
+            tx.borrow().send(Actions::SelectRow(row.as_ref().unwrap().get_index() as u32)).unwrap();
         });
     }
 
@@ -173,7 +246,7 @@ impl View {
         let button: Button = self.builder.get_object("add_item").unwrap();
         let tx = self.tx.clone();
         button.connect_clicked(move |_| {
-            tx.borrow().send(Actions::AddRow);
+            tx.borrow().send(Actions::AddRow).unwrap();
         });
     }
 
@@ -181,14 +254,14 @@ impl View {
 
 #[derive(Debug)]
 struct ArticleEntry {
-    tx: Sender<i32>,
+    tx: Sender<Show>,
     rx: Receiver<Actions>,
     fname: Option<PathBuf>,
     items: Vec<ArticleChunk>
 }
 
 impl ArticleEntry {
-    fn new(tx: Sender<i32>, rx: Receiver<Actions>) -> ArticleEntry {
+    fn new(tx: Sender<Show>, rx: Receiver<Actions>) -> ArticleEntry {
         ArticleEntry {
             tx: tx,
             rx: rx,
@@ -219,18 +292,32 @@ impl ArticleEntry {
         let _ = reader.read_to_string(&mut contents);
 
         let article_new: CompleteArticle = serde_json::from_str(&contents).unwrap();
-        // self.set_article(&article_new);
+        self.set_article(&article_new);
     }
 
     fn save(&self) {
         println!("Save file");
         let fname = self.fname.clone();
-        // fname.map(|fname| {
-        //     let json = serde_json::to_string_pretty(&self.get_article()).unwrap();
-        //     let file = File::create(&fname).unwrap();
-        //     let mut writer = BufWriter::new(file);
-        //     writer.write(json.as_bytes()).expect("Could not write to file");
-        // });
+        fname.map(|fname| {
+            let json = serde_json::to_string_pretty(&self.gen_article()).unwrap();
+            let file = File::create(&fname).unwrap();
+            let mut writer = BufWriter::new(file);
+            writer.write(json.as_bytes()).expect("Could not write to file");
+        });
+    }
+
+    fn gen_article(&self) -> CompleteArticle {
+        // TODO Use id, heading, extract, uri
+        let id = "".to_string();
+        let uri = "".to_string();
+        let heading = "".to_string();
+        let extract = None;
+
+        let article = Article::new(heading, self.items.clone(), extract,
+               LocalDateTime::empty(), uri);
+
+        CompleteArticle::new(id, article, Vec::new(),
+               Vec::new(), Author::empty())
     }
 
     fn save_as(&mut self, filename: &PathBuf) {
@@ -239,103 +326,45 @@ impl ArticleEntry {
        self.save();
     }
 
-    // fn set_row(&mut self, row: i32) {
-    //     let text_view: TextView = self.builder.get_object("text_view").unwrap();
+    fn set_row(&mut self, row: i32) {
+        let item = self.items.get(row as usize).unwrap();
+        let text = match item {
+            &TextileText(ref x) => x,
+            &HtmlText(ref x) => x,
+            &PullQuote(ref x) => x
+        };
 
-    //     let item = self.items.get(row as usize).unwrap();
-    //     let text = match item {
-    //         &TextileText(ref x) => x,
-    //         &HtmlText(ref x) => x,
-    //         &PullQuote(ref x) => x
-    //     };
-    //     let buf = TextBuffer::new(None);
-    //     buf.set_text(text.as_ref());
-    //     text_view.set_buffer(Some(&buf));
-    //     text_view.show_all();
-    // }
+        self.tx.send(Show::SetTextBuffer(text.clone())).unwrap();
+    }
 
-    // fn update_row(&mut self, row: i32, item: ArticleChunk) {
-    // }
+    fn update_row(&mut self, row: i32, item: ArticleChunk) {
+    }
 
-    // fn get_selected_item(&self) -> ArticleChunk {
-    //     let item_type: ComboBoxText = self.builder.get_object("item_type").unwrap();
-    //     let text_view: TextView = self.builder.get_object("text_view").unwrap();
+    fn add_row(&mut self, row: usize, item_type: String) {
+        let content: String = "".to_string();
 
-    //     let content = text_view.get_buffer().and_then(|b| {
-    //         let (start, end) = b.get_bounds();
-    //         b.get_text(&start, &end, false)
-    //     }).unwrap();
+        self.items.insert(row, match item_type.as_ref() {
+            "Html" => ArticleChunk::html(content),
+            "Pullquote" => ArticleChunk::pullquote(content),
+            _ => ArticleChunk::textile(content)
+        });
+        // TODO Set view content
+        // self.update_content();
+    }
 
-    //     match item_type.get_active_text().unwrap().as_ref() {
-    //         "Html" => ArticleChunk::html(content),
-    //         "Pullquote" => ArticleChunk::pullquote(content),
-    //         _ => ArticleChunk::textile(content)
-    //     }
-    // }
+    fn set_article(&mut self, article: &CompleteArticle) {
 
-    // fn add_row(&mut self, row: usize) {
-    //     let item_type: ComboBoxText = self.builder.get_object("item_type").unwrap();
-    //     let content: String = "".to_string();
+        self.items = article.article.content.clone();
 
-    //     self.items.insert(row, match item_type.get_active_text().unwrap().as_ref() {
-    //         "Html" => ArticleChunk::html(content),
-    //         "Pullquote" => ArticleChunk::pullquote(content),
-    //         _ => ArticleChunk::textile(content)
-    //     });
-    //     self.update_content();
-    // }
-
-    // fn set_article(&mut self, article: &CompleteArticle) {
-    //     let id: Entry = self.builder.get_object("id").unwrap();
-    //     let uri: Entry = self.builder.get_object("uri").unwrap();
-    //     let heading: Entry = self.builder.get_object("heading").unwrap();
-    //     let extract: Entry = self.builder.get_object("extract").unwrap();
-
-    //     id.set_text(&article.id);
-    //     uri.set_text(&article.id);
-    //     heading.set_text(&article.article.heading);
-    //     let e_str = article.article.extract.clone();
-    //     extract.set_text(&e_str.unwrap_or("".to_string()));
-    //     self.items = article.article.content.clone();
-
-    //     self.update_content();
-    // }
-
-    // fn update_content(&mut self) {
-    //     let list: ListBox = self.builder.get_object("item_list").unwrap();
-    //     for item in list.get_children() {
-    //         list.remove(&item);
-    //     }
-    //     for content in &self.items {
-    //         let string = match content {
-    //             &TextileText(_) => "textile",
-    //             &HtmlText(_) => "html",
-    //             &PullQuote(_) => "pullquote"
-    //         };
-    //         let list_item = ListBoxRow::new();
-    //         list_item.add(&Label::new(Some(string)));
-    //         list.add(&list_item);
-    //     }
-    //     list.show_all();
-    // }
-
-    // fn get_article(&self) -> CompleteArticle {
-    //     let id_e: Entry = self.builder.get_object("id").unwrap();
-    //     let uri_e: Entry = self.builder.get_object("uri").unwrap();
-    //     let heading_e: Entry = self.builder.get_object("heading").unwrap();
-    //     let extract_e: Entry = self.builder.get_object("extract").unwrap();
-
-    //     let id = id_e.get_text().unwrap_or("".to_string());
-    //     let uri = uri_e.get_text().unwrap_or("".to_string());
-    //     let heading = heading_e.get_text().unwrap_or("".to_string());
-    //     let extract = extract_e.get_text();
-
-    //     let article = Article::new(heading, self.items.clone(), extract,
-    //            LocalDateTime::empty(), uri);
-
-    //     CompleteArticle::new(id, article, Vec::new(),
-    //            Vec::new(), Author::empty())
-    // }
+        self.tx.send(Show::SetArticle {
+            id: article.id.clone(),
+            uri: article.article.uri.clone(),
+            heading: article.article.heading.clone(),
+            extract: article.article.extract.clone().unwrap_or("".to_string())
+        }).unwrap();
+        // TODO Set view content
+        // self.update_content();
+    }
 
 }
 
