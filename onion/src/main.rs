@@ -73,7 +73,8 @@ enum Show {
     SetTextBuffer(String),
     SetArticle {
         heading: String, extract: String
-    }
+    },
+    UpdateList(Vec<String>)
 }
 
 struct View {
@@ -283,7 +284,7 @@ impl ArticleEntry {
         }
     }
 
-    fn run(mut self) {
+    fn run(self) {
         thread::spawn(move|| {
             let mut me = self;
             while let Ok(i) = me.rx.recv() {
@@ -296,11 +297,9 @@ impl ArticleEntry {
                     Actions::Open(file) => me.open_file(&file),
                     Actions::Save => me.save(),
                     Actions::SaveAs(file) => me.save_as(&file),
-                    Actions::SelectRow(row) => { me.select_row(row) },
+                    Actions::SelectRow(row) => { me.set_row(row) },
                     Actions::AddRow(item_type) => { me.add_row(item_type) },
-                    Actions::DetailsUpdated {
-                            heading: heading, extract: extract
-                        } => {
+                    Actions::DetailsUpdated { heading, extract } => {
                         // TODO None for empty extract
                         me.set_article_details(heading, Some(extract))
                     },
@@ -337,10 +336,10 @@ impl ArticleEntry {
     }
 
     fn gen_article(&self) -> CompleteArticle {
-        // TODO Use id, heading, extract, uri
+        // TODO basename fname .json
         let uri: String = self.fname.as_ref().unwrap().to_str().unwrap().to_string();
-        let heading = "".to_string();
-        let extract = None;
+        let heading = self.heading.clone();
+        let extract = self.extract.clone();
 
         let article = Article::new(heading, self.items.clone(), extract,
                LocalDateTime::empty(), uri);
@@ -356,6 +355,7 @@ impl ArticleEntry {
     }
 
     fn set_row(&mut self, row: usize) {
+        self.selected_row = Some(row);
         let item = self.items.get(row).unwrap();
         let text = match item {
             &TextileText(ref x) => x,
@@ -372,10 +372,6 @@ impl ArticleEntry {
         self.items.swap_remove(row);
     }
 
-    fn select_row(&mut self, row: usize) {
-        self.selected_row = Some(row);
-    }
-
     fn add_row(&mut self, item_type: ItemType) {
         let content: String = "".to_string();
 
@@ -386,8 +382,8 @@ impl ArticleEntry {
             ItemType::Pullquote => ArticleChunk::pullquote(content),
             _ => ArticleChunk::textile(content)
         });
-        // TODO Set view content
-        // self.update_content();
+        // TODO add row.
+        self.update_list();
     }
 
     fn update_article(&self) {
@@ -397,21 +393,31 @@ impl ArticleEntry {
         }).unwrap();
     }
 
+    fn update_list(&self) {
+        self.tx.send(Show::UpdateList(self.items.iter().map(|item| match item {
+            &ArticleChunk::HtmlText(_) => "Html".to_string(),
+            &ArticleChunk::PullQuote(_) => "Pullquote".to_string(),
+            _ => "Textile".to_string()
+        }).collect())).unwrap();
+    }
+
     fn set_article_details(&mut self, heading: String, extract: Option<String>) {
         self.heading = heading;
-        self.selected_row = None;
         self.extract = extract;
+        self.update_article();
     }
 
     fn set_article(&mut self, article: CompleteArticle) {
+        self.set_article_details(article.article.heading.clone(), article.article.extract.clone());
+
+        // Also set ID and items, because when opening a file these should be kept.
         self.id = article.id.clone();
-        self.heading = article.article.heading.clone();
         self.selected_row = None;
-        self.extract = article.article.extract.clone();
         self.items = article.article.content.clone();
 
-        // TODO Set view content
-        // self.update_content();
+        // NOTE: We clobber the URI, as this should depend on the filename.
+
+        self.update_list();
     }
 
 }
