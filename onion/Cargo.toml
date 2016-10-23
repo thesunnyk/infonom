@@ -4,6 +4,7 @@ version = "0.1.0"
 authors = ["kalsi <thesunnyk@gmail.com>"]
 
 [dependencies]
+uuid = { version = "0.3", features = ["v4"] }
 serde = "0.7.10"
 serde_json = "0.7.1"
 chrono = "0.2"

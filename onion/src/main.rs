@@ -1,3 +1,4 @@
+extern crate uuid;
 extern crate chrono;
 extern crate serde_json;
 extern crate gtk;
@@ -25,6 +26,9 @@ use self::model::ArticleChunk;
 use self::model::ArticleChunk::HtmlText;
 use self::model::ArticleChunk::PullQuote;
 use self::model::ArticleChunk::TextileText;
+
+use uuid::Uuid;
+
 use gtk::Builder;
 use gtk::Continue;
 use gtk::ComboBoxText;
@@ -42,9 +46,12 @@ use gtk::ListBoxRow;
 use gtk::{ Entry, EntryExt };
 use gtk::{ Window, Inhibit };
 
-// TODO:
-// Add button should work
-// Save text when switching list items
+#[derive(Debug, Clone)]
+enum ItemType {
+    Html,
+    Textile,
+    Pullquote
+}
 
 #[derive(Debug, Clone)]
 enum Actions {
@@ -52,19 +59,20 @@ enum Actions {
     Open(PathBuf),
     Save,
     SaveAs(PathBuf),
-    SelectRow(u32),
-    AddRow,
+    SelectRow(usize),
+    AddRow(ItemType),
     DetailsUpdated {
-        id: String, uri: String, heading: String, extract: String
+        heading: String, extract: String
     },
     ItemUpdated(ArticleChunk)
 }
 
+// TODO Add a thing to update the list appropriately.
 #[derive(Debug, Clone)]
 enum Show {
     SetTextBuffer(String),
     SetArticle {
-        id: String, uri: String, heading: String, extract: String
+        heading: String, extract: String
     }
 }
 
@@ -132,18 +140,14 @@ impl View {
     }
 
     fn get_article(&self) {
-        let id_e: Entry = self.builder.get_object("id").unwrap();
-        let uri_e: Entry = self.builder.get_object("uri").unwrap();
         let heading_e: Entry = self.builder.get_object("heading").unwrap();
         let extract_e: Entry = self.builder.get_object("extract").unwrap();
 
-        let id = id_e.get_text().unwrap_or("".to_string());
-        let uri = uri_e.get_text().unwrap_or("".to_string());
         let heading = heading_e.get_text().unwrap_or("".to_string());
         let extract = extract_e.get_text().unwrap_or("".to_string());
 
         self.tx.borrow().send(Actions::DetailsUpdated {
-            id: id, uri: uri, heading: heading, extract: extract
+            heading: heading, extract: extract
         }).unwrap();
     }
 
@@ -238,7 +242,7 @@ impl View {
         let list: ListBox = self.builder.get_object("item_list").unwrap();
         let tx = self.tx.clone();
         list.connect_row_selected(move |_, row| {
-            tx.borrow().send(Actions::SelectRow(row.as_ref().unwrap().get_index() as u32)).unwrap();
+            tx.borrow().send(Actions::SelectRow(row.as_ref().unwrap().get_index() as usize)).unwrap();
         });
     }
 
@@ -246,7 +250,7 @@ impl View {
         let button: Button = self.builder.get_object("add_item").unwrap();
         let tx = self.tx.clone();
         button.connect_clicked(move |_| {
-            tx.borrow().send(Actions::AddRow).unwrap();
+            tx.borrow().send(Actions::AddRow(ItemType::Textile)).unwrap();
         });
     }
 
@@ -257,27 +261,53 @@ struct ArticleEntry {
     tx: Sender<Show>,
     rx: Receiver<Actions>,
     fname: Option<PathBuf>,
+    selected_row: Option<usize>,
+    id: String,
+    heading: String,
+    extract: Option<String>,
     items: Vec<ArticleChunk>
 }
 
 impl ArticleEntry {
     fn new(tx: Sender<Show>, rx: Receiver<Actions>) -> ArticleEntry {
+        let uuid = Uuid::new_v4();
         ArticleEntry {
             tx: tx,
             rx: rx,
             fname: None,
+            selected_row: None,
+            id: uuid.to_string(),
+            heading: "Empty".to_string(),
+            extract: None,
             items: Vec::new()
         }
     }
 
-    fn run(self) {
-        let rx = self.rx;
+    fn run(mut self) {
         thread::spawn(move|| {
-            while let Ok(i) = rx.recv() {
+            let mut me = self;
+            while let Ok(i) = me.rx.recv() {
                 println!("{:?}", i);
-                // For Actions::New
-                // let article = CompleteArticle::empty();
-                // ae.borrow_mut().set_article(&article);
+                match i {
+                    Actions::New => {
+                        let article = CompleteArticle::empty();
+                        me.set_article(article)
+                    },
+                    Actions::Open(file) => me.open_file(&file),
+                    Actions::Save => me.save(),
+                    Actions::SaveAs(file) => me.save_as(&file),
+                    Actions::SelectRow(row) => { me.select_row(row) },
+                    Actions::AddRow(item_type) => { me.add_row(item_type) },
+                    Actions::DetailsUpdated {
+                            heading: heading, extract: extract
+                        } => {
+                        // TODO None for empty extract
+                        me.set_article_details(heading, Some(extract))
+                    },
+                    Actions::ItemUpdated(chunk) => {
+                        me.update_row(chunk)
+                    }
+                }
             }
         });
     }
@@ -292,7 +322,7 @@ impl ArticleEntry {
         let _ = reader.read_to_string(&mut contents);
 
         let article_new: CompleteArticle = serde_json::from_str(&contents).unwrap();
-        self.set_article(&article_new);
+        self.set_article(article_new);
     }
 
     fn save(&self) {
@@ -308,15 +338,14 @@ impl ArticleEntry {
 
     fn gen_article(&self) -> CompleteArticle {
         // TODO Use id, heading, extract, uri
-        let id = "".to_string();
-        let uri = "".to_string();
+        let uri: String = self.fname.as_ref().unwrap().to_str().unwrap().to_string();
         let heading = "".to_string();
         let extract = None;
 
         let article = Article::new(heading, self.items.clone(), extract,
                LocalDateTime::empty(), uri);
 
-        CompleteArticle::new(id, article, Vec::new(),
+        CompleteArticle::new(self.id.clone(), article, Vec::new(),
                Vec::new(), Author::empty())
     }
 
@@ -326,8 +355,8 @@ impl ArticleEntry {
        self.save();
     }
 
-    fn set_row(&mut self, row: i32) {
-        let item = self.items.get(row as usize).unwrap();
+    fn set_row(&mut self, row: usize) {
+        let item = self.items.get(row).unwrap();
         let text = match item {
             &TextileText(ref x) => x,
             &HtmlText(ref x) => x,
@@ -337,31 +366,50 @@ impl ArticleEntry {
         self.tx.send(Show::SetTextBuffer(text.clone())).unwrap();
     }
 
-    fn update_row(&mut self, row: i32, item: ArticleChunk) {
+    fn update_row(&mut self, item: ArticleChunk) {
+        let row = self.selected_row.unwrap();
+        self.items.push(item);
+        self.items.swap_remove(row);
     }
 
-    fn add_row(&mut self, row: usize, item_type: String) {
+    fn select_row(&mut self, row: usize) {
+        self.selected_row = Some(row);
+    }
+
+    fn add_row(&mut self, item_type: ItemType) {
         let content: String = "".to_string();
 
-        self.items.insert(row, match item_type.as_ref() {
-            "Html" => ArticleChunk::html(content),
-            "Pullquote" => ArticleChunk::pullquote(content),
+        let row = self.selected_row.unwrap_or(0);
+
+        self.items.insert(row, match item_type {
+            ItemType::Html => ArticleChunk::html(content),
+            ItemType::Pullquote => ArticleChunk::pullquote(content),
             _ => ArticleChunk::textile(content)
         });
         // TODO Set view content
         // self.update_content();
     }
 
-    fn set_article(&mut self, article: &CompleteArticle) {
+    fn update_article(&self) {
+        self.tx.send(Show::SetArticle {
+            heading: self.heading.clone(),
+            extract: self.extract.clone().unwrap_or("".to_string())
+        }).unwrap();
+    }
 
+    fn set_article_details(&mut self, heading: String, extract: Option<String>) {
+        self.heading = heading;
+        self.selected_row = None;
+        self.extract = extract;
+    }
+
+    fn set_article(&mut self, article: CompleteArticle) {
+        self.id = article.id.clone();
+        self.heading = article.article.heading.clone();
+        self.selected_row = None;
+        self.extract = article.article.extract.clone();
         self.items = article.article.content.clone();
 
-        self.tx.send(Show::SetArticle {
-            id: article.id.clone(),
-            uri: article.article.uri.clone(),
-            heading: article.article.heading.clone(),
-            extract: article.article.extract.clone().unwrap_or("".to_string())
-        }).unwrap();
         // TODO Set view content
         // self.update_content();
     }
