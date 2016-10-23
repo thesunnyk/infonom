@@ -101,11 +101,17 @@ impl View {
         view
     }
 
-    fn main(&self) {
-        let rx = self.rx.clone();
+    fn main(self) {
         gtk::timeout_add(100, move || {
+            let ref me = self;
+            let rx = me.rx.clone();
             while let Ok(i) = rx.borrow().try_recv() {
                 println!("{:?}", i);
+                match i {
+                    Show::SetTextBuffer(text) => me.update_text(text),
+                    Show::SetArticle { heading, extract } => me.set_article(heading, extract),
+                    Show::UpdateList(items) => me.update_list(items)
+                }
             }
             Continue(true)
         });
@@ -140,6 +146,15 @@ impl View {
         text_view.show_all();
     }
 
+
+    fn set_article(&self, heading: String, extract: String) {
+        let heading_e: Entry = self.builder.get_object("heading").unwrap();
+        let extract_e: Entry = self.builder.get_object("extract").unwrap();
+
+        heading_e.set_text(&heading);
+        extract_e.set_text(&extract);
+    }
+
     fn get_article(&self) {
         let heading_e: Entry = self.builder.get_object("heading").unwrap();
         let extract_e: Entry = self.builder.get_object("extract").unwrap();
@@ -152,19 +167,14 @@ impl View {
         }).unwrap();
     }
 
-    fn update_content(&mut self, items: Vec<ArticleChunk>) {
+    fn update_list(&self, items: Vec<String>) {
         let list: ListBox = self.builder.get_object("item_list").unwrap();
         for item in list.get_children() {
             list.remove(&item);
         }
         for content in &items {
-            let string = match content {
-                &TextileText(_) => "textile",
-                &HtmlText(_) => "html",
-                &PullQuote(_) => "pullquote"
-            };
             let list_item = ListBoxRow::new();
-            list_item.add(&Label::new(Some(string)));
+            list_item.add(&Label::new(Some(content)));
             list.add(&list_item);
         }
         list.show_all();
@@ -243,7 +253,9 @@ impl View {
         let list: ListBox = self.builder.get_object("item_list").unwrap();
         let tx = self.tx.clone();
         list.connect_row_selected(move |_, row| {
-            tx.borrow().send(Actions::SelectRow(row.as_ref().unwrap().get_index() as usize)).unwrap();
+            row.as_ref().map(|rr|
+                tx.borrow().send(Actions::SelectRow(rr.get_index() as usize)).unwrap()
+            );
         });
     }
 
@@ -377,11 +389,17 @@ impl ArticleEntry {
 
         let row = self.selected_row.unwrap_or(0);
 
-        self.items.insert(row, match item_type {
+        let item = match item_type {
             ItemType::Html => ArticleChunk::html(content),
             ItemType::Pullquote => ArticleChunk::pullquote(content),
             _ => ArticleChunk::textile(content)
-        });
+        };
+
+        if row < self.items.len() {
+            self.items.insert(row + 1, item);
+        } else {
+            self.items.push(item);
+        }
         // TODO add row.
         self.update_list();
     }
