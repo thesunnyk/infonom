@@ -64,7 +64,7 @@ enum Actions {
     DetailsUpdated {
         heading: String, extract: String
     },
-    ItemUpdated(ArticleChunk)
+    ItemUpdated(String)
 }
 
 // TODO Add a thing to update the list appropriately.
@@ -98,6 +98,8 @@ impl View {
         view.attach_save_as();
         view.attach_list();
         view.attach_add();
+        view.attach_text();
+        view.attach_metadata();
         view
     }
 
@@ -119,22 +121,20 @@ impl View {
         gtk::main();
     }
 
-    fn get_selected_item(&self) {
-        let item_type: ComboBoxText = self.builder.get_object("item_type").unwrap();
+    fn attach_text(&self) {
         let text_view: TextView = self.builder.get_object("text_view").unwrap();
 
-        let content = text_view.get_buffer().and_then(|b| {
-            let (start, end) = b.get_bounds();
-            b.get_text(&start, &end, false)
-        }).unwrap();
+        let tx = self.tx.clone();
+        text_view.connect_focus_out_event(move |tv, _| {
 
-        let chunk = match item_type.get_active_text().unwrap().as_ref() {
-            "Html" => ArticleChunk::html(content),
-            "Pullquote" => ArticleChunk::pullquote(content),
-            _ => ArticleChunk::textile(content)
-        };
+            let content = tv.get_buffer().and_then(|b| {
+                let (start, end) = b.get_bounds();
+                b.get_text(&start, &end, false)
+            }).unwrap();
 
-        self.tx.borrow().send(Actions::ItemUpdated(chunk)).unwrap();
+            tx.borrow().send(Actions::ItemUpdated(content)).unwrap();
+            Inhibit(false)
+        });
     }
 
     fn update_text(&self, text: String) {
@@ -155,16 +155,33 @@ impl View {
         extract_e.set_text(&extract);
     }
 
-    fn get_article(&self) {
+    fn attach_metadata(&self) {
         let heading_e: Entry = self.builder.get_object("heading").unwrap();
         let extract_e: Entry = self.builder.get_object("extract").unwrap();
+        let tx = self.tx.clone();
+        heading_e.connect_focus_out_event(move |h, _| {
+            let heading = h.get_text().unwrap_or("".to_string());
+            let extract = extract_e.get_text().unwrap_or("".to_string());
 
-        let heading = heading_e.get_text().unwrap_or("".to_string());
-        let extract = extract_e.get_text().unwrap_or("".to_string());
+            tx.borrow().send(Actions::DetailsUpdated {
+                heading: heading, extract: extract
+            }).unwrap();
+            Inhibit(false)
+        });
 
-        self.tx.borrow().send(Actions::DetailsUpdated {
-            heading: heading, extract: extract
-        }).unwrap();
+        let heading_e: Entry = self.builder.get_object("heading").unwrap();
+        let extract_e: Entry = self.builder.get_object("extract").unwrap();
+        let tx = self.tx.clone();
+        extract_e.connect_focus_out_event(move |e, _| {
+            let heading = heading_e.get_text().unwrap_or("".to_string());
+            let extract = e.get_text().unwrap_or("".to_string());
+
+            tx.borrow().send(Actions::DetailsUpdated {
+                heading: heading, extract: extract
+            }).unwrap();
+            Inhibit(false)
+        });
+
     }
 
     fn update_list(&self, items: Vec<String>) {
@@ -315,8 +332,8 @@ impl ArticleEntry {
                         // TODO None for empty extract
                         me.set_article_details(heading, Some(extract))
                     },
-                    Actions::ItemUpdated(chunk) => {
-                        me.update_row(chunk)
+                    Actions::ItemUpdated(content) => {
+                        me.update_row(content)
                     }
                 }
             }
@@ -378,10 +395,13 @@ impl ArticleEntry {
         self.tx.send(Show::SetTextBuffer(text.clone())).unwrap();
     }
 
-    fn update_row(&mut self, item: ArticleChunk) {
-        let row = self.selected_row.unwrap();
-        self.items.push(item);
-        self.items.swap_remove(row);
+    fn update_row(&mut self, content: String) {
+        let item = ArticleChunk::textile(content);
+
+        if self.selected_row.is_some() {
+            self.items.push(item);
+            self.items.swap_remove(self.selected_row.unwrap());
+        }
     }
 
     fn add_row(&mut self, item_type: ItemType) {
