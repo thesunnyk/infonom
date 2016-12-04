@@ -61,9 +61,9 @@ enum Actions {
     SaveAs(PathBuf),
     SelectRow(usize),
     AddRow(ItemType),
-    DetailsUpdated {
-        heading: String, extract: String
-    },
+    HeadingUpdated(String),
+    ExtractUpdated(String),
+    DateUpdated(String),
     ItemUpdated(String)
 }
 
@@ -163,9 +163,7 @@ impl View {
             let heading = h.get_text().unwrap_or("".to_string());
             let extract = extract_e.get_text().unwrap_or("".to_string());
 
-            tx.borrow().send(Actions::DetailsUpdated {
-                heading: heading, extract: extract
-            }).unwrap();
+            tx.borrow().send(Actions::HeadingUpdated(heading)).unwrap();
             Inhibit(false)
         });
 
@@ -176,9 +174,7 @@ impl View {
             let heading = heading_e.get_text().unwrap_or("".to_string());
             let extract = e.get_text().unwrap_or("".to_string());
 
-            tx.borrow().send(Actions::DetailsUpdated {
-                heading: heading, extract: extract
-            }).unwrap();
+            tx.borrow().send(Actions::ExtractUpdated(extract)).unwrap();
             Inhibit(false)
         });
 
@@ -328,13 +324,10 @@ impl ArticleEntry {
                     Actions::SaveAs(file) => me.save_as(&file),
                     Actions::SelectRow(row) => { me.set_row(row) },
                     Actions::AddRow(item_type) => { me.add_row(item_type) },
-                    Actions::DetailsUpdated { heading, extract } => {
-                        // TODO None for empty extract
-                        me.set_article_details(heading, Some(extract))
-                    },
-                    Actions::ItemUpdated(content) => {
-                        me.update_row(content)
-                    }
+                    Actions::HeadingUpdated(heading) => { me.heading = heading; me.update_article(); },
+                    Actions::ExtractUpdated(extract) => { me.extract = Some(extract); me.update_article(); },
+                    Actions::DateUpdated(date) => {},
+                    Actions::ItemUpdated(content) => { me.update_row(content) }
                 }
             }
         });
