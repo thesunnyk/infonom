@@ -1,5 +1,7 @@
 extern crate chrono;
 
+use std::string::ToString;
+
 use self::chrono::datetime::DateTime;
 use self::chrono::offset::local::Local;
 
@@ -15,6 +17,13 @@ impl LocalDateTime {
 
     pub fn empty() -> LocalDateTime {
         LocalDateTime::new(Local::now())
+    }
+
+}
+
+impl ToString for LocalDateTime {
+    fn to_string(&self) -> String {
+        self.datetime.to_string()
     }
 }
 

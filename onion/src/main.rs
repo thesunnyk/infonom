@@ -63,7 +63,7 @@ enum Actions {
     AddRow(ItemType),
     HeadingUpdated(String),
     ExtractUpdated(String),
-    DateUpdated(String),
+    DateUpdated(LocalDateTime),
     ItemUpdated(String)
 }
 
@@ -72,7 +72,7 @@ enum Actions {
 enum Show {
     SetTextBuffer(String),
     SetArticle {
-        heading: String, extract: String
+        heading: String, extract: String, date: LocalDateTime
     },
     UpdateList(Vec<String>)
 }
@@ -111,7 +111,7 @@ impl View {
                 println!("{:?}", i);
                 match i {
                     Show::SetTextBuffer(text) => me.update_text(text),
-                    Show::SetArticle { heading, extract } => me.set_article(heading, extract),
+                    Show::SetArticle { heading, extract, date } => me.set_article(heading, extract, date),
                     Show::UpdateList(items) => me.update_list(items)
                 }
             }
@@ -147,12 +147,14 @@ impl View {
     }
 
 
-    fn set_article(&self, heading: String, extract: String) {
+    fn set_article(&self, heading: String, extract: String, date: LocalDateTime) {
         let heading_e: Entry = self.builder.get_object("heading").unwrap();
         let extract_e: Entry = self.builder.get_object("extract").unwrap();
+        let date_e: Entry = self.builder.get_object("date").unwrap();
 
         heading_e.set_text(&heading);
         extract_e.set_text(&extract);
+        date_e.set_text(&date.to_string());
     }
 
     fn attach_metadata(&self) {
@@ -291,6 +293,7 @@ struct ArticleEntry {
     id: String,
     heading: String,
     extract: Option<String>,
+    date: LocalDateTime,
     items: Vec<ArticleChunk>
 }
 
@@ -305,6 +308,7 @@ impl ArticleEntry {
             id: uuid.to_string(),
             heading: "Empty".to_string(),
             extract: None,
+            date: LocalDateTime::empty(),
             items: Vec::new()
         }
     }
@@ -324,9 +328,9 @@ impl ArticleEntry {
                     Actions::SaveAs(file) => me.save_as(&file),
                     Actions::SelectRow(row) => { me.set_row(row) },
                     Actions::AddRow(item_type) => { me.add_row(item_type) },
-                    Actions::HeadingUpdated(heading) => { me.heading = heading; me.update_article(); },
-                    Actions::ExtractUpdated(extract) => { me.extract = Some(extract); me.update_article(); },
-                    Actions::DateUpdated(date) => {},
+                    Actions::HeadingUpdated(heading) => { me.heading = heading; },
+                    Actions::ExtractUpdated(extract) => { me.extract = Some(extract); },
+                    Actions::DateUpdated(date) => { me.date = date; },
                     Actions::ItemUpdated(content) => { me.update_row(content) }
                 }
             }
@@ -364,7 +368,7 @@ impl ArticleEntry {
         let extract = self.extract.clone();
 
         let article = Article::new(heading, self.items.clone(), extract,
-               LocalDateTime::empty(), uri);
+               self.date.clone(), uri);
 
         CompleteArticle::new(self.id.clone(), article, Vec::new(),
                Vec::new(), Author::empty())
@@ -420,7 +424,8 @@ impl ArticleEntry {
     fn update_article(&self) {
         self.tx.send(Show::SetArticle {
             heading: self.heading.clone(),
-            extract: self.extract.clone().unwrap_or("".to_string())
+            extract: self.extract.clone().unwrap_or("".to_string()),
+            date: self.date.clone()
         }).unwrap();
     }
 
@@ -432,14 +437,16 @@ impl ArticleEntry {
         }).collect())).unwrap();
     }
 
-    fn set_article_details(&mut self, heading: String, extract: Option<String>) {
+    fn set_article_details(&mut self, heading: String, extract: Option<String>, date: LocalDateTime) {
         self.heading = heading;
         self.extract = extract;
+        self.date = date;
         self.update_article();
     }
 
     fn set_article(&mut self, article: CompleteArticle) {
-        self.set_article_details(article.article.heading.clone(), article.article.extract.clone());
+        self.set_article_details(article.article.heading.clone(),
+            article.article.extract.clone(), article.article.pub_date.clone());
 
         // Also set ID and items, because when opening a file these should be kept.
         self.id = article.id.clone();
