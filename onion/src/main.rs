@@ -17,6 +17,7 @@ use std::io::BufWriter;
 use std::cell::RefCell;
 use std::rc::Rc;
 use std::path::PathBuf;
+use std::ops::Deref;
 
 use self::model::CompleteArticle;
 use self::model::LocalDateTime;
@@ -36,13 +37,14 @@ use gtk::Label;
 use gtk::{TextView, TextBuffer};
 use gtk::{ WindowExt, WidgetExt };
 use gtk::HeaderBar;
-use gtk::{ Button, ButtonExt };
+use gtk::{ Button, ButtonExt, ToolButton, ToolButtonExt };
 use gtk::{ FileChooserDialog, FileChooserExt, FileChooserAction };
 use gtk::DialogExt;
 use gtk::ContainerExt;
 use gtk::prelude::DialogExtManual;
 use gtk::ListBox;
 use gtk::ListBoxRow;
+use gtk::Orientation;
 use gtk::{ Entry, EntryExt };
 use gtk::{ Window, Inhibit };
 
@@ -61,6 +63,7 @@ enum Actions {
     SaveAs(PathBuf),
     SelectRow(usize),
     AddRow(ItemType),
+    DeleteRow(usize),
     HeadingUpdated(String),
     ExtractUpdated(String),
     DateUpdated(LocalDateTime),
@@ -68,6 +71,7 @@ enum Actions {
 }
 
 // TODO Add a thing to update the list appropriately.
+// TODO Add click-drag-ability
 #[derive(Debug, Clone)]
 enum Show {
     SetTextBuffer(String),
@@ -188,9 +192,22 @@ impl View {
             list.remove(&item);
         }
         for content in &items {
-            let list_item = ListBoxRow::new();
-            list_item.add(&Label::new(Some(content)));
-            list.add(&list_item);
+            let list_item = Rc::new(RefCell::new(ListBoxRow::new()));
+            let list_item_box = gtk::Box::new(Orientation::Horizontal, 0);
+            list_item.borrow_mut().add(&list_item_box);
+            let content_label = Label::new(Some(content));
+            content_label.set_hexpand(true);
+            list_item_box.add(&content_label);
+
+            let delete_button = ToolButton::new_from_stock("gtk-delete");
+
+            let tx = self.tx.clone();
+            let litem = list_item.clone();
+            delete_button.connect_clicked(move |_| {
+                tx.borrow().send(Actions::DeleteRow(litem.borrow_mut().get_index() as usize)).unwrap();
+            });
+            list_item_box.add(&delete_button);
+            list.add(list_item.borrow().deref());
         }
         list.show_all();
     }
@@ -275,10 +292,22 @@ impl View {
     }
 
     fn attach_add(&self) {
-        let button: Button = self.builder.get_object("add_item").unwrap();
-        let tx = self.tx.clone();
-        button.connect_clicked(move |_| {
-            tx.borrow().send(Actions::AddRow(ItemType::Textile)).unwrap();
+        let textile_button: Button = self.builder.get_object("add_textile_item").unwrap();
+        let textile_tx = self.tx.clone();
+        textile_button.connect_clicked(move |_| {
+            textile_tx.borrow().send(Actions::AddRow(ItemType::Textile)).unwrap();
+        });
+
+        let html_button: Button = self.builder.get_object("add_html_item").unwrap();
+        let html_tx = self.tx.clone();
+        html_button.connect_clicked(move |_| {
+            html_tx.borrow().send(Actions::AddRow(ItemType::Html)).unwrap();
+        });
+
+        let pullquote_button: Button = self.builder.get_object("add_pullquote_item").unwrap();
+        let pullquote_tx = self.tx.clone();
+        pullquote_button.connect_clicked(move |_| {
+            pullquote_tx.borrow().send(Actions::AddRow(ItemType::Pullquote)).unwrap();
         });
     }
 
@@ -328,6 +357,7 @@ impl ArticleEntry {
                     Actions::SaveAs(file) => me.save_as(&file),
                     Actions::SelectRow(row) => { me.set_row(row) },
                     Actions::AddRow(item_type) => { me.add_row(item_type) },
+                    Actions::DeleteRow(row) => { me.delete_row(row) },
                     Actions::HeadingUpdated(heading) => { me.heading = heading; },
                     Actions::ExtractUpdated(extract) => { me.extract = Some(extract); },
                     Actions::DateUpdated(date) => { me.date = date; },
@@ -392,8 +422,26 @@ impl ArticleEntry {
         self.tx.send(Show::SetTextBuffer(text.clone())).unwrap();
     }
 
+    fn delete_row(&mut self, row: usize) {
+        let item = self.items.remove(row);
+
+        self.update_list();
+    }
+
+    fn get_item_type(&self) -> ItemType {
+        match self.items.get(self.selected_row.unwrap()).unwrap() {
+            &ArticleChunk::HtmlText(_) => ItemType::Html,
+            &ArticleChunk::PullQuote(_) => ItemType::Pullquote,
+            &ArticleChunk::TextileText(_) => ItemType::Textile
+        }
+    }
+
     fn update_row(&mut self, content: String) {
-        let item = ArticleChunk::textile(content);
+        let item = match self.get_item_type() {
+            ItemType::Html => ArticleChunk::html(content),
+            ItemType::Textile => ArticleChunk::textile(content),
+            ItemType::Pullquote => ArticleChunk::pullquote(content)
+        };
 
         if self.selected_row.is_some() {
             self.items.push(item);
