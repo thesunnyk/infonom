@@ -102,7 +102,6 @@ impl View {
         view.attach_save_as();
         view.attach_list();
         view.attach_add();
-        view.attach_text();
         view.attach_metadata();
         view
     }
@@ -123,22 +122,6 @@ impl View {
         });
 
         gtk::main();
-    }
-
-    fn attach_text(&self) {
-        let text_view: TextView = self.builder.get_object("text_view").unwrap();
-
-        let tx = self.tx.clone();
-        text_view.connect_focus_out_event(move |tv, _| {
-
-            let content = tv.get_buffer().and_then(|b| {
-                let (start, end) = b.get_bounds();
-                b.get_text(&start, &end, false)
-            }).unwrap();
-
-            tx.borrow().send(Actions::ItemUpdated(content)).unwrap();
-            Inhibit(false)
-        });
     }
 
     fn update_text(&self, text: String) {
@@ -283,10 +266,18 @@ impl View {
 
     fn attach_list(&self) {
         let list: ListBox = self.builder.get_object("item_list").unwrap();
+        let tv: TextView = self.builder.get_object("text_view").unwrap();
         let tx = self.tx.clone();
         list.connect_row_selected(move |_, row| {
-            row.as_ref().map(|rr|
-                tx.borrow().send(Actions::SelectRow(rr.get_index() as usize)).unwrap()
+            row.as_ref().map(|rr| {
+                    let content = tv.get_buffer().and_then(|b| {
+                        let (start, end) = b.get_bounds();
+                        b.get_text(&start, &end, false)
+                    }).unwrap();
+
+                    tx.borrow().send(Actions::ItemUpdated(content)).unwrap();
+                    tx.borrow().send(Actions::SelectRow(rr.get_index() as usize)).unwrap()
+                }
             );
         });
     }
@@ -392,14 +383,14 @@ impl ArticleEntry {
     }
 
     fn gen_article(&self) -> CompleteArticle {
-        // TODO basename fname .json
-        let uri: String = self.fname.as_ref().unwrap().to_str().unwrap().to_string();
+        let uri: String = self.fname.as_ref().unwrap().to_str().unwrap().to_string().replace(".json$", "");
         let heading = self.heading.clone();
         let extract = self.extract.clone();
 
         let article = Article::new(heading, self.items.clone(), extract,
                self.date.clone(), uri);
 
+        // TODO change Author and Categories to simple text fields
         CompleteArticle::new(self.id.clone(), article, Vec::new(),
                Vec::new(), Author::empty())
     }
@@ -437,13 +428,12 @@ impl ArticleEntry {
     }
 
     fn update_row(&mut self, content: String) {
-        let item = match self.get_item_type() {
-            ItemType::Html => ArticleChunk::html(content),
-            ItemType::Textile => ArticleChunk::textile(content),
-            ItemType::Pullquote => ArticleChunk::pullquote(content)
-        };
-
         if self.selected_row.is_some() {
+            let item = match self.get_item_type() {
+                ItemType::Html => ArticleChunk::html(content),
+                ItemType::Textile => ArticleChunk::textile(content),
+                ItemType::Pullquote => ArticleChunk::pullquote(content)
+            };
             self.items.push(item);
             self.items.swap_remove(self.selected_row.unwrap());
         }
