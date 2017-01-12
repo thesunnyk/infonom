@@ -78,7 +78,7 @@ enum Actions {
 enum Show {
     SetTextBuffer(String),
     SetArticle {
-        heading: String, extract: String, date: LocalDateTime
+        heading: String, extract: String, author: String, categories: String, date: LocalDateTime
     },
     UpdateList(Vec<String>)
 }
@@ -116,7 +116,8 @@ impl View {
                 println!("{:?}", i);
                 match i {
                     Show::SetTextBuffer(text) => me.update_text(text),
-                    Show::SetArticle { heading, extract, date } => me.set_article(heading, extract, date),
+                    Show::SetArticle { heading, extract, author, categories, date } =>
+                        me.set_article(heading, extract, author, categories, date),
                     Show::UpdateList(items) => me.update_list(items)
                 }
             }
@@ -136,13 +137,17 @@ impl View {
     }
 
 
-    fn set_article(&self, heading: String, extract: String, date: LocalDateTime) {
+    fn set_article(&self, heading: String, extract: String, author: String, categories: String, date: LocalDateTime) {
         let heading_e: Entry = self.builder.get_object("heading").unwrap();
         let extract_e: Entry = self.builder.get_object("extract").unwrap();
+        let author_e: Entry = self.builder.get_object("author").unwrap();
+        let categories_e: Entry = self.builder.get_object("categories").unwrap();
         let date_e: Entry = self.builder.get_object("date").unwrap();
 
         heading_e.set_text(&heading);
         extract_e.set_text(&extract);
+        author_e.set_text(&author);
+        categories_e.set_text(&categories);
         date_e.set_text(&date.to_string());
     }
 
@@ -434,7 +439,7 @@ impl ArticleEntry {
                self.date.clone(), uri);
 
         CompleteArticle::new(self.id.clone(), article, Vec::new(),
-               Vec::new(), Author::empty())
+               self.categories.clone(), self.author.clone())
     }
 
     fn save_as(&mut self, filename: &PathBuf) {
@@ -456,7 +461,7 @@ impl ArticleEntry {
     }
 
     fn delete_row(&mut self, row: usize) {
-        let item = self.items.remove(row);
+        self.items.remove(row);
 
         self.update_list();
     }
@@ -502,9 +507,21 @@ impl ArticleEntry {
     }
 
     fn update_article(&self) {
+        let mut author = self.author.name.clone();
+        if self.author.email.is_some() {
+            author.push_str(" <");
+            author.push_str(self.author.email.as_ref().unwrap());
+            author.push('>');
+        }
+        let category_vec: Vec<String> = self.categories.iter().map(|x| x.clone().name).collect();
+        let categories = category_vec.iter().fold(String::new(), |acc, ref next| {
+            acc + ", " + next.as_ref()
+        });
         self.tx.send(Show::SetArticle {
             heading: self.heading.clone(),
             extract: self.extract.clone().unwrap_or("".to_string()),
+            categories: categories,
+            author: author,
             date: self.date.clone()
         }).unwrap();
     }
@@ -517,16 +534,13 @@ impl ArticleEntry {
         }).collect())).unwrap();
     }
 
-    fn set_article_details(&mut self, heading: String, extract: Option<String>, date: LocalDateTime) {
-        self.heading = heading;
-        self.extract = extract;
-        self.date = date;
-        self.update_article();
-    }
-
     fn set_article(&mut self, article: CompleteArticle) {
-        self.set_article_details(article.article.heading.clone(),
-            article.article.extract.clone(), article.article.pub_date.clone());
+        self.heading = article.article.heading.clone();
+        self.extract = article.article.extract.clone();
+        self.date = article.article.pub_date.clone();
+        self.author = article.author.clone();
+        self.categories = article.categories.clone();
+        self.update_article();
 
         // Also set ID and items, because when opening a file these should be kept.
         self.id = article.id.clone();
