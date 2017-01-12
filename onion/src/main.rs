@@ -23,6 +23,7 @@ use self::model::CompleteArticle;
 use self::model::LocalDateTime;
 use self::model::Article;
 use self::model::Author;
+use self::model::Category;
 use self::model::ArticleChunk;
 use self::model::ArticleChunk::HtmlText;
 use self::model::ArticleChunk::PullQuote;
@@ -67,10 +68,11 @@ enum Actions {
     HeadingUpdated(String),
     ExtractUpdated(String),
     DateUpdated(LocalDateTime),
+    CategoriesUpdated(String),
+    AuthorUpdated(String),
     ItemUpdated(String)
 }
 
-// TODO Add a thing to update the list appropriately.
 // TODO Add click-drag-ability
 #[derive(Debug, Clone)]
 enum Show {
@@ -146,24 +148,38 @@ impl View {
 
     fn attach_metadata(&self) {
         let heading_e: Entry = self.builder.get_object("heading").unwrap();
-        let extract_e: Entry = self.builder.get_object("extract").unwrap();
         let tx = self.tx.clone();
         heading_e.connect_focus_out_event(move |h, _| {
             let heading = h.get_text().unwrap_or("".to_string());
-            let extract = extract_e.get_text().unwrap_or("".to_string());
 
             tx.borrow().send(Actions::HeadingUpdated(heading)).unwrap();
             Inhibit(false)
         });
 
-        let heading_e: Entry = self.builder.get_object("heading").unwrap();
         let extract_e: Entry = self.builder.get_object("extract").unwrap();
         let tx = self.tx.clone();
         extract_e.connect_focus_out_event(move |e, _| {
-            let heading = heading_e.get_text().unwrap_or("".to_string());
             let extract = e.get_text().unwrap_or("".to_string());
 
             tx.borrow().send(Actions::ExtractUpdated(extract)).unwrap();
+            Inhibit(false)
+        });
+
+        let author_e: Entry = self.builder.get_object("author").unwrap();
+        let tx = self.tx.clone();
+        author_e.connect_focus_out_event(move |e, _| {
+            let author = e.get_text().unwrap_or("".to_string());
+
+            tx.borrow().send(Actions::AuthorUpdated(author)).unwrap();
+            Inhibit(false)
+        });
+
+        let categories_e: Entry = self.builder.get_object("categories").unwrap();
+        let tx = self.tx.clone();
+        categories_e.connect_focus_out_event(move |e, _| {
+            let categories = e.get_text().unwrap_or("".to_string());
+
+            tx.borrow().send(Actions::CategoriesUpdated(categories)).unwrap();
             Inhibit(false)
         });
 
@@ -314,6 +330,8 @@ struct ArticleEntry {
     heading: String,
     extract: Option<String>,
     date: LocalDateTime,
+    categories: Vec<Category>,
+    author: Author,
     items: Vec<ArticleChunk>
 }
 
@@ -328,6 +346,8 @@ impl ArticleEntry {
             id: uuid.to_string(),
             heading: "Empty".to_string(),
             extract: None,
+            categories: Vec::new(),
+            author: Author::new("".to_string(), None, None),
             date: LocalDateTime::empty(),
             items: Vec::new()
         }
@@ -350,12 +370,35 @@ impl ArticleEntry {
                     Actions::AddRow(item_type) => { me.add_row(item_type) },
                     Actions::DeleteRow(row) => { me.delete_row(row) },
                     Actions::HeadingUpdated(heading) => { me.heading = heading; },
+                    Actions::AuthorUpdated(author) => { me.set_author(author); },
+                    Actions::CategoriesUpdated(categories) => { me.set_categories(categories); },
                     Actions::ExtractUpdated(extract) => { me.extract = Some(extract); },
                     Actions::DateUpdated(date) => { me.date = date; },
                     Actions::ItemUpdated(content) => { me.update_row(content) }
                 }
             }
         });
+    }
+
+    fn set_author(&mut self, author: String) {
+        let mut split = author.split("<");
+        let name = split.next().map(|x| x.trim().to_string());
+        let email = split.next().and_then(|x| x.split(">").next()).map(|x| x.to_string());
+        let uri = email.clone().map(|x| x.to_string()).and_then(
+            |x| x.split("@").next().map(|y| y.to_string())
+            );
+
+        if name.is_some() {
+            self.author = Author::new(name.unwrap(), email, uri);
+            print!("Author: {:?}\n", self.author);
+        }
+    }
+
+    fn set_categories(&mut self, categories: String) {
+        self.categories = categories.split(",").map(
+            |x| Category::new(x.trim().to_string(), x.trim().replace(" ", "_").to_lowercase())
+            ).collect();
+        print!("Categories: {:?}\n", self.categories);
     }
 
     fn open_file(&mut self, filename: &PathBuf) {
@@ -390,7 +433,6 @@ impl ArticleEntry {
         let article = Article::new(heading, self.items.clone(), extract,
                self.date.clone(), uri);
 
-        // TODO change Author and Categories to simple text fields
         CompleteArticle::new(self.id.clone(), article, Vec::new(),
                Vec::new(), Author::empty())
     }
@@ -455,7 +497,7 @@ impl ArticleEntry {
         } else {
             self.items.push(item);
         }
-        // TODO add row.
+        // TODO add row instead of updating complete list.
         self.update_list();
     }
 
